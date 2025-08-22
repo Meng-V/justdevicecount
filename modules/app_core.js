@@ -2,66 +2,20 @@ const config = require("config");
 const path = require("path");
 const { MongoClient } = require("mongodb");
 const axiosApi = require("./axiosApi");
+const { dateTime, validRssi, validTime, isValidDevice, isWithinBounds } = require("./deviceUtils");
 
-// Helper: Time to local time zone
-function dateTime() {
-  const today = new Date().toLocaleString("en-US", {
-    timeZone: "America/New_York",
-  });
-  return today;
-}
-
-// Helper method: To get rid of weak rssi devices
-function validRssi(parseRssi) {
-  var rssiValue = parseInt(parseRssi);
-  if (rssiValue !== NaN) {
-    if (rssiValue >= -70 && rssiValue < -1) {
-      return true;
-    }
-  }
-}
-
-// Helper method: remove devices last seen longer than 30 minutes
-function validTime(serverTime, lastSeenTime) {
-  const serverT = new Date(serverTime);
-  const lastSeenT = new Date(lastSeenTime);
-  const timeDifferenceMs = serverT - lastSeenT;
-  return timeDifferenceMs < 30 * 60 * 1000;
-}
-
-// Helper: Validate device data
-function isValidDevice(device) {
-  const uName = device.username.toLowerCase();
-  return (
-    validRssi(device.maxDetectedRssi.rssi) &&
-    validTime(device.statistics.currentServerTime, device.lastSeen) &&
-    !device.guestUser &&
-    !device.ssid.toLowerCase().includes("visitor") &&
-    !device.ssid.toLowerCase().includes("gaming")
-  );
-}
-
-// Helper: Check if coordinates are within bounds
-function isWithinBounds(x, y, bounds) {
-  return (
-    x >= bounds.minX &&
-    x <= bounds.maxX &&
-    y >= bounds.minY &&
-    y <= bounds.maxY
-  );
-}
 
 // Generic floor processing function
 function processFloorData(body, userMap, bounds) {
   for (let i = 0; i < body.length; i++) {
     const device = body[i];
-    const uName = device.username.toLowerCase();
+    const deviceId = device.deviceId;
     
     if (!isValidDevice(device)) continue;
     
     if (isWithinBounds(device.locationCoordinate.x, device.locationCoordinate.y, bounds)) {
-      if (!userMap.has(uName)) {
-        userMap.set(uName, [
+      if (!userMap.has(deviceId)) {
+        userMap.set(deviceId, [
           device.locationCoordinate.x,
           device.locationCoordinate.y,
         ]);
@@ -76,6 +30,7 @@ let uniqUserSecond = new Map();
 let uniqUserThird = new Map();
 
 let uniqKingAll = new Set();
+let rec_uniqRecAll = new Set();
 
 function king_resetALLarray() {
   uniqUserGround = new Map();
@@ -83,10 +38,6 @@ function king_resetALLarray() {
   uniqUserSecond = new Map();
   uniqUserThird = new Map();
   uniqKingAll = new Set();
-}
-
-function rec_resetALLarray() {
-  rec_uniqRecAll = new Set();
 }
 
 async function king_start() {
@@ -156,11 +107,11 @@ async function saveToDatabase() {
 
     const floorDocument = {
       timeStamp: dateTime(),
-      uniqUserTotal: Array.from(uniqKingAll).sort(),
-      uniqUserGround: new Map([...uniqUserGround.entries()].sort()),
-      uniqUserFirst: new Map([...uniqUserFirst.entries()].sort()),
-      uniqUserSecond: new Map([...uniqUserSecond.entries()].sort()),
-      uniqUserThird: new Map([...uniqUserThird.entries()].sort()),
+      uniqUserTotal: Array.from(uniqKingAll),
+      uniqUserGround: new Map([...uniqUserGround.entries()]),
+      uniqUserFirst: new Map([...uniqUserFirst.entries()]),
+      uniqUserSecond: new Map([...uniqUserSecond.entries()]),
+      uniqUserThird: new Map([...uniqUserThird.entries()]),
       patrons: uniqKingAll.size,
       countByFloor: [
         uniqUserGround.size,
@@ -195,14 +146,18 @@ async function saveToDatabase() {
 }
 
 // Helper: Process recreation center data
+function rec_resetALLarray() {
+  rec_uniqRecAll = new Set();
+}
+
 function processRecData(body, bounds) {
   for (let i = 0; i < body.length; i++) {
     const device = body[i];
-    const uName = device.username.toLowerCase();
+    const deviceId = device.deviceId;
     
     if (isValidDevice(device) && 
         isWithinBounds(device.locationCoordinate.x, device.locationCoordinate.y, bounds)) {
-      rec_uniqRecAll.add(uName);
+      rec_uniqRecAll.add(deviceId);
     }
   }
 }

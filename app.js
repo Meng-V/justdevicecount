@@ -9,6 +9,7 @@ const cors = require("cors");
 const indexRouter = require("./routes/index");
 const patronapiRouter = require("./routes/patronapi");
 const recapiRouter = require("./routes/recapi");
+const patronCache = require("./modules/patronCache");
 
 const app = express();
 
@@ -28,6 +29,9 @@ app.use(express.static(path.join(__dirname, "public")));
 app.use("/", indexRouter);
 app.use("/patronapi", patronapiRouter);
 app.use("/recapi", recapiRouter);
+
+// Start the patron cache background updater
+patronCache.startCacheUpdater();
 
 // catch 404 and forward to error handler
 app.use((req, res, next) => {
