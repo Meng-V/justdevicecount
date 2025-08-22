@@ -1,0 +1,78 @@
+#!/usr/bin/env node
+
+// sudo lsof -i:3012 ## see a specific port such as 3012 ##
+// sudo kill PID
+
+/**
+ * Module dependencies.
+ */
+
+const config = require("config");
+const https = require("https");
+const fs = require("fs");
+const app = require("../app");
+const app_core = require("../modules/app_core");
+
+/**
+ * Normalize a port into a number, string, or false.
+ */
+
+function normalizePort(val) {
+  const port = parseInt(val, 10);
+
+  if (Number.isNaN(port)) {
+    // named pipe
+    return val;
+  }
+
+  if (port >= 0) {
+    // port number
+    return port;
+  }
+
+  return false;
+}
+
+/**
+ * Get port from environment and store in Express.
+ */
+
+// ulblwebp11.lib.miamioh.edu = prod
+process.env.HOSTNAME = 'ulblwebp11.lib.miamioh.edu';
+console.log("process.env.HOSTNAME: " + process.env.HOSTNAME);
+
+if (process.env.HOSTNAME === "ulblwebp11.lib.miamioh.edu") {
+  global.onServer = true;
+} else {
+  global.onServer = false;
+}
+console.log(`On Server? : ${global.onServer}`);
+
+const PORT = normalizePort(process.env.PORT || config.get("app.port"));
+
+let server = {};
+
+if (global.onServer) {
+  server = {
+    key: "/etc/pki/tls/certs/ulblwebp11.lib.miamioh.edu-privkey.pem",
+    cert: "/etc/pki/tls/certs/ulblwebp11.lib.miamioh.edu-cert.pem",
+  };
+} else {
+  server = {
+    key: "/Users/qum/Documents/GitHub/devicecount/security/www.localhost.key",
+    cert: "/Users/qum/Documents/GitHub/devicecount/security/www.localhost.pem",
+  };
+}
+
+https
+  .createServer(
+    {
+      key: fs.readFileSync(server.key),
+      cert: fs.readFileSync(server.cert),
+    },
+    app
+  )
+  .listen(PORT, () => {
+    // app_core.start();
+    app_core.restart();
+  });
