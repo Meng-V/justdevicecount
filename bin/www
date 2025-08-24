@@ -39,16 +39,21 @@ function normalizePort(val) {
  * Get port from environment and store in Express.
  */
 
-// ulblwebp11.lib.miamioh.edu = prod
-// For local testing, comment out the line below to use local certificates
-// process.env.HOSTNAME = 'ulblwebp11.lib.miamioh.edu';
+// Server detection logic
+// Production: ulblwebp11.lib.miamioh.edu
+// Local: localhost or undefined hostname
 console.log("process.env.HOSTNAME: " + process.env.HOSTNAME);
 
-if (process.env.HOSTNAME === "ulblwebp11.lib.miamioh.edu") {
-  global.onServer = true;
-} else {
-  global.onServer = false;
-}
+// Detect server environment
+const isProduction = process.env.HOSTNAME === "ulblwebp11.lib.miamioh.edu";
+const isLocalhost = !process.env.HOSTNAME || 
+                   process.env.HOSTNAME === "localhost" || 
+                   process.env.HOSTNAME === "127.0.0.1";
+
+global.onServer = isProduction;
+global.isLocalhost = isLocalhost;
+
+console.log(`Environment: ${isProduction ? 'Production' : (isLocalhost ? 'Localhost' : 'Unknown')}`);
 console.log(`On Server? : ${global.onServer}`);
 
 const PORT = normalizePort(process.env.PORT || config.get("app.port") || 3012);

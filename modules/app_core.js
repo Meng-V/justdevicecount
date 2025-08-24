@@ -117,7 +117,7 @@ async function saveToDatabase() {
           timeZone: "America/New_York"
         });
         const currentHour = new Date(nyTime).getHours();
-        if ((currentHour < 2 || currentHour > 6) && isServer) {
+        if (currentHour < 2 || currentHour > 6) {
           await prisma.deviceData.create({ data: floorDocument });
         }
       }
