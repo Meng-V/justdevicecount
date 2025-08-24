@@ -60,11 +60,12 @@ process.on('SIGINT', () => {
 
 // catch 404 and forward to error handler
 app.use((req, res, next) => {
+  console.log(`[${new Date().toLocaleString('en-US', {timeZone: 'America/New_York'})}] 404 - Route not found: ${req.method} ${req.url}`);
   next(createError(404));
 });
 
 // error handler
-app.use((err, req, res) => {
+app.use((err, req, res, next) => {
   // set locals, only providing error in development
   res.locals.message = err.message;
   res.locals.error = req.app.get("env") === "development" ? err : {};
