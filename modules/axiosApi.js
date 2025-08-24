@@ -48,7 +48,7 @@ async function makeFloorRequest(floorKey, cb) {
   
   if (!floorInfo) {
     const error = new Error(`Invalid floor key: ${floorKey}`);
-    console.log(`Error in makeFloorRequest: ${error.message}`);
+    console.log(`[${new Date().toLocaleString('en-US', {timeZone: 'America/New_York'})}] Error in makeFloorRequest: ${error.message}`);
     return cb(error);
   }
 
@@ -58,11 +58,11 @@ async function makeFloorRequest(floorKey, cb) {
     });
 
     if (!response.error) {
-      console.log(`Device Connected in ${floorInfo.displayName}: ${response.data.length}`);
+      console.log(`[${new Date().toLocaleString('en-US', {timeZone: 'America/New_York'})}] Device Connected in ${floorInfo.displayName}: ${response.data.length}`);
       cb(response.data);
     }
   } catch (error) {
-    console.log(`Error in ${floorKey}Request axiosApi: ${error}`);
+    console.log(`[${new Date().toLocaleString('en-US', {timeZone: 'America/New_York'})}] Error in ${floorKey}Request axiosApi: ${error}`);
     cb(error);
   }
 }

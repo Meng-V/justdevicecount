@@ -1,5 +1,5 @@
-// PatronAPI is now used as the couting source to the Crowd Index.
-// Updated to use cached data instead of direct DB access
+// PatronAPI is now used as the counting source to the Crowd Index.
+// Returns cached King Library data from database in JSON format
 
 const express = require("express");
 const router = express.Router();
@@ -7,24 +7,34 @@ const patronCache = require("../modules/patronCache");
 
 router.get("/", async (req, res) => {
   try {
-    // Get cached data instead of querying database
+    // Get cached data from patron cache (King Library data from DB)
     const cachedData = patronCache.getCachedData();
     
-    // Add cache metadata for debugging/monitoring
+    // Format response for API consumers
     const response = {
-      ...cachedData,
-      cached: true,
-      cacheAgeMinutes: cachedData.cacheAge ? Math.floor(cachedData.cacheAge / (1000 * 60)) : null
+      success: true,
+      data: {
+        patrons: cachedData.patrons,
+        timeMap: cachedData.timeMap,
+        findMax: cachedData.findMax,
+        lastTen: cachedData.lastTen
+      },
+      metadata: {
+        cached: true,
+        cacheAgeMinutes: cachedData.cacheAge ? Math.floor(cachedData.cacheAge / (1000 * 60)) : null,
+        source: "King Library Database",
+        refreshInterval: "15 minutes"
+      }
     };
-    
-    // Remove internal cache metadata before sending to client
-    delete response.lastUpdated;
-    delete response.cacheAge;
     
     res.json(response);
   } catch (err) {
     console.error("Error serving cached patron data:", err);
-    res.status(500).json({ error: "Failed to retrieve patron data" });
+    res.status(500).json({ 
+      success: false,
+      error: "Failed to retrieve patron data",
+      message: err.message 
+    });
   }
 });
 

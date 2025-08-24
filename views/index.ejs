@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 30px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 20px;
+        }
+        .user-info {
+            background: #e9ecef;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .stat-card {
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .stat-card h3 {
+            margin: 0 0 10px 0;
+            font-size: 1.2em;
+        }
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        .floor-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .floor-stat {
+            background: rgba(255,255,255,0.2);
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+        }
+        .recent-data {
+            margin-top: 30px;
+        }
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        .data-table th,
+        .data-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        .data-table th {
+            background-color: #007bff;
+            color: white;
+        }
+        .data-table tr:hover {
+            background-color: #f5f5f5;
+        }
+        .error {
+            background: #dc3545;
+            color: white;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .timestamp {
+            font-size: 0.9em;
+            color: antiquewhite;
+        }
+        .nav-links {
+            text-align: center;
+            margin: 20px 0;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 5px;
+        }
+        .nav-links a {
+            display: inline-block;
+            margin: 0 15px;
+            padding: 8px 16px;
+            background: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+        .nav-links a:hover {
+            background: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><%= title %></h1>
+            <div class="user-info">
+                Welcome, <strong><%= cas_displayName %></strong>
+            </div>
+        </div>
+
+        <div class="nav-links">
+            <a href="/patronapi">Patron API</a>
+            <a href="/recapi">Recreation API</a>
+            <a href="/count_by_floor">Count by Floor API</a>
+        </div>
+
+        <% if (typeof error !== 'undefined') { %>
+            <div class="error">
+                <strong>Error:</strong> <%= error %>
+            </div>
+        <% } %>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3>Current Patrons</h3>
+                <div class="stat-value"><%= currentPatrons %></div>
+                <% if (currentTimestamp) { %>
+                    <div class="timestamp">
+                        Last updated: <%= new Date(currentTimestamp).toLocaleString() %>
+                    </div>
+                <% } %>
+            </div>
+
+            <div class="stat-card">
+                <h3>Peak Patrons</h3>
+                <div class="stat-value"><%= maxPatrons %></div>
+                <% if (maxPatronsTimestamp) { %>
+                    <div class="timestamp">
+                        Recorded: <%= new Date(maxPatronsTimestamp).toLocaleString() %>
+                    </div>
+                <% } %>
+            </div>
+
+            <div class="stat-card">
+                <h3>Count by Floor</h3>
+                <div class="floor-grid">
+                    <div class="floor-stat">
+                        <div>Ground</div>
+                        <div><%= currentCountByFloor[0] || 0 %></div>
+                    </div>
+                    <div class="floor-stat">
+                        <div>First</div>
+                        <div><%= currentCountByFloor[1] || 0 %></div>
+                    </div>
+                    <div class="floor-stat">
+                        <div>Second</div>
+                        <div><%= currentCountByFloor[2] || 0 %></div>
+                    </div>
+                    <div class="floor-stat">
+                        <div>Third</div>
+                        <div><%= currentCountByFloor[3] || 0 %></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="recent-data">
+            <h2>Recent Data (Last 10 Records)</h2>
+            <% if (recentData && recentData.length > 0) { %>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Timestamp</th>
+                            <th>Total Patrons</th>
+                            <th>Ground</th>
+                            <th>First</th>
+                            <th>Second</th>
+                            <th>Third</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% recentData.forEach(function(record) { %>
+                            <tr>
+                                <td><%= new Date(record.timeStamp).toLocaleString() %></td>
+                                <td><strong><%= record.patrons %></strong></td>
+                                <td><%= record.countByFloor ? record.countByFloor[0] || 0 : 0 %></td>
+                                <td><%= record.countByFloor ? record.countByFloor[1] || 0 : 0 %></td>
+                                <td><%= record.countByFloor ? record.countByFloor[2] || 0 : 0 %></td>
+                                <td><%= record.countByFloor ? record.countByFloor[3] || 0 : 0 %></td>
+                            </tr>
+                        <% }); %>
+                    </tbody>
+                </table>
+            <% } else { %>
+                <p>No recent data available.</p>
+            <% } %>
+        </div>
+    </div>
+
+    <script>
+        // Auto-refresh every 5 minutes
+        setTimeout(function() {
+            location.reload();
+        }, 5 * 60 * 1000);
+    </script>
+</body>
+</html>

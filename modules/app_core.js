@@ -1,8 +1,9 @@
 const config = require("config");
-const path = require("path");
-const { MongoClient } = require("mongodb");
+const { PrismaClient } = require('@prisma/client');
 const axiosApi = require("./axiosApi");
 const { dateTime, validRssi, validTime, isValidDevice, isWithinBounds } = require("./deviceUtils");
+
+const prisma = new PrismaClient();
 
 
 // Generic floor processing function
@@ -78,40 +79,18 @@ async function king_start() {
 // Helper: Database connection and save logic
 async function saveToDatabase() {
   const isServer = global.onServer;
-  console.log("global on server? " + isServer);
-  
-  const uri = isServer 
-    ? config.get("database.servr-connection")
-    : config.get("database.mongo-atlas");
-    
-  const clientOptions = {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-    ...(isServer 
-      ? { 
-          sslValidate: true,
-          sslCA: [path.join(__dirname, "..", "certs", "global-bundle.pem")]
-        }
-      : { rejectUnauthorized: false }
-    )
-  };
-
-  const client = new MongoClient(uri, clientOptions);
-  const dbName = config.get("database.name");
+  console.log(`[${dateTime()}] global on server? ${isServer}`);
 
   try {
-    await client.connect();
-    console.log("App Core connected to server");
-    const db = client.db(dbName);
-    const col = db.collection(config.get("database.collection"));
+    console.log(`[${dateTime()}] App Core connected to database`);
 
     const floorDocument = {
       timeStamp: dateTime(),
       uniqUserTotal: Array.from(uniqKingAll),
-      uniqUserGround: new Map([...uniqUserGround.entries()]),
-      uniqUserFirst: new Map([...uniqUserFirst.entries()]),
-      uniqUserSecond: new Map([...uniqUserSecond.entries()]),
-      uniqUserThird: new Map([...uniqUserThird.entries()]),
+      uniqUserGround: Object.fromEntries(uniqUserGround),
+      uniqUserFirst: Object.fromEntries(uniqUserFirst),
+      uniqUserSecond: Object.fromEntries(uniqUserSecond),
+      uniqUserThird: Object.fromEntries(uniqUserThird),
       patrons: uniqKingAll.size,
       countByFloor: [
         uniqUserGround.size,
@@ -122,26 +101,29 @@ async function saveToDatabase() {
     };
 
     // Avoid time entry redundancy caused by Chrome
-    const checkDBTime = await col.find({}).sort({ _id: -1 }).limit(1).toArray();
+    const checkDBTime = await prisma.deviceData.findFirst({
+      orderBy: { timeStamp: 'desc' }
+    });
     
-    if (checkDBTime.length === 0) {
-      await col.insertOne(floorDocument);
+    if (!checkDBTime) {
+      await prisma.deviceData.create({ data: floorDocument });
     } else {
-      const timeDiff = Date.parse(floorDocument.timeStamp) - Date.parse(checkDBTime[0].timeStamp);
-      console.log("time diff: " + timeDiff);
+      const timeDiff = Date.parse(floorDocument.timeStamp) - Date.parse(checkDBTime.timeStamp);
+      console.log(`[${dateTime()}] time diff: ${timeDiff}`);
       
       if (timeDiff > 30000) {
-        const currentDate = new Date();
-        const currentHour = currentDate.getHours();
+        // Get current hour in NY timezone
+        const nyTime = new Date().toLocaleString("en-US", {
+          timeZone: "America/New_York"
+        });
+        const currentHour = new Date(nyTime).getHours();
         if ((currentHour < 2 || currentHour > 6) && isServer) {
-          await col.insertOne(floorDocument);
+          await prisma.deviceData.create({ data: floorDocument });
         }
       }
     }
   } catch (err) {
-    console.log(err.stack);
-  } finally {
-    await client.close();
+    console.log(`[${dateTime()}] Error: ${err.stack}`);
   }
 }
 
@@ -186,32 +168,123 @@ async function rec_start() {
   };
 }
 
-// To restart the "start" function every 15 minutes.
-// And to keep the minutes as much as possible close to 00, 15, 30, 45.
-function restart() {
-  console.log("---------------I'm in the restart function--------------");
-  const d = new Date();
-  let minutes = d.getMinutes();
-  var remainder = minutes % 15;
-  console.log(
-    "--------------- Will restart in: " +
-      (15 - remainder) +
-      " minutes--------------"
-  );
-  if (remainder == 0) {
-    king_start();
-    rec_start();
-    console.log("---------------I'm in start function--------------");
-    setInterval(function () {
-      king_start();
-      rec_start();
-    }, 900000);
-  } else {
-    setTimeout(function () {
-      restart();
-    }, (15 - remainder) * 60000);
+// Service class for managing device data collection
+class DeviceDataService {
+  constructor() {
+    this.isRunning = false;
+    this.intervalId = null;
+  }
+
+  // Start the service with proper Express app lifecycle integration
+  start() {
+    if (this.isRunning) {
+      console.log(`[${dateTime()}] Device data service already running`);
+      return;
+    }
+
+    console.log(`[${dateTime()}] Starting device data collection service...`);
+    this.isRunning = true;
+
+    // Run initial collection
+    this.collectData();
+
+    // Schedule to run every 15 minutes aligned to :00, :15, :30, :45
+    this.scheduleNextRun();
+  }
+
+  // Stop the service gracefully
+  stop() {
+    if (this.intervalId) {
+      clearInterval(this.intervalId);
+      this.intervalId = null;
+    }
+    this.isRunning = false;
+    console.log(`[${dateTime()}] Device data service stopped`);
+  }
+
+  // Schedule next run aligned to 15-minute intervals
+  scheduleNextRun() {
+    // Use NY timezone for scheduling
+    const nyTimeString = new Date().toLocaleString("en-US", {
+      timeZone: "America/New_York"
+    });
+    const now = new Date(nyTimeString);
+    const minutes = now.getMinutes();
+    const remainder = minutes % 15;
+    const msUntilNext = (15 - remainder) * 60 * 1000 - now.getSeconds() * 1000 - now.getMilliseconds();
+
+    setTimeout(() => {
+      this.collectData();
+      // Set regular 15-minute interval after first aligned run
+      this.intervalId = setInterval(() => {
+        this.collectData();
+      }, 15 * 60 * 1000);
+    }, msUntilNext);
+
+    console.log(`Next data collection in ${Math.round(msUntilNext / 1000)} seconds`);
+  }
+
+  // Collect data from both king and recreation center
+  async collectData() {
+    try {
+      console.log("Collecting device data...");
+      await Promise.all([
+        king_start(),        // Saves to database via Prisma
+        rec_start_cached()   // Caches in memory only
+      ]);
+      console.log("Device data collection completed");
+    } catch (error) {
+      console.error("Error during data collection:", error);
+    }
+  }
+
+  // Get current status
+  getStatus() {
+    return {
+      isRunning: this.isRunning,
+      lastCollection: dateTime()
+    };
   }
 }
 
-module.exports.rec_start = rec_start;
-module.exports.restart = restart;
+// Create singleton instance
+const deviceDataService = new DeviceDataService();
+
+// Cache for recreation data (in-memory only, not saved to DB)
+let recDataCache = {
+  timeStamp: null,
+  patrons: 0,
+  lastUpdated: null
+};
+
+// Enhanced rec_start to cache data in memory
+async function rec_start_cached() {
+  const data = await rec_start();
+  recDataCache = {
+    ...data,
+    lastUpdated: dateTime()
+  };
+  return recDataCache;
+}
+
+// Get cached recreation data
+function getRecData() {
+  return recDataCache;
+}
+
+// Legacy function for backward compatibility
+function restart() {
+  deviceDataService.start();
+}
+
+module.exports = {
+  rec_start,
+  rec_start_cached,
+  getRecData,
+  restart,
+  deviceDataService,
+  // Export individual functions for API use
+  king_start,
+  processFloorData,
+  processRecData
+};

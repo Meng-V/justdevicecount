@@ -1,0 +1,27 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model DeviceData {
+  id                String   @id @default(cuid())
+  timeStamp         DateTime @default(now())
+  uniqUserTotal     String[] // Array of device IDs
+  uniqUserGround    Json     // Map of device positions for ground floor
+  uniqUserFirst     Json     // Map of device positions for first floor  
+  uniqUserSecond    Json     // Map of device positions for second floor
+  uniqUserThird     Json     // Map of device positions for third floor
+  patrons           Int      // Total unique patrons count
+  countByFloor      Int[]    // Array of counts [ground, first, second, third]
+  
+  @@map("device_data")
+  @@index([timeStamp])
+  @@index([patrons])
+}

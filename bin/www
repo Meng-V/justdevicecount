@@ -3,6 +3,9 @@
 // sudo lsof -i:3012 ## see a specific port such as 3012 ##
 // sudo kill PID
 
+// Set timezone to New York for all logging
+process.env.TZ = 'America/New_York';
+
 /**
  * Module dependencies.
  */
@@ -11,7 +14,6 @@ const config = require("config");
 const https = require("https");
 const fs = require("fs");
 const app = require("../app");
-const app_core = require("../modules/app_core");
 
 /**
  * Normalize a port into a number, string, or false.
@@ -38,7 +40,8 @@ function normalizePort(val) {
  */
 
 // ulblwebp11.lib.miamioh.edu = prod
-process.env.HOSTNAME = 'ulblwebp11.lib.miamioh.edu';
+// For local testing, comment out the line below to use local certificates
+// process.env.HOSTNAME = 'ulblwebp11.lib.miamioh.edu';
 console.log("process.env.HOSTNAME: " + process.env.HOSTNAME);
 
 if (process.env.HOSTNAME === "ulblwebp11.lib.miamioh.edu") {
@@ -48,7 +51,7 @@ if (process.env.HOSTNAME === "ulblwebp11.lib.miamioh.edu") {
 }
 console.log(`On Server? : ${global.onServer}`);
 
-const PORT = normalizePort(process.env.PORT || config.get("app.port"));
+const PORT = normalizePort(process.env.PORT || config.get("app.port") || 3012);
 
 let server = {};
 
@@ -59,8 +62,8 @@ if (global.onServer) {
   };
 } else {
   server = {
-    key: "/Users/qum/Documents/GitHub/devicecount/security/www.localhost.key",
-    cert: "/Users/qum/Documents/GitHub/devicecount/security/www.localhost.pem",
+    key: "/Users/qum/Documents/GitHub/justdevicecount/security/cert.key",
+    cert: "/Users/qum/Documents/GitHub/justdevicecount/security/cert.pem",
   };
 }
 
@@ -73,6 +76,17 @@ https
     app
   )
   .listen(PORT, () => {
-    // app_core.start();
-    app_core.restart();
+    console.log(`HTTPS Server running on port ${PORT}`);
+    console.log(`Server environment: ${global.onServer ? 'production' : 'development'}`);
+    console.log(`Access URLs:`);
+    if (global.onServer) {
+      console.log(`  Production: https://ulblwebp11.lib.miamioh.edu:${PORT}`);
+    } else {
+      console.log(`  Local: https://localhost:${PORT}`);
+      console.log(`  Network: https://127.0.0.1:${PORT}`);
+    }
+    console.log(`API Endpoints:`);
+    console.log(`  Patron API: https://localhost:${PORT}/patronapi`);
+    console.log(`  Recreation API: https://localhost:${PORT}/recapi`);
+    console.log(`  Floor Count API: https://localhost:${PORT}/count_by_floor`);
   });

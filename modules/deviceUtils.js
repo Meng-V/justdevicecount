@@ -11,11 +11,12 @@ function dateTime() {
 // Helper method: To get rid of weak rssi devices
 function validRssi(parseRssi) {
   var rssiValue = parseInt(parseRssi);
-  if (rssiValue !== NaN) {
+  if (!isNaN(rssiValue)) {
     if (rssiValue >= -70 && rssiValue < -1) {
       return true;
     }
   }
+  return false;
 }
 
 // Helper method: remove devices last seen longer than 30 minutes

@@ -1,20 +1,39 @@
-// RecAPI is now used as the couting source to the Rec Crowd Index.
-// Staff accounts are reduced.
+// RecAPI is now used as the counting source to the Recreation Center Crowd Index.
+// Returns cached recreation data (in-memory only, not from database)
 
 const express = require("express");
 const router = express.Router();
-const coreModule = require("../modules/app_core");
+const { getRecData } = require("../modules/app_core");
 
 router.get("/", async (req, res) => {
     try {
-        const data = await coreModule.rec_start();
-        res.json({
-            timeStamp: data.timeStamp,
-            patronCount: data.patrons,
-        });
+        // Get cached recreation data (not from database)
+        const data = getRecData();
+        
+        // Format response for API consumers
+        const response = {
+            success: true,
+            data: {
+                timeStamp: data.timeStamp,
+                patrons: data.patrons
+            },
+            metadata: {
+                cached: true,
+                lastUpdated: data.lastUpdated,
+                source: "Recreation Center Memory Cache",
+                refreshInterval: "15 minutes",
+                note: "This data is not stored in database"
+            }
+        };
+        
+        res.json(response);
     } catch (error) {
-        console.error("Error fetching data in recapi.js file: ", error);
-        res.status(500).json({ error: "Internal Server Error. Check with Rec" });
+        console.error("Error fetching recreation data:", error);
+        res.status(500).json({ 
+            success: false,
+            error: "Failed to retrieve recreation data",
+            message: error.message 
+        });
     }
 });
 
