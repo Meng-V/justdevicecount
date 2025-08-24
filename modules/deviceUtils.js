@@ -1,36 +1,9 @@
 // Device utility functions for validation and processing
 
-// Helper: Time to local time zone - returns NY time as ISO format for Prisma
+// Helper: Returns current UTC timestamp for database storage
 function dateTime() {
-  // Get current time in NY timezone
-  const now = new Date();
-  const nyTimeString = now.toLocaleString("en-US", {
-    timeZone: "America/New_York",
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-    hour12: false
-  });
-  
-  // Parse the NY time string and create a proper Date object
-  const [datePart, timePart] = nyTimeString.split(', ');
-  const [month, day, year] = datePart.split('/');
-  const [hour, minute, second] = timePart.split(':');
-  
-  // Create Date object representing NY time but store as if it were UTC
-  const nyAsUtc = new Date(Date.UTC(
-    parseInt(year),
-    parseInt(month) - 1,
-    parseInt(day),
-    parseInt(hour),
-    parseInt(minute),
-    parseInt(second)
-  ));
-  
-  return nyAsUtc.toISOString();
+  // Return current UTC time as Date object for Prisma
+  return new Date();
 }
 
 // Helper method: To get rid of weak rssi devices
