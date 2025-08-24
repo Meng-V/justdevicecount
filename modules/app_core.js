@@ -202,26 +202,66 @@ class DeviceDataService {
     console.log(`[${dateTime()}] Device data service stopped`);
   }
 
-  // Schedule next run aligned to 15-minute intervals
+  // Schedule next run aligned to 15-minute intervals (:00, :15, :30, :45)
   scheduleNextRun() {
+    // Clear any existing interval
+    if (this.intervalId) {
+      clearInterval(this.intervalId);
+      this.intervalId = null;
+    }
+
     // Use NY timezone for scheduling
     const nyTimeString = new Date().toLocaleString("en-US", {
       timeZone: "America/New_York"
     });
     const now = new Date(nyTimeString);
-    const minutes = now.getMinutes();
-    const remainder = minutes % 15;
-    const msUntilNext = (15 - remainder) * 60 * 1000 - now.getSeconds() * 1000 - now.getMilliseconds();
+    const currentMinutes = now.getMinutes();
+    
+    // Find next valid minute mark (:00, :15, :30, :45)
+    const validMinutes = [0, 15, 30, 45];
+    let nextValidMinute = validMinutes.find(minute => minute > currentMinutes);
+    
+    // If no valid minute found in current hour, use :00 of next hour
+    if (!nextValidMinute) {
+      nextValidMinute = 0;
+    }
+    
+    // Calculate milliseconds until next valid time
+    let msUntilNext;
+    if (nextValidMinute === 0 && currentMinutes >= 45) {
+      // Next hour at :00
+      msUntilNext = (60 - currentMinutes) * 60 * 1000 - now.getSeconds() * 1000 - now.getMilliseconds();
+    } else {
+      // Same hour at next valid minute
+      msUntilNext = (nextValidMinute - currentMinutes) * 60 * 1000 - now.getSeconds() * 1000 - now.getMilliseconds();
+    }
+
+    console.log(`Next data collection in ${Math.round(msUntilNext / 1000)} seconds (at :${nextValidMinute.toString().padStart(2, '0')})`);
 
     setTimeout(() => {
-      this.collectData();
-      // Set regular 15-minute interval after first aligned run
-      this.intervalId = setInterval(() => {
-        this.collectData();
-      }, 15 * 60 * 1000);
+      this.collectDataWithValidation();
+      // Schedule the next run recursively to maintain alignment
+      this.scheduleNextRun();
     }, msUntilNext);
+  }
 
-    console.log(`Next data collection in ${Math.round(msUntilNext / 1000)} seconds`);
+  // Enhanced collectData with minute validation
+  async collectDataWithValidation() {
+    // Double-check that we're at a valid minute mark in NY timezone
+    const nyTimeString = new Date().toLocaleString("en-US", {
+      timeZone: "America/New_York"
+    });
+    const now = new Date(nyTimeString);
+    const currentMinute = now.getMinutes();
+    
+    // Only proceed if we're at :00, :15, :30, or :45
+    if (![0, 15, 30, 45].includes(currentMinute)) {
+      console.log(`[${dateTime()}] Skipping API call - current minute is :${currentMinute.toString().padStart(2, '0')}, not at valid interval`);
+      return;
+    }
+
+    console.log(`[${dateTime()}] Collecting device data at valid minute mark :${currentMinute.toString().padStart(2, '0')}`);
+    await this.collectData();
   }
 
   // Collect data from both king and recreation center
