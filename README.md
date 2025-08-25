@@ -86,11 +86,6 @@ The application uses environment-based configuration with gitignored sensitive f
 
 This project is designed to be easily adaptable to different institutional environments. Feel free to submit issues or pull requests for improvements.
 
-## 📄 License
-
-[Add your license information here]
-- **Environment isolation**: Separate dev/prod configurations
-
 ## 📁 Project Structure
 ```
 justdevicecount/
