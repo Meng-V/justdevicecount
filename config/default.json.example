@@ -1,0 +1,17 @@
+{
+  "address": {
+    "host": "https://your-cmx-server.institution.edu/",
+    "ground-add": "api/location/v3/clients?floorId=YOUR_GROUND_FLOOR_ID",
+    "first-add": "api/location/v3/clients?floorId=YOUR_FIRST_FLOOR_ID",
+    "second-add": "api/location/v3/clients?floorId=YOUR_SECOND_FLOOR_ID",
+    "third-add": "api/location/v3/clients?floorId=YOUR_THIRD_FLOOR_ID",
+    "rec-first": "api/location/v3/clients?floorId=YOUR_REC_FIRST_FLOOR_ID",
+    "rec-ground": "api/location/v3/clients?floorId=YOUR_REC_GROUND_FLOOR_ID",
+    "king-all": "api/location/v3/clients?mapHierarchy=Your%20Library%20Name",
+    "all": "api/location/v1/history/clients"
+  },
+  "app": {
+    "port": 3012,
+    "auth": "Basic YOUR_BASE64_ENCODED_CREDENTIALS_HERE"
+  }
+}

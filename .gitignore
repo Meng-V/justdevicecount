@@ -132,12 +132,53 @@ dist
 .yarn/cache
 .yarn/unplugged
 .yarn/build-state.yml
-.yarn/install-state.gz
-.pnp.*
-
-
-certs/
-config/
-security/
+.yarn/inode_modules/
+# Custom application files - Security Critical
 .env
-test*.js
+.env.production
+.env.local
+.DS_Store
+
+# SSL Certificates and Keys - Never commit these
+security/*.key
+security/*.pem
+security/*.crt
+security/*.p12
+security/*.pfx
+
+# SSH Keys and Authentication - Security Risk
+security/id_rsa*
+security/*.pub
+security/authorized_keys
+
+# Configuration Files with Secrets
+config/production.json
+config/local.json
+config/*.local.json
+
+# Certificate Signing Requests (may contain sensitive info)
+security/req.cnf
+
+# PM2 Runtime Files
+ecosystem.config.js.local
+.pm2/
+
+# Database Files (if using local SQLite)
+*.db
+*.sqlite
+*.sqlite3
+
+# Backup Files (may contain sensitive data)
+*.backup
+*.bak
+*.sql.gz
+*.dump
+
+# IDE and Editor Files
+.vscode/settings.json
+.idea/
+*.swp
+*.swo
+*~
+*.pem
+certs/

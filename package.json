@@ -33,7 +33,7 @@
     "pm2:flush": "pm2 flush justdevicecount",
     "test": "node test_comprehensive.js"
   },
-  "author": "Meng-V",
+  "author": "Your Institution",
   "license": "ISC",
   "repository": {
     "type": "git",

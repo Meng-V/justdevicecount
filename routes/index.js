@@ -5,9 +5,9 @@ const router = express.Router();
 const prisma = new PrismaClient();
 
 router.get("/", async (req, res) => {
-    // LOCAL-TESTING: When developing in local, command the following line.
-    var casUid = "qum";
-    var cas_displayName = "Meng Qu the developer";
+    // LOCAL-TESTING: When developing in local, use test credentials
+    var casUid = process.env.TEST_USER_ID || "testuser";
+    var cas_displayName = process.env.TEST_USER_NAME || "Test Developer";
 
     try {
         // Fetch latest device data from database

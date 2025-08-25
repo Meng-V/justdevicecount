@@ -1,260 +1,235 @@
 # JustDeviceCount
 
-A real-time device counting and analytics system for King Library and Recreation Center using CMX API integration. Built with Node.js, Express, and PM2 for production deployment.
+A real-time device counting and analytics system for institutional libraries and recreation centers using Cisco CMX API integration.
 
-## 🏗️ Architecture Overview
+## 📊 What It Does
 
-**JustDeviceCount** is a backend service that collects, processes, and serves device count data from Cisco CMX APIs. The system provides real-time patron counting with floor-level granularity and historical analytics.
+JustDeviceCount automatically tracks patron counts across multiple building floors by integrating with your existing Cisco CMX WiFi infrastructure. It provides real-time and historical analytics through RESTful APIs and a web dashboard.
 
 ### Key Features
-- **Real-time Data Collection**: Automated 15-minute intervals aligned to NY timezone
-- **Multi-location Support**: King Library (4 floors) + Recreation Center (2 floors)
-- **Intelligent Caching**: Memory-based caching to minimize database load
-- **RESTful APIs**: JSON endpoints for external integrations
-- **Production Ready**: PM2 process management with monitoring
-- **Comprehensive Testing**: Automated test suite for all components
+- **Real-time Data Collection**: Automated 15-minute intervals with timezone handling
+- **Multi-building Support**: Configurable for multiple buildings and floors
+- **Dual Storage Strategy**: Database persistence + memory caching for optimal performance
+- **RESTful APIs**: JSON endpoints for dashboards and integrations
+- **Production Ready**: PM2 process management with comprehensive monitoring
+- **Secure HTTPS**: SSL/TLS encryption with certificate management
 
-## 🚀 Quick Start (Local Development)
+## 🏗️ Architecture
+
+**Two-Building Implementation:**
+
+- **King Library** (4 floors): Full database storage + 15-minute cache layer
+- **Recreation Center** (2 floors): Memory-only storage for lightweight operation
+
+## 🚀 Technology Stack
+
+- **Backend**: Node.js, Express.js
+- **Database**: PostgreSQL with Prisma ORM
+- **Process Management**: PM2
+- **Security**: HTTPS/SSL, environment-based configuration
+- **Integration**: Cisco CMX API
+
+## 🚀 Getting Started
 
 ### Prerequisites
-```bash
-# Required
-Node.js >= 18.x
-npm >= 8.x
-PM2 (auto-installed)
+- Node.js >= 18.x
+- PostgreSQL database
+- Cisco CMX server with API access
+- SSL certificates
 
-# Database
-PostgreSQL or compatible (via Prisma)
-```
-
-### Installation & Setup
+### Quick Start
 ```bash
-# Clone repository
+# Clone and install
 git clone https://github.com/Meng-V/justdevicecount.git
 cd justdevicecount
-
-# Install dependencies
 npm install
 
-# Environment setup
+# Configure (see DEVELOPER_SETUP.md for details)
 cp .env.example .env
-# Configure DATABASE_URL and other environment variables
+# Edit .env and config/default.json with your values
 
-# Database setup
+# Setup database
 npx prisma generate
-npx prisma migrate dev
+npx prisma migrate dev --name init
 
-# SSL certificates (for HTTPS)
-# Place cert.pem and cert.key in security/ directory
-```
-
-### Local Development Server
-
-#### Option 1: Standard Node.js (Recommended for debugging)
-```bash
+# Start application
 npm start
-# Server runs on https://localhost:3012
 ```
 
-#### Option 2: PM2 Development Mode (Recommended for testing)
-```bash
-npm run dev
-# Runs with file watching and auto-restart
-```
-
-#### Option 3: Full PM2 Production Mode
-```bash
-npm run pm2:start
-# or
-bash start.sh start
-```
-
-### Verify Installation
-```bash
-# Run comprehensive tests
-npm test
-
-# Check server health
-curl -k https://localhost:3012/
-
-# Test API endpoints
-curl -k https://localhost:3012/patronapi
-curl -k https://localhost:3012/recapi
-curl -k https://localhost:3012/count_by_floor
-```
+**📖 For complete setup instructions, see [DEVELOPER_SETUP.md](DEVELOPER_SETUP.md)**
 
 ## 📊 API Endpoints
 
-### Core APIs
-| Endpoint | Method | Description | Cache |
-|----------|--------|-------------|-------|
-| `/` | GET | Dashboard with real-time data | Live |
-| `/patronapi` | GET | King Library patron counts | 15min |
-| `/recapi` | GET | Recreation Center counts | Memory |
-| `/count_by_floor` | GET | Historical floor-wise data | Live |
+### King Library Data
+`GET /patronapi` - Returns current patron count with historical data and analytics
 
-### API Response Format
-```json
-{
-  "success": true,
-  "data": {
-    "patrons": 45,
-    "timeMap": {...},
-    "findMax": {...},
-    "lastTen": [...]
-  },
-  "metadata": {
-    "cached": true,
-    "cacheAgeMinutes": 3,
-    "source": "King Library Database",
-    "refreshInterval": "15 minutes"
-  }
-}
+### Recreation Center Data  
+`GET /recapi` - Returns current patron count (memory-only, no historical data)
+
+### Floor Breakdown
+`GET /count_by_floor` - Returns patron counts by floor for both buildings
+
+### Dashboard
+`GET /` - Web dashboard showing real-time counts and analytics
+
+## 🔒 Security
+
+The application uses environment-based configuration with gitignored sensitive files:
+- Environment variables (`.env*`)
+- Production configurations (`config/production.json`)
+- SSL certificates and keys (`security/` directory)
+- Database credentials and connection strings
+
+**All sensitive files are automatically excluded from version control.**
+
+## 🤝 Contributing
+
+This project is designed to be easily adaptable to different institutional environments. Feel free to submit issues or pull requests for improvements.
+
+## 📄 License
+
+[Add your license information here]
+- **Environment isolation**: Separate dev/prod configurations
+
+## 📁 Project Structure
+```
+justdevicecount/
+├── bin/www                 # HTTPS server entry point
+├── app.js                  # Express application setup
+├── ecosystem.config.js     # PM2 configuration
+├── start.sh               # Deployment convenience script
+├── package.json           # Dependencies and scripts
+├── .env                   # Environment variables (create this)
+├── modules/
+│   ├── app_core.js        # Data collection service
+│   ├── patronCache.js     # Memory caching system
+│   ├── axiosApi.js        # CMX API client
+│   └── deviceUtils.js     # Utility functions
+├── routes/
+│   ├── index.js           # Dashboard route (/)
+│   ├── patronapi.js       # King Library API (/patronapi)
+│   ├── recapi.js          # Recreation Center API (/recapi)
+│   └── count_by_floor.js  # Historical data API (/count_by_floor)
+├── config/
+│   └── default.json       # CMX API configuration (update this)
+├── security/              # SSL certificates (create this)
+│   ├── cert.pem          # SSL certificate
+│   └── cert.key          # SSL private key
+├── prisma/
+│   └── schema.prisma     # Database schema
+├── logs/                 # PM2 log files (auto-created)
+├── views/
+│   └── index.ejs         # Dashboard HTML template
+└── test_comprehensive.js # Complete test suite
 ```
 
-## 🏛️ System Architecture
+## 🔍 Troubleshooting Guide
 
-### Data Flow
-```
-CMX APIs → Device Processing → Database Storage → Cache Layer → API Endpoints
-    ↓              ↓               ↓              ↓           ↓
-Floor APIs    Validation     Prisma ORM    PatronCache   Express Routes
-```
+### Common Issues & Solutions
 
-### Core Components
-
-#### **Data Collection (`modules/app_core.js`)**
-- **DeviceDataService**: Manages 15-minute collection cycles
-- **Floor Processing**: Validates and processes device data per floor
-- **Database Integration**: Prisma ORM for PostgreSQL operations
-
-#### **Caching System (`modules/patronCache.js`)**
-- **PatronCache**: Singleton cache service
-- **Background Updates**: Automatic 15-minute refresh cycles
-- **Memory Optimization**: Reduces database load by 95%
-
-#### **API Layer (`routes/`)**
-- **Express Routes**: RESTful endpoint implementations
-- **Error Handling**: Comprehensive error responses
-- **CORS Support**: Cross-origin request handling
-
-#### **Utilities (`modules/deviceUtils.js`)**
-- **Timezone Handling**: Consistent NY timezone operations
-- **Device Validation**: RSSI, time, and SSID filtering
-- **Coordinate Bounds**: Floor-level device positioning
-
-## 🔧 Configuration
-
-### Environment Variables
+#### 1. "EADDRINUSE: Port 3012 already in use"
 ```bash
-# Database
-DATABASE_URL="postgresql://user:pass@host:port/db"
-
-# Application
-NODE_ENV="development"
-PORT=3012
-TZ="America/New_York"
-
-# SSL (Production)
-HTTPS_CERT_PATH="./security/cert.pem"
-HTTPS_KEY_PATH="./security/cert.key"
+# Find process using port
+lsof -i :3012
+# Kill the process
+kill -9 <PID>
+# Or use different port in .env
+PORT=3013
 ```
 
-### CMX API Configuration (`config/default.json`)
-```json
-{
-  "address": {
-    "host": "https://your-cmx-server/",
-    "ground-add": "api/location/v3/clients?floorId=...",
-    "first-add": "api/location/v3/clients?floorId=..."
-  },
-  "app": {
-    "port": 3012,
-    "auth": "Basic <base64-encoded-credentials>"
-  }
-}
-```
-
-## 🚀 Production Deployment
-
-### PM2 Process Management
+#### 2. "SSL Certificate Error"
 ```bash
-# Production start
-npm run pm2:start:prod
-
-# Monitor processes
-npm run pm2:monit
-
-# View logs
-npm run pm2:logs
-
-# Graceful reload
-npm run pm2:reload
-
-# Stop services
-npm run pm2:stop
+# Generate new self-signed certificates
+openssl req -x509 -newkey rsa:4096 -keyout security/cert.key -out security/cert.pem -days 365 -nodes
+# Or check certificate validity
+openssl x509 -in security/cert.pem -text -noout
 ```
 
-### PM2 Ecosystem Features
-- **Memory Limits**: 500MB restart threshold
-- **File Watching**: Development mode only
-- **Log Management**: Timestamped logs with rotation
-- **Health Monitoring**: Automatic restart on failures
-- **Environment Separation**: Dev/prod configurations
-
-## 🧪 Testing & Quality Assurance
-
-### Test Suite (`test_comprehensive.js`)
+#### 3. "Database Connection Failed"
 ```bash
+# Test database connection
+node -e "require('@prisma/client').PrismaClient().\$connect().then(() => console.log('OK')).catch(console.error)"
+# Check DATABASE_URL in .env
+# Ensure PostgreSQL is running
+```
+
+#### 4. "CMX API Authentication Failed"
+```bash
+# Test CMX credentials
+curl -H "Authorization: Basic YOUR_BASE64_CREDENTIALS" "https://your-cmx-server.edu/api/location/v3/clients"
+# Regenerate base64 credentials
+echo -n "username:password" | base64
+```
+
+#### 5. "PM2 Process Not Starting"
+```bash
+# Reset PM2
+pm2 kill
+pm2 start ecosystem.config.js
+# Check PM2 logs
+pm2 logs justdevicecount --lines 50
+```
+
+### Debug Commands
+```bash
+# Enable debug logging
+DEBUG=* npm start
+
+# Check configuration
+node -e "console.log(require('config'))"
+
+# Test individual modules
+node -e "require('./modules/deviceUtils').dateTime()"
+
+# Monitor system resources
+top -p $(pgrep -f justdevicecount)
+```
+
+## 🤝 Contributing & Customization
+
+### For Peer Institutions
+1. **Fork the repository** for your institution
+2. **Update configuration** files with your CMX details
+3. **Modify floor boundaries** in `deviceUtils.js`
+4. **Customize API endpoints** as needed
+5. **Add your institution's branding** to dashboard
+
+### Development Workflow
+```bash
+# 1. Create feature branch
+git checkout -b feature/your-enhancement
+
+# 2. Make changes and test
 npm test
+
+# 3. Update documentation
+# Edit README.md if adding new features
+
+# 4. Commit and push
+git commit -m "Add: your enhancement description"
+git push origin feature/your-enhancement
 ```
 
-**Test Coverage:**
-- ✅ Server connectivity and HTTPS
-- ✅ Database operations and Prisma
-- ✅ API endpoint responses
-- ✅ CMX API authentication
-- ✅ Device validation logic
-- ✅ Cache performance
-- ✅ PM2 process health
-- ✅ Memory usage monitoring
+### Code Style Guidelines
+- Follow existing ESLint configuration
+- Use NY timezone for all timestamps
+- Add comprehensive error handling
+- Include JSDoc comments for new functions
+- Update tests for new features
 
-### Code Quality
-- **ESLint**: Code style and error checking
-- **Security**: No vulnerabilities (npm audit clean)
-- **Performance**: Optimized database queries
-- **Logging**: Comprehensive NY timezone logging
-
-## 📈 Performance & Monitoring
-
-### Metrics
-- **Database Queries**: Reduced from per-request to 4x/hour
-- **Response Time**: <50ms for cached endpoints
-- **Memory Usage**: ~100MB baseline, 500MB restart limit
-- **Uptime**: PM2 automatic restart on failures
-
-### Monitoring Commands
+### Adding New Features
 ```bash
-# Real-time monitoring
-pm2 monit
+# Add new API endpoint:
+# 1. Create route file in routes/
+# 2. Add route to app.js
+# 3. Add tests to test_comprehensive.js
+# 4. Update this README
 
-# Process status
-pm2 status
-
-# Log analysis
-pm2 logs --lines 100
-
-# Memory usage
-pm2 show justdevicecount
+# Modify data collection:
+# 1. Update modules/app_core.js
+# 2. Test with shorter intervals first
+# 3. Update database schema if needed
 ```
-
-## 🔒 Security Considerations
-
-- **HTTPS Only**: SSL/TLS encryption required
-- **API Authentication**: Basic auth for CMX APIs
-- **Input Validation**: Device data sanitization
-- **Error Handling**: No sensitive data in error responses
-- **Environment Isolation**: Separate dev/prod configurations
 
 ## 📁 Project Structure
 ```
@@ -280,54 +255,81 @@ justdevicecount/
 └── test_comprehensive.js  # Test suite
 ```
 
-## 🤝 Contributing
 
-### Development Workflow
-1. **Setup**: Follow local development setup
-2. **Testing**: Run `npm test` before commits
-3. **Code Style**: Follow ESLint configuration
-4. **Logging**: Use NY timezone for all timestamps
-5. **Documentation**: Update README for new features
+## 📞 Support & Resources
 
-### Common Tasks
+### Getting Help
+1. **Check the logs first**: `pm2 logs justdevicecount`
+2. **Run the test suite**: `npm test`
+3. **Review this README** for configuration steps
+4. **Check GitHub Issues** for similar problems
+
+### Useful Resources
+- **Cisco CMX Documentation**: [CMX API Guide](https://developer.cisco.com/docs/cmx/)
+- **Prisma Documentation**: [Prisma.io](https://www.prisma.io/docs/)
+- **PM2 Documentation**: [PM2.io](https://pm2.keymetrics.io/docs/)
+- **Node.js Best Practices**: [Node.js Guide](https://nodejs.org/en/docs/)
+
+### Performance Monitoring
 ```bash
-# Add new API endpoint
-# 1. Create route in routes/
-# 2. Add to app.js
-# 3. Add tests to test_comprehensive.js
-# 4. Update README
+# Real-time process monitoring
+pm2 monit
 
-# Modify data collection
-# 1. Update modules/app_core.js
-# 2. Test with 30-second intervals first
-# 3. Revert to 15-minute for production
-```
+# System resource usage
+htop
 
-## 📞 Support & Troubleshooting
-
-### Common Issues
-- **SSL Certificate**: Ensure cert.pem and cert.key are valid
-- **Database Connection**: Verify DATABASE_URL and network access
-- **PM2 Processes**: Use `pm2 delete all` to clean duplicate processes
-- **Port Conflicts**: Check if port 3012 is available
-
-### Debug Commands
-```bash
-# Check server logs
-tail -f logs/combined.log
-
-# Test database connection
+# Database performance
 npx prisma studio
 
-# Validate configuration
-node -e "console.log(require('config'))"
-
-# Check PM2 status
-pm2 list
+# API response times
+time curl -k https://localhost:3012/patronapi
 ```
+
+### Maintenance Tasks
+- **Weekly**: Check logs for errors, verify data collection
+- **Monthly**: Update dependencies, rotate SSL certificates
+- **Quarterly**: Review CMX credentials, optimize database
+- **Annually**: Update Node.js version, security audit
+
+---
+
+## 📋 Quick Reference
+
+### Essential Commands
+```bash
+# Start application
+npm start                    # Development
+npm run pm2:start:prod      # Production
+
+# Monitor & Debug
+pm2 logs justdevicecount    # View logs
+pm2 monit                   # Real-time monitoring
+npm test                     # Run tests
+
+# Database
+npx prisma studio           # Database browser
+npx prisma migrate dev      # Apply migrations
+
+# SSL Certificates
+openssl req -x509 -newkey rsa:4096 -keyout security/cert.key -out security/cert.pem -days 365 -nodes
+```
+
+### Key Files to Configure
+1. `.env` or `.env.production` - Database URL and environment variables
+2. `config/default.json` - CMX server template (for sharing)
+3. `config/production.json` - Actual CMX server and Floor IDs (gitignored)
+4. `security/cert.pem` & `security/cert.key` - SSL certificates
+5. Environment variables for production hostname and certificate paths
+
+### API Endpoints
+- `https://localhost:3012/` - Dashboard
+- `https://localhost:3012/patronapi` - Library patron counts
+- `https://localhost:3012/recapi` - Recreation center counts
+- `https://localhost:3012/count_by_floor` - Historical floor data
 
 ---
 
 **Author**: Meng-V  
 **License**: ISC  
-**Repository**: [GitHub](https://github.com/Meng-V/justdevicecount)
+**Repository**: [GitHub](https://github.com/Meng-V/justdevicecount)  
+**For Support**: Check GitHub Issues or run `npm test` for diagnostics

@@ -40,15 +40,18 @@ function normalizePort(val) {
  */
 
 // Server detection logic
-// Production: ulblwebp11.lib.miamioh.edu
-// Local: localhost or undefined hostname
+// Use environment variables to determine server type
 console.log("process.env.HOSTNAME: " + process.env.HOSTNAME);
+console.log("process.env.NODE_ENV: " + process.env.NODE_ENV);
 
-// Detect server environment
-const isProduction = process.env.HOSTNAME === "ulblwebp11.lib.miamioh.edu";
+// Detect server environment based on NODE_ENV and hostname
+const productionHostname = process.env.PRODUCTION_HOSTNAME || "your-production-server.edu";
+const isProduction = process.env.NODE_ENV === "production" || 
+                    process.env.HOSTNAME === productionHostname;
 const isLocalhost = !process.env.HOSTNAME || 
                    process.env.HOSTNAME === "localhost" || 
-                   process.env.HOSTNAME === "127.0.0.1";
+                   process.env.HOSTNAME === "127.0.0.1" ||
+                   process.env.NODE_ENV === "development";
 
 global.onServer = isProduction;
 global.isLocalhost = isLocalhost;
@@ -58,17 +61,26 @@ console.log(`On Server? : ${global.onServer}`);
 
 const PORT = normalizePort(process.env.PORT || config.get("app.port") || 3012);
 
+// SSL certificate configuration using environment variables
+const defaultCertPath = process.env.HTTPS_CERT_PATH || "./security/cert.pem";
+const defaultKeyPath = process.env.HTTPS_KEY_PATH || "./security/cert.key";
+
 let server = {};
 
 if (global.onServer) {
+  // Production certificate paths from environment variables
+  const prodCertPath = process.env.PROD_CERT_PATH || `/etc/pki/tls/certs/${productionHostname}-cert.pem`;
+  const prodKeyPath = process.env.PROD_KEY_PATH || `/etc/pki/tls/certs/${productionHostname}-privkey.pem`;
+  
   server = {
-    key: "/etc/pki/tls/certs/ulblwebp11.lib.miamioh.edu-privkey.pem",
-    cert: "/etc/pki/tls/certs/ulblwebp11.lib.miamioh.edu-cert.pem",
+    key: prodKeyPath,
+    cert: prodCertPath,
   };
 } else {
+  // Development certificate paths
   server = {
-    key: "/Users/qum/Documents/GitHub/justdevicecount/security/cert.key",
-    cert: "/Users/qum/Documents/GitHub/justdevicecount/security/cert.pem",
+    key: defaultKeyPath,
+    cert: defaultCertPath,
   };
 }
 
@@ -85,13 +97,14 @@ https
     console.log(`Server environment: ${global.onServer ? 'production' : 'development'}`);
     console.log(`Access URLs:`);
     if (global.onServer) {
-      console.log(`  Production: https://ulblwebp11.lib.miamioh.edu:${PORT}`);
+      console.log(`  Production: https://${productionHostname}:${PORT}`);
     } else {
       console.log(`  Local: https://localhost:${PORT}`);
       console.log(`  Network: https://127.0.0.1:${PORT}`);
     }
     console.log(`API Endpoints:`);
-    console.log(`  Patron API: https://localhost:${PORT}/patronapi`);
-    console.log(`  Recreation API: https://localhost:${PORT}/recapi`);
-    console.log(`  Floor Count API: https://localhost:${PORT}/count_by_floor`);
+    const baseUrl = global.onServer ? `https://${productionHostname}:${PORT}` : `https://localhost:${PORT}`;
+    console.log(`  Patron API: ${baseUrl}/patronapi`);
+    console.log(`  Recreation API: ${baseUrl}/recapi`);
+    console.log(`  Floor Count API: ${baseUrl}/count_by_floor`);
   });
