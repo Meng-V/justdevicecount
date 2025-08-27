@@ -13,6 +13,7 @@ JustDeviceCount automatically tracks patron counts across multiple building floo
 - **RESTful APIs**: JSON endpoints for dashboards and integrations
 - **Production Ready**: PM2 process management with comprehensive monitoring
 - **Secure HTTPS**: SSL/TLS encryption with certificate management
+- **Build System**: Webpack-based dist folder generation for production deployment
 
 ## 🏗️ Architecture
 
@@ -25,46 +26,24 @@ JustDeviceCount automatically tracks patron counts across multiple building floo
 
 - **Backend**: Node.js, Express.js
 - **Database**: PostgreSQL with Prisma ORM
+- **Build System**: Webpack, Babel
 - **Process Management**: PM2
 - **Security**: HTTPS/SSL, environment-based configuration
 - **Integration**: Cisco CMX API
 
-## 🚀 Getting Started
+## 🚀 Quick Start
 
-### Prerequisites
-- Node.js >= 18.x
-- PostgreSQL database
-- Cisco CMX server with API access
-- SSL certificates
+```bash
+# Clone and install
+git clone https://github.com/Meng-V/justdevicecount.git
+cd justdevicecount
+npm install
 
-### Quick Start
+# Start development server
+npm start
+```
 
-1. **Clone and Setup**
-   ```bash
-   git clone https://github.com/Meng-V/justdevicecount.git
-   cd justdevicecount
-   npm install
-   ```
-
-2. **Build for Production (Optional)**
-   ```bash
-   # Create production-ready dist folder
-   npm run build
-   
-   # Start from dist folder
-   ./start-dist.sh
-   ```
-
-3. **Database Setup**
-   ```bash
-   # Initialize database
-   npx prisma migrate dev --name init
-   
-   # Start application
-   npm start
-   ```
-
-**📖 For complete setup instructions, see [DEVELOPER_SETUP.md](DEVELOPER_SETUP.md)**
+**📖 For complete setup, build, and deployment instructions, see [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md)**
 
 ## 📊 API Endpoints
 
@@ -126,69 +105,9 @@ justdevicecount/
 └── test_comprehensive.js # Complete test suite
 ```
 
-## 🔍 Troubleshooting Guide
+## 🤝 Contributing
 
-### Common Issues & Solutions
-
-#### 1. "EADDRINUSE: Port 3012 already in use"
-```bash
-# Find process using port
-lsof -i :3012
-# Kill the process
-kill -9 <PID>
-# Or use different port in .env
-PORT=3013
-```
-
-#### 2. "SSL Certificate Error"
-```bash
-# Generate new self-signed certificates
-openssl req -x509 -newkey rsa:4096 -keyout security/cert.key -out security/cert.pem -days 365 -nodes
-# Or check certificate validity
-openssl x509 -in security/cert.pem -text -noout
-```
-
-#### 3. "Database Connection Failed"
-```bash
-# Test database connection
-node -e "require('@prisma/client').PrismaClient().\$connect().then(() => console.log('OK')).catch(console.error)"
-# Check DATABASE_URL in .env
-# Ensure PostgreSQL is running
-```
-
-#### 4. "CMX API Authentication Failed"
-```bash
-# Test CMX credentials
-curl -H "Authorization: Basic YOUR_BASE64_CREDENTIALS" "https://your-cmx-server.edu/api/location/v3/clients"
-# Regenerate base64 credentials
-echo -n "username:password" | base64
-```
-
-#### 5. "PM2 Process Not Starting"
-```bash
-# Reset PM2
-pm2 kill
-pm2 start ecosystem.config.js
-# Check PM2 logs
-pm2 logs justdevicecount --lines 50
-```
-
-### Debug Commands
-```bash
-# Enable debug logging
-DEBUG=* npm start
-
-# Check configuration
-node -e "console.log(require('config'))"
-
-# Test individual modules
-node -e "require('./modules/deviceUtils').dateTime()"
-
-# Monitor system resources
-top -p $(pgrep -f justdevicecount)
-```
-
-## 🤝 Contributing & Customization
+This project is designed to be easily adaptable to different institutional environments. Feel free to submit issues or pull requests for improvements.
 
 ### For Peer Institutions
 1. **Fork the repository** for your institution
@@ -196,43 +115,6 @@ top -p $(pgrep -f justdevicecount)
 3. **Modify floor boundaries** in `deviceUtils.js`
 4. **Customize API endpoints** as needed
 5. **Add your institution's branding** to dashboard
-
-### Development Workflow
-```bash
-# 1. Create feature branch
-git checkout -b feature/your-enhancement
-
-# 2. Make changes and test
-npm test
-
-# 3. Update documentation
-# Edit README.md if adding new features
-
-# 4. Commit and push
-git commit -m "Add: your enhancement description"
-git push origin feature/your-enhancement
-```
-
-### Code Style Guidelines
-- Follow existing ESLint configuration
-- Use NY timezone for all timestamps
-- Add comprehensive error handling
-- Include JSDoc comments for new functions
-- Update tests for new features
-
-### Adding New Features
-```bash
-# Add new API endpoint:
-# 1. Create route file in routes/
-# 2. Add route to app.js
-# 3. Add tests to test_comprehensive.js
-# 4. Update this README
-
-# Modify data collection:
-# 1. Update modules/app_core.js
-# 2. Test with shorter intervals first
-# 3. Update database schema if needed
-```
 
 ## 📁 Project Structure
 ```
@@ -264,7 +146,7 @@ justdevicecount/
 ### Getting Help
 1. **Check the logs first**: `pm2 logs justdevicecount`
 2. **Run the test suite**: `npm test`
-3. **Review this README** for configuration steps
+3. **Review [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md)** for configuration steps
 4. **Check GitHub Issues** for similar problems
 
 ### Useful Resources
@@ -272,63 +154,6 @@ justdevicecount/
 - **Prisma Documentation**: [Prisma.io](https://www.prisma.io/docs/)
 - **PM2 Documentation**: [PM2.io](https://pm2.keymetrics.io/docs/)
 - **Node.js Best Practices**: [Node.js Guide](https://nodejs.org/en/docs/)
-
-### Performance Monitoring
-```bash
-# Real-time process monitoring
-pm2 monit
-
-# System resource usage
-htop
-
-# Database performance
-npx prisma studio
-
-# API response times
-time curl -k https://localhost:3012/patronapi
-```
-
-### Maintenance Tasks
-- **Weekly**: Check logs for errors, verify data collection
-- **Monthly**: Update dependencies, rotate SSL certificates
-- **Quarterly**: Review CMX credentials, optimize database
-- **Annually**: Update Node.js version, security audit
-
----
-
-## 📋 Quick Reference
-
-### Essential Commands
-```bash
-# Start application
-npm start                    # Development
-npm run pm2:start:prod      # Production
-
-# Monitor & Debug
-pm2 logs justdevicecount    # View logs
-pm2 monit                   # Real-time monitoring
-npm test                     # Run tests
-
-# Database
-npx prisma studio           # Database browser
-npx prisma migrate dev      # Apply migrations
-
-# SSL Certificates
-openssl req -x509 -newkey rsa:4096 -keyout security/cert.key -out security/cert.pem -days 365 -nodes
-```
-
-### Key Files to Configure
-1. `.env` or `.env.production` - Database URL and environment variables
-2. `config/default.json` - CMX server template (for sharing)
-3. `config/production.json` - Actual CMX server and Floor IDs (gitignored)
-4. `security/cert.pem` & `security/cert.key` - SSL certificates
-5. Environment variables for production hostname and certificate paths
-
-### API Endpoints
-- `https://localhost:3012/` - Dashboard
-- `https://localhost:3012/patronapi` - Library patron counts
-- `https://localhost:3012/recapi` - Recreation center counts
-- `https://localhost:3012/count_by_floor` - Historical floor data
 
 ---
 
