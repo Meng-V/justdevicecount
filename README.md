@@ -38,23 +38,31 @@ JustDeviceCount automatically tracks patron counts across multiple building floo
 - SSL certificates
 
 ### Quick Start
-```bash
-# Clone and install
-git clone https://github.com/Meng-V/justdevicecount.git
-cd justdevicecount
-npm install
 
-# Configure (see DEVELOPER_SETUP.md for details)
-cp .env.example .env
-# Edit .env and config/default.json with your values
+1. **Clone and Setup**
+   ```bash
+   git clone https://github.com/Meng-V/justdevicecount.git
+   cd justdevicecount
+   npm install
+   ```
 
-# Setup database
-npx prisma generate
-npx prisma migrate dev --name init
+2. **Build for Production (Optional)**
+   ```bash
+   # Create production-ready dist folder
+   npm run build
+   
+   # Start from dist folder
+   ./start-dist.sh
+   ```
 
-# Start application
-npm start
-```
+3. **Database Setup**
+   ```bash
+   # Initialize database
+   npx prisma migrate dev --name init
+   
+   # Start application
+   npm start
+   ```
 
 **📖 For complete setup instructions, see [DEVELOPER_SETUP.md](DEVELOPER_SETUP.md)**
 
