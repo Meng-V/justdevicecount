@@ -70,7 +70,7 @@ let server = {};
 if (global.onServer) {
   // Production certificate paths from environment variables
   const prodCertPath = process.env.PROD_CERT_PATH || `/etc/pki/tls/certs/${productionHostname}-cert.pem`;
-  const prodKeyPath = process.env.PROD_KEY_PATH || `/etc/pki/tls/certs/${productionHostname}-privkey.pem`;
+  const prodKeyPath = process.env.PROD_KEY_PATH || `/etc/pki/tls/private/${productionHostname}-privkey.pem`;
   
   server = {
     key: prodKeyPath,
@@ -96,15 +96,16 @@ https
     console.log(`HTTPS Server running on port ${PORT}`);
     console.log(`Server environment: ${global.onServer ? 'production' : 'development'}`);
     console.log(`Access URLs:`);
+    const basePath = "/crowdindex";
     if (global.onServer) {
-      console.log(`  Production: https://${productionHostname}:${PORT}`);
+      console.log(`  Production: https://${productionHostname}:${PORT}${basePath}`);
     } else {
-      console.log(`  Local: https://localhost:${PORT}`);
-      console.log(`  Network: https://127.0.0.1:${PORT}`);
+      console.log(`  Local: https://localhost:${PORT}${basePath}`);
+      console.log(`  Network: https://127.0.0.1:${PORT}${basePath}`);
     }
     console.log(`API Endpoints:`);
     const baseUrl = global.onServer ? `https://${productionHostname}:${PORT}` : `https://localhost:${PORT}`;
-    console.log(`  Patron API: ${baseUrl}/patronapi`);
-    console.log(`  Recreation API: ${baseUrl}/recapi`);
-    console.log(`  Floor Count API: ${baseUrl}/count_by_floor`);
+    console.log(`  Patron API: ${baseUrl}${basePath}/patronapi`);
+    console.log(`  Recreation API: ${baseUrl}${basePath}/recapi`);
+    console.log(`  Floor Count API: ${baseUrl}${basePath}/count_by_floor`);
   });

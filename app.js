@@ -32,12 +32,15 @@ app.use(
     strict: false,
   })
 );
-app.use(express.static(path.join(__dirname, "public")));
+// Set base path for the application
+const basePath = "/crowdindex";
 
-app.use("/", indexRouter);
-app.use("/patronapi", patronapiRouter);
-app.use("/recapi", recapiRouter);
-app.use("/count_by_floor", countByFloorRouter);
+app.use(basePath, express.static(path.join(__dirname, "public")));
+
+app.use(basePath + "/", indexRouter);
+app.use(basePath + "/patronapi", patronapiRouter);
+app.use(basePath + "/recapi", recapiRouter);
+app.use(basePath + "/count_by_floor", countByFloorRouter);
 
 // Start background services
 patronCache.startCacheUpdater();
