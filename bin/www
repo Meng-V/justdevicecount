@@ -45,7 +45,7 @@ console.log("process.env.HOSTNAME: " + process.env.HOSTNAME);
 console.log("process.env.NODE_ENV: " + process.env.NODE_ENV);
 
 // Detect server environment based on NODE_ENV and hostname
-const productionHostname = process.env.PRODUCTION_HOSTNAME || "your-production-server.edu";
+const productionHostname = process.env.PRODUCTION_HOSTNAME
 const isProduction = process.env.NODE_ENV === "production" || 
                     process.env.HOSTNAME === productionHostname;
 const isLocalhost = !process.env.HOSTNAME || 
@@ -61,28 +61,16 @@ console.log(`On Server? : ${global.onServer}`);
 
 const PORT = normalizePort(process.env.PORT || config.get("app.port") || 3012);
 
-// SSL certificate configuration using environment variables
-const defaultCertPath = process.env.HTTPS_CERT_PATH || "./security/cert.pem";
-const defaultKeyPath = process.env.HTTPS_KEY_PATH || "./security/cert.key";
-
 let server = {};
 
-if (global.onServer) {
-  // Production certificate paths from environment variables
-  const prodCertPath = process.env.PROD_CERT_PATH || `/etc/pki/tls/certs/${productionHostname}-cert.pem`;
-  const prodKeyPath = process.env.PROD_KEY_PATH || `/etc/pki/tls/private/${productionHostname}-privkey.pem`;
-  
-  server = {
+// Production certificate paths from environment variables
+const prodCertPath = process.env.PROD_CERT_PATH;
+const prodKeyPath = process.env.PROD_KEY_PATH;
+
+server = {
     key: prodKeyPath,
     cert: prodCertPath,
   };
-} else {
-  // Development certificate paths
-  server = {
-    key: defaultKeyPath,
-    cert: defaultCertPath,
-  };
-}
 
 https
   .createServer(
