@@ -1,17 +1,17 @@
 {
   "address": {
-    "host": "https://your-cmx-server.institution.edu/",
-    "ground-add": "api/location/v3/clients?floorId=YOUR_GROUND_FLOOR_ID",
-    "first-add": "api/location/v3/clients?floorId=YOUR_FIRST_FLOOR_ID",
-    "second-add": "api/location/v3/clients?floorId=YOUR_SECOND_FLOOR_ID",
-    "third-add": "api/location/v3/clients?floorId=YOUR_THIRD_FLOOR_ID",
-    "rec-first": "api/location/v3/clients?floorId=YOUR_REC_FIRST_FLOOR_ID",
-    "rec-ground": "api/location/v3/clients?floorId=YOUR_REC_GROUND_FLOOR_ID",
-    "king-all": "api/location/v3/clients?mapHierarchy=Your%20Library%20Name",
+    "host": "https://mualcmxp11.itapps.miamioh.edu/",
+    "ground-add": "api/location/v3/clients?floorId=-9111125278481972129",
+    "first-add": "api/location/v3/clients?floorId=-3406025815824006052",
+    "second-add": "api/location/v3/clients?floorId=4051885010473452638",
+    "third-add": "api/location/v3/clients?floorId=-957425657128680355",
+    "rec-first": "api/location/v3/clients?floorId=-3222929203921944075",
+    "rec-ground": "api/location/v3/clients?floorId=-3350501105686543884",
+    "king-all": "api/location/v3/clients?mapHierarchy=King%20Library",
     "all": "api/location/v1/history/clients"
   },
   "app": {
     "port": 3012,
-    "auth": "Basic YOUR_BASE64_ENCODED_CREDENTIALS_HERE"
+    "auth": "Basic cXVtOkJ0IWpoemUyenFkcmZ6d3Fu"
   }
 }
