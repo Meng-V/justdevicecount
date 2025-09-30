@@ -25,14 +25,14 @@ module.exports = {
       NODE_ENV: 'development',
       PORT: 3012,
       TZ: 'America/New_York',
-      NODE_TLS_REJECT_UNAUTHORIZED: '1'
+      NODE_TLS_REJECT_UNAUTHORIZED: '0'
     },
     env_production: {
       NODE_ENV: 'production',
       PORT: 3012,
       watch: false,
       TZ: 'America/New_York',
-      NODE_TLS_REJECT_UNAUTHORIZED: '1'
+      NODE_TLS_REJECT_UNAUTHORIZED: '0'
     },
     error_file: './logs/err.log',
     out_file: './logs/out.log',

@@ -3,6 +3,9 @@
 // sudo lsof -i:3012 ## see a specific port such as 3012 ##
 // sudo kill PID
 
+
+require('dotenv').config();
+
 // Set timezone to New York for all logging
 process.env.TZ = 'America/New_York';
 
@@ -61,39 +64,60 @@ console.log(`On Server? : ${global.onServer}`);
 
 const PORT = normalizePort(process.env.PORT || config.get("app.port") || 3012);
 
-let server = {};
+const basePath = "/crowdindex";
 
-// Production certificate paths from environment variables
-const prodCertPath = process.env.PROD_CERT_PATH;
-const prodKeyPath = process.env.PROD_KEY_PATH;
-
-server = {
-    key: prodKeyPath,
-    cert: prodCertPath,
-  };
-
-https
-  .createServer(
-    {
-      key: fs.readFileSync(server.key),
-      cert: fs.readFileSync(server.cert),
-    },
-    app
-  )
-  .listen(PORT, () => {
-    console.log(`HTTPS Server running on port ${PORT}`);
-    console.log(`Server environment: ${global.onServer ? 'production' : 'development'}`);
-    console.log(`Access URLs:`);
-    const basePath = "/crowdindex";
-    if (global.onServer) {
-      console.log(`  Production: https://${productionHostname}:${PORT}${basePath}`);
-    } else {
-      console.log(`  Local: https://localhost:${PORT}${basePath}`);
-      console.log(`  Network: https://127.0.0.1:${PORT}${basePath}`);
-    }
-    console.log(`API Endpoints:`);
-    const baseUrl = global.onServer ? `https://${productionHostname}:${PORT}` : `https://localhost:${PORT}`;
-    console.log(`  Patron API: ${baseUrl}${basePath}/patronapi`);
-    console.log(`  Recreation API: ${baseUrl}${basePath}/recapi`);
-    console.log(`  Floor Count API: ${baseUrl}${basePath}/count_by_floor`);
+// Start server based on environment
+if (isLocalhost) {
+  // Local development: Use HTTP (no SSL)
+  const http = require("http");
+  
+  http.createServer(app).listen(PORT, () => {
+    console.log(`\n${'='.repeat(60)}`);
+    console.log(`🚀 LOCAL DEVELOPMENT SERVER STARTED`);
+    console.log(`${'='.repeat(60)}`);
+    console.log(`Environment: Development`);
+    console.log(`Port: ${PORT}`);
+    console.log(`\n📊 Dashboard:`);
+    console.log(`   http://localhost:${PORT}${basePath}/`);
+    console.log(`\n📡 API Endpoints:`);
+    console.log(`   Patron API:     http://localhost:${PORT}${basePath}/patronapi`);
+    console.log(`   Recreation API: http://localhost:${PORT}${basePath}/recapi`);
+    console.log(`   Floor Count:    http://localhost:${PORT}${basePath}/count_by_floor`);
+    console.log(`${'='.repeat(60)}\n`);
   });
+} else {
+  // Production: Use HTTPS with SSL certificates
+  const prodCertPath = process.env.PROD_CERT_PATH;
+  const prodKeyPath = process.env.PROD_KEY_PATH;
+
+  if (!prodCertPath || !prodKeyPath) {
+    console.error('❌ ERROR: SSL certificate paths not configured!');
+    console.error('   Set PROD_CERT_PATH and PROD_KEY_PATH in .env file');
+    process.exit(1);
+  }
+
+  https
+    .createServer(
+      {
+        key: fs.readFileSync(prodKeyPath),
+        cert: fs.readFileSync(prodCertPath),
+      },
+      app
+    )
+    .listen(PORT, () => {
+      console.log(`\n${'='.repeat(60)}`);
+      console.log(`🔒 PRODUCTION HTTPS SERVER STARTED`);
+      console.log(`${'='.repeat(60)}`);
+      console.log(`Environment: Production`);
+      console.log(`Hostname: ${productionHostname}`);
+      console.log(`Port: ${PORT}`);
+      console.log(`SSL: Enabled`);
+      console.log(`\n📊 Dashboard:`);
+      console.log(`   https://${productionHostname}:${PORT}${basePath}/`);
+      console.log(`\n📡 API Endpoints:`);
+      console.log(`   Patron API:     https://${productionHostname}:${PORT}${basePath}/patronapi`);
+      console.log(`   Recreation API: https://${productionHostname}:${PORT}${basePath}/recapi`);
+      console.log(`   Floor Count:    https://${productionHostname}:${PORT}${basePath}/count_by_floor`);
+      console.log(`${'='.repeat(60)}\n`);
+    });
+}
