@@ -1,163 +1,133 @@
 # JustDeviceCount
 
-A real-time device counting and analytics system for institutional libraries and recreation centers using Cisco CMX API integration.
+A real-time patron counting system for academic libraries and recreational facilities, providing instant visibility into building occupancy across multiple floors.
 
-## 📊 What It Does
+## 🎯 What Problem Does It Solve?
 
-JustDeviceCount automatically tracks patron counts across multiple building floors by integrating with your existing Cisco CMX WiFi infrastructure. It provides real-time and historical analytics through RESTful APIs and a web dashboard.
+**Challenge**: Understanding real-time occupancy in multi-floor buildings is difficult without manual counting or expensive specialized hardware.
 
-### Key Features
-- **Real-time Data Collection**: Automated 15-minute intervals with timezone handling
-- **Multi-building Support**: Configurable for multiple buildings and floors
-- **Dual Storage Strategy**: Database persistence + memory caching for optimal performance
-- **RESTful APIs**: JSON endpoints for dashboards and integrations
-- **Production Ready**: PM2 process management with comprehensive monitoring
-- **Secure HTTPS**: SSL/TLS encryption with certificate management
-- **Build System**: Webpack-based dist folder generation for production deployment
+**Solution**: JustDeviceCount leverages your existing WiFi infrastructure (Cisco CMX) to automatically track unique device counts as a proxy for patron occupancy. The system continuously monitors WiFi-connected devices and provides real-time and historical occupancy data through simple web interfaces.
 
-## 🏗️ Architecture
+**Who Benefits**:
+- **Library staff**: Monitor patron traffic patterns and optimize staffing
+- **Facilities managers**: Track building usage and space utilization
+- **Students/visitors**: Check real-time occupancy before visiting
+- **Administrators**: Access historical data for planning and reporting
 
-**Two-Building Implementation:**
+## 📊 Main Features
 
-- **King Library** (4 floors): Full database storage + 15-minute cache layer
-- **Recreation Center** (2 floors): Memory-only storage for lightweight operation
+### Real-Time Occupancy Tracking
+Automatically counts unique WiFi devices every 15 minutes across all building floors, providing a reliable estimate of patron counts without requiring manual intervention.
 
-## 🚀 Technology Stack
+### Multi-Building Support
+Simultaneously monitors multiple buildings with different configurations:
+- **King Library** (4 floors): Full historical tracking with database storage
+- **Recreation Center** (2 floors): Real-time tracking with memory-only storage
 
-- **Backend**: Node.js, Express.js
+### Web Dashboard & APIs
+- **Visual Dashboard** (`/crowdindex/`): Interactive web interface showing current occupancy
+- **JSON APIs**: Machine-readable endpoints for integration with digital signage, mobile apps, or institutional dashboards
+
+### Historical Analytics
+Database storage enables:
+- Trend analysis over days, weeks, or months
+- Peak usage time identification
+- Capacity planning and resource allocation
+- Data-driven decision making
+
+## 🌐 Available Routes
+
+All routes are prefixed with `/crowdindex/`
+
+### For End Users
+
+**`GET /crowdindex/`**  
+Web dashboard with live occupancy visualization
+
+**`GET /crowdindex/patronapi`**  
+King Library current and historical patron data (JSON)
+
+**`GET /crowdindex/recapi`**  
+Recreation Center current patron count (JSON)
+
+**`GET /crowdindex/count_by_floor`**  
+Floor-by-floor breakdown for both buildings (JSON)
+
+### Example API Response
+
+```json
+{
+  "currentPatrons": 127,
+  "timestamp": "2025-09-30T14:30:00Z",
+  "byFloor": {
+    "ground": 45,
+    "first": 38,
+    "second": 28,
+    "third": 16
+  },
+  "historicalAverage": 98,
+  "trend": "increasing"
+}
+```
+
+## 🏗️ How It Works
+
+1. **Data Collection**: Connects to Cisco CMX API every 15 minutes
+2. **Device Processing**: Identifies unique WiFi devices and maps them to floor locations
+3. **Storage**: Saves historical data to PostgreSQL database (King Library) or keeps in memory (Recreation Center)
+4. **Caching**: Maintains 15-minute cache for fast API responses
+5. **Delivery**: Serves data via RESTful APIs and web dashboard
+
+## 🔒 Privacy & Security
+
+- **Device Anonymization**: Tracks only anonymized device IDs, never personal information
+- **HTTPS Encryption**: All data transmitted over secure SSL/TLS connections
+- **No Personal Data**: System cannot identify individuals, only counts unique devices
+- **Compliance**: Designed to respect patron privacy while providing occupancy insights
+
+## 💡 Use Cases
+
+### For Library Operations
+- Staff allocation based on predicted busy periods
+- Study room availability decisions
+- Event planning around occupancy patterns
+
+### For Students & Visitors
+- Check crowding levels before visiting
+- Find quieter study times
+- Plan group study sessions
+
+### For Facilities Planning
+- Justify space renovations with usage data
+- Optimize HVAC and lighting schedules
+- Demonstrate ROI for building improvements
+
+## 🛠️ Technical Overview
+
+Built with modern, reliable technology:
+- **Backend**: Node.js with Express framework
 - **Database**: PostgreSQL with Prisma ORM
-- **Build System**: Webpack, Babel
-- **Process Management**: PM2
-- **Security**: HTTPS/SSL, environment-based configuration
-- **Integration**: Cisco CMX API
+- **Process Management**: PM2 for 24/7 uptime
+- **Security**: HTTPS/SSL encryption
+- **Data Source**: Cisco CMX WiFi Analytics API
 
-## 🚀 Quick Start
+## 📖 Documentation
 
-```bash
-# Clone and install
-git clone https://github.com/Meng-V/justdevicecount.git
-cd justdevicecount
-npm install
+- **[DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md)**: Complete technical guide for developers and system administrators
+- **[TESTING_GUIDE.md](TESTING_GUIDE.md)**: Comprehensive testing procedures
 
-# Start development server
-npm start
-```
+## 🤝 For Peer Institutions
 
-**📖 For complete setup, build, and deployment instructions, see [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md)**
+This system is designed to be easily replicated at other universities and institutions with Cisco CMX WiFi infrastructure. The [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md) provides step-by-step instructions for deploying at your institution.
 
-## 📊 API Endpoints
+## 📞 Getting Support
 
-### King Library Data
-`GET /patronapi` - Returns current patron count with historical data and analytics
-
-### Recreation Center Data  
-`GET /recapi` - Returns current patron count (memory-only, no historical data)
-
-### Floor Breakdown
-`GET /count_by_floor` - Returns patron counts by floor for both buildings
-
-### Dashboard
-`GET /` - Web dashboard showing real-time counts and analytics
-
-## 🔒 Security
-
-The application uses environment-based configuration with gitignored sensitive files:
-- Environment variables (`.env*`)
-- Production configurations (`config/production.json`)
-- SSL certificates and keys (`security/` directory)
-- Database credentials and connection strings
-
-**All sensitive files are automatically excluded from version control.**
-
-## 🤝 Contributing
-
-This project is designed to be easily adaptable to different institutional environments. Feel free to submit issues or pull requests for improvements.
-
-## 📁 Project Structure
-```
-justdevicecount/
-├── bin/www                 # HTTPS server entry point
-├── app.js                  # Express application setup
-├── ecosystem.config.js     # PM2 configuration
-├── start.sh               # Deployment convenience script
-├── package.json           # Dependencies and scripts
-├── .env                   # Environment variables (create this)
-├── modules/
-│   ├── app_core.js        # Data collection service
-│   ├── patronCache.js     # Memory caching system
-│   ├── axiosApi.js        # CMX API client
-│   └── deviceUtils.js     # Utility functions
-├── routes/
-│   ├── index.js           # Dashboard route (/)
-│   ├── patronapi.js       # King Library API (/patronapi)
-│   ├── recapi.js          # Recreation Center API (/recapi)
-│   └── count_by_floor.js  # Historical data API (/count_by_floor)
-├── config/
-│   └── default.json       # CMX API configuration (update this)
-├── security/              # SSL certificates (create this)
-│   ├── cert.pem          # SSL certificate
-│   └── cert.key          # SSL private key
-├── prisma/
-│   └── schema.prisma     # Database schema
-├── logs/                 # PM2 log files (auto-created)
-├── views/
-│   └── index.ejs         # Dashboard HTML template
-└── test_comprehensive.js # Complete test suite
-```
-
-## 🤝 Contributing
-
-This project is designed to be easily adaptable to different institutional environments. Feel free to submit issues or pull requests for improvements.
-
-### For Peer Institutions
-1. **Fork the repository** for your institution
-2. **Update configuration** files with your CMX details
-3. **Modify floor boundaries** in `deviceUtils.js`
-4. **Customize API endpoints** as needed
-5. **Add your institution's branding** to dashboard
-
-## 📁 Project Structure
-```
-justdevicecount/
-├── bin/www                 # Server entry point
-├── app.js                  # Express application setup
-├── ecosystem.config.js     # PM2 configuration
-├── start.sh               # Deployment script
-├── modules/
-│   ├── app_core.js        # Data collection service
-│   ├── patronCache.js     # Caching system
-│   ├── axiosApi.js        # CMX API client
-│   └── deviceUtils.js     # Utility functions
-├── routes/
-│   ├── index.js           # Dashboard route
-│   ├── patronapi.js       # King Library API
-│   ├── recapi.js          # Recreation Center API
-│   └── count_by_floor.js  # Historical data API
-├── config/
-│   └── default.json       # Application configuration
-├── security/              # SSL certificates
-├── logs/                  # PM2 log files
-└── test_comprehensive.js  # Test suite
-```
-
-
-## 📞 Support & Resources
-
-### Getting Help
-1. **Check the logs first**: `pm2 logs justdevicecount`
-2. **Run the test suite**: `npm test`
-3. **Review [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md)** for configuration steps
-4. **Check GitHub Issues** for similar problems
-
-### Useful Resources
-- **Cisco CMX Documentation**: [CMX API Guide](https://developer.cisco.com/docs/cmx/)
-- **Prisma Documentation**: [Prisma.io](https://www.prisma.io/docs/)
-- **PM2 Documentation**: [PM2.io](https://pm2.keymetrics.io/docs/)
-- **Node.js Best Practices**: [Node.js Guide](https://nodejs.org/en/docs/)
+- **GitHub Issues**: Report bugs or request features
+- **Developer Guide**: Technical documentation for deployment
+- **Test Suite**: Built-in diagnostics (`npm test`)
 
 ---
 
 **Author**: Meng-V  
 **License**: ISC  
-**Repository**: [GitHub](https://github.com/Meng-V/justdevicecount)  
-**For Support**: Check GitHub Issues or run `npm test` for diagnostics
+**Repository**: [GitHub](https://github.com/Meng-V/justdevicecount)

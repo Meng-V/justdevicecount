@@ -1,3 +1,7 @@
+// PM2 Ecosystem Configuration for JustDeviceCount (Dist Build)
+// Production deployment from webpack-bundled dist folder
+// Uses server-side PostgreSQL database
+
 module.exports = {
   apps: [{
     name: 'justdevicecount-dist',
@@ -13,7 +17,8 @@ module.exports = {
     env_production: {
       NODE_ENV: 'production',
       PORT: 3012,
-      TZ: 'America/New_York'
+      TZ: 'America/New_York',
+      NODE_TLS_REJECT_UNAUTHORIZED: '1'
     },
     error_file: './logs/dist-err.log',
     out_file: './logs/dist-out.log',

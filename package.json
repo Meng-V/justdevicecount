@@ -1,9 +1,8 @@
 {
   "name": "justdevicecount",
   "version": "1.0.0",
-  "description": "Just Device Count",
+  "description": "Real-time patron counting system using Cisco CMX WiFi analytics with PostgreSQL database",
   "dependencies": {
-    "@neondatabase/serverless": "^1.0.1",
     "@prisma/client": "^6.14.0",
     "axios": "^1.11.0",
     "body-parser": "^2.2.0",
@@ -44,7 +43,10 @@
     "pm2:status": "pm2 status",
     "pm2:monit": "pm2 monit",
     "pm2:flush": "pm2 flush justdevicecount",
-    "test": "node test_comprehensive.js"
+    "test": "node test_comprehensive.js",
+    "db:push": "npx prisma db push",
+    "db:generate": "npx prisma generate",
+    "db:studio": "npx prisma studio"
   },
   "author": "Your Institution",
   "license": "ISC",
