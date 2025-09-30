@@ -18,7 +18,7 @@ module.exports = {
       NODE_ENV: 'production',
       PORT: 3012,
       TZ: 'America/New_York',
-      NODE_TLS_REJECT_UNAUTHORIZED: '1'
+      NODE_TLS_REJECT_UNAUTHORIZED: '0'
     },
     error_file: './logs/dist-err.log',
     out_file: './logs/dist-out.log',
