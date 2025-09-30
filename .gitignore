@@ -182,3 +182,5 @@ ecosystem.config.js.local
 *~
 *.pem
 certs/
+
+.DS_Store

@@ -11,7 +11,7 @@
     "all": "api/location/v1/history/clients"
   },
   "app": {
-    "port": 3012,
+    "port": 3000,
     "auth": "Basic YOUR_BASE64_ENCODED_CREDENTIALS_HERE"
   }
 }
