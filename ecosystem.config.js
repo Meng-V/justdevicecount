@@ -1,5 +1,8 @@
 // PM2 Ecosystem Configuration for JustDeviceCount
-// Development and Production environments with PostgreSQL database
+// ⚠️  LOCAL DEVELOPMENT ONLY - NOT FOR SERVER DEPLOYMENT
+// 
+// For production server deployment, see SERVER_DEPLOYMENT.md
+// Server uses systemd service (crowd-index), NOT PM2
 
 module.exports = {
   apps: [{
@@ -8,7 +11,7 @@ module.exports = {
     instances: 1,
     exec_mode: 'fork',
     autorestart: true,
-    watch: true,
+    watch: true,  // Auto-reload on file changes (dev only)
     ignore_watch: [
       'node_modules',
       'logs',
@@ -27,13 +30,6 @@ module.exports = {
       TZ: 'America/New_York',
       NODE_TLS_REJECT_UNAUTHORIZED: '0'
     },
-    env_production: {
-      NODE_ENV: 'production',
-      PORT: 3012,
-      watch: false,
-      TZ: 'America/New_York',
-      NODE_TLS_REJECT_UNAUTHORIZED: '0'
-    },
     error_file: './logs/err.log',
     out_file: './logs/out.log',
     log_file: './logs/combined.log',
@@ -41,12 +37,10 @@ module.exports = {
     time: true,
     merge_logs: true,
     kill_timeout: 5000,
-    listen_timeout: 3000,
-    // Health monitoring
-    health_check_grace_period: 3000,
-    // Advanced PM2+ features (optional)
-    pmx: false,
-    // Instance variables
-    instance_var: 'INSTANCE_ID'
+    listen_timeout: 3000
   }]
 };
+
+// Note: This PM2 config is ONLY for local development
+// Production server uses systemd service management
+// See SERVER_DEPLOYMENT.md for production deployment instructions

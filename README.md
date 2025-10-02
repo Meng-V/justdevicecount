@@ -113,7 +113,8 @@ Built with modern, reliable technology:
 
 ## 📖 Documentation
 
-- **[DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md)**: Complete technical guide for developers and system administrators
+- **[DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md)**: Complete technical guide for local development setup
+- **[SERVER_DEPLOYMENT.md](SERVER_DEPLOYMENT.md)**: Production server deployment using systemd
 - **[TESTING_GUIDE.md](TESTING_GUIDE.md)**: Comprehensive testing procedures
 
 ## 🤝 For Peer Institutions

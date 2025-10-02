@@ -1,7 +1,10 @@
 #!/bin/bash
 
-# JustDeviceCount - Production Deployment Script
-# Manages PM2 process for the application with PostgreSQL database
+# JustDeviceCount - LOCAL DEVELOPMENT Script
+# Manages PM2 process for local development with PostgreSQL database
+#
+# FOR SERVER DEPLOYMENT: See SERVER_DEPLOYMENT.md
+# Server uses systemd service, not PM2: sudo service crowd-index restart
 
 APP_NAME="justdevicecount"
 ECOSYSTEM_FILE="ecosystem.config.js"
@@ -96,7 +99,10 @@ case "$1" in
     delete_app
     ;;
   *)
-    echo "JustDeviceCount Deployment Script"
+    echo "JustDeviceCount - LOCAL DEVELOPMENT Script"
+    echo ""
+    echo "⚠️  This script is for LOCAL DEVELOPMENT only!"
+    echo "   For SERVER deployment, see SERVER_DEPLOYMENT.md"
     echo ""
     echo "Usage: $0 {start|stop|restart|status|logs|delete}"
     echo ""
@@ -113,7 +119,9 @@ case "$1" in
     echo "  - PostgreSQL database initialized (run: npm run db:push)"
     echo "  - SSL certificates in security/ directory"
     echo ""
-    echo "See DEVELOPER_GUIDE.md for complete setup instructions."
+    echo "Documentation:"
+    echo "  - Local setup: DEVELOPER_GUIDE.md"
+    echo "  - Server deployment: SERVER_DEPLOYMENT.md"
     echo ""
     echo "Default action: start"
     start
