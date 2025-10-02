@@ -276,26 +276,16 @@ NODE_TLS_REJECT_UNAUTHORIZED=1
 
 ## Deployment Options
 
-### Option 1: Development Mode
+### Local Development
 
-For testing and development:
+For testing and development on your local machine:
 
 ```bash
+# Direct node execution
 npm start
-```
 
-This runs the server directly without process management.
-
-### Option 2: PM2 Production Deployment
-
-For production with automatic restarts and monitoring:
-
-```bash
-# Using the convenience script
+# Or with PM2 for auto-restart during development
 ./start.sh start
-
-# Or manually with npm
-npm run pm2:start
 ```
 
 **PM2 Configuration** (`ecosystem.config.js`):
@@ -308,79 +298,60 @@ module.exports = {
     instances: 1,
     exec_mode: 'fork',
     autorestart: true,
-    watch: false,
-    max_memory_restart: '512M',
+    watch: true,  // Auto-reload on file changes
+    max_memory_restart: '500M',
     env: {
-      NODE_ENV: 'production',
+      NODE_ENV: 'development',
       PORT: 3012
     }
   }]
 };
 ```
 
-### Option 3: Webpack Build (Dist Folder)
+### Server Production Deployment
 
-For optimized production deployment:
+**For production server deployment, see [SERVER_DEPLOYMENT.md](SERVER_DEPLOYMENT.md)**
 
-```bash
-# Build and deploy with convenience script
-./start-dist.sh
+The production server uses systemd service management (not PM2):
+- Service name: `crowd-index`
+- Restart: `sudo service crowd-index restart`
+- Logs: `sudo journalctl -u crowd-index -f`
+- Runs: `bin/www` directly
 
-# Or manually
-npm run build
-cd dist
-npm install --production
-npm start
-```
+The SERVER_DEPLOYMENT.md guide covers:
+- Complete deployment workflow
+- Service management commands
+- Troubleshooting production issues
+- Differences from local development
 
-The dist folder contains:
-- Bundled JavaScript (`dist/server.js`)
-- Copied assets (views, config, prisma, security)
-- Production package.json
+### Local PM2 Management Commands
 
-### PM2 Management Commands
+These commands are for **local development only**:
 
 ```bash
 # Start application
 ./start.sh start
-# or: npm run pm2:start
 
 # Stop application
 ./start.sh stop
-# or: npm run pm2:stop
 
 # Restart application
 ./start.sh restart
-# or: npm run pm2:restart
 
 # View logs
 ./start.sh logs
-# or: npm run pm2:logs
 
 # Check status
 ./start.sh status
-# or: npm run pm2:status
 
 # Monitor in real-time
 npm run pm2:monit
 
 # Remove from PM2
 ./start.sh delete
-# or: npm run pm2:delete
 ```
 
-### Auto-Start on Server Reboot
-
-```bash
-# Save PM2 configuration
-pm2 save
-
-# Generate startup script
-pm2 startup
-
-# Follow the instructions provided by PM2
-# Usually requires running a command with sudo
-```
+**Note**: For production server deployment, use systemd commands instead. See [SERVER_DEPLOYMENT.md](SERVER_DEPLOYMENT.md).
 
 ## Customization
 
@@ -632,11 +603,11 @@ pm2 monit
    npx prisma db push
    npx prisma generate
 
-   # Rebuild if using dist
-   npm run build
-
-   # Restart application
+   # Restart application (local dev)
    pm2 restart justdevicecount
+   
+   # Or restart server (production)
+   # See SERVER_DEPLOYMENT.md
    ```
 
 2. **Dependency Updates**
@@ -680,10 +651,8 @@ justdevicecount/
 │   └── cert.key
 ├── .env                        # Environment variables (gitignored)
 ├── app.js                      # Express application
-├── ecosystem.config.js         # PM2 configuration
-├── webpack.config.js           # Build configuration
-├── start.sh                    # Deployment script
-├── start-dist.sh              # Build & deploy script
+├── ecosystem.config.js         # PM2 configuration (local dev)
+├── start.sh                    # Local development script
 └── test_comprehensive.js      # Test suite
 ```
 
@@ -710,7 +679,11 @@ CMX API → axiosApi.js → deviceUtils.js → app_core.js → Database (Postgre
 
 1. **Check logs first**
    ```bash
+   # Local development
    pm2 logs justdevicecount --lines 100
+   
+   # Production server
+   sudo journalctl -u crowd-index -n 100
    ```
 
 2. **Run diagnostics**
@@ -738,6 +711,6 @@ Include in bug reports:
 
 ---
 
-**Last Updated**: 2025-09-30  
+**Last Updated**: 2025-10-02  
 **Version**: 1.0.0  
 **Maintainer**: Meng-V
