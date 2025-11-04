@@ -41,7 +41,9 @@
     "test": "node test_comprehensive.js",
     "db:push": "npx prisma db push",
     "db:generate": "npx prisma generate",
-    "db:studio": "npx prisma studio"
+    "db:studio": "npx prisma studio",
+    "export:data": "node scripts/export_and_purge.js",
+    "export:data:dry": "node scripts/export_and_purge.js --dry-run"
   },
   "author": "Your Institution",
   "license": "ISC",
