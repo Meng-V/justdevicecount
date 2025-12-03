@@ -15,10 +15,7 @@ router.get("/", async (req, res) => {
       success: true,
       data: {
         timeStamp: data.timeStamp,
-        patrons:
-          data.patrons > 300
-            ? Math.abs(data.patrons - 175)
-            : Math.abs(data.patrons - 120),
+        patrons: Math.abs(data.patrons - 150),
       },
       metadata: {
         cached: true,
