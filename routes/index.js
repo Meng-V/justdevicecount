@@ -1,8 +1,6 @@
 const express = require("express");
-const { PrismaClient } = require('@prisma/client');
+const prisma = require("../lib/prisma");
 const router = express.Router();
-
-const prisma = new PrismaClient();
 
 router.get("/", async (req, res) => {
     // LOCAL-TESTING: When developing in local, use test credentials

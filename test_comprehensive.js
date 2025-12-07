@@ -14,7 +14,7 @@
  */
 
 const axios = require('axios');
-const { PrismaClient } = require('@prisma/client');
+const prisma = require('./lib/prisma');
 const config = require('config');
 const { spawn, exec } = require('child_process');
 const fs = require('fs');
@@ -212,7 +212,6 @@ runner.test('Server Health Check', async () => {
 
 // Test 2: Database Connectivity
 runner.test('Database Connectivity', async () => {
-  const prisma = new PrismaClient();
   try {
     await prisma.$connect();
     log('Database connection successful', 'INFO');

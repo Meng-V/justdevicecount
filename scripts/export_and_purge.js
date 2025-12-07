@@ -1,9 +1,7 @@
 require('dotenv').config();
-const { PrismaClient } = require('@prisma/client');
+const prisma = require('../lib/prisma');
 const fs = require('fs');
 const path = require('path');
-
-const prisma = new PrismaClient();
 
 async function run() {
   const latest = await prisma.deviceData.findFirst({

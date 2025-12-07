@@ -1,11 +1,9 @@
 // Staff accounts are reduced.
 
 const express = require("express");
-const { PrismaClient } = require('@prisma/client');
+const prisma = require("../lib/prisma");
 const { dateTime } = require("../modules/deviceUtils");
 const router = express.Router();
-
-const prisma = new PrismaClient();
 
 router.get("/", async (req, res) => {
   try {
