@@ -1,8 +1,6 @@
-const { PrismaClient } = require("@prisma/client");
+const prisma = require("../lib/prisma");
 const config = require("config");
 const { dateTime } = require("./deviceUtils");
-
-const prisma = new PrismaClient();
 
 class PatronCache {
   constructor() {

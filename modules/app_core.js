@@ -1,9 +1,7 @@
 const config = require("config");
-const { PrismaClient } = require('@prisma/client');
+const prisma = require("../lib/prisma");
 const axiosApi = require("./axiosApi");
 const { dateTime, validRssi, validTime, isValidDevice, isWithinBounds } = require("./deviceUtils");
-
-const prisma = new PrismaClient();
 
 
 // Generic floor processing function
