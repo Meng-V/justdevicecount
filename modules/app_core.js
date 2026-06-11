@@ -1,19 +1,22 @@
-const config = require("config");
-const { PrismaClient } = require('@prisma/client');
+const prisma = require("./prisma");
 const axiosApi = require("./axiosApi");
 const { dateTime, validRssi, validTime, isValidDevice, isWithinBounds } = require("./deviceUtils");
 
-const prisma = new PrismaClient();
-
-
-// Generic floor processing function
+// ---------------------------------------------------------------------------
+// Generic floor processing function.
+// All Maps/Sets are created locally inside each king_start() call (fixes the
+// module-level race condition — issue 1.2).
+// ---------------------------------------------------------------------------
 function processFloorData(body, userMap, bounds) {
+  // If the CMX API returned null (all retries failed) skip this floor safely.
+  if (!body || !Array.isArray(body)) return;
+
   for (let i = 0; i < body.length; i++) {
     const device = body[i];
     const deviceId = device.deviceId;
-    
+
     if (!isValidDevice(device)) continue;
-    
+
     if (isWithinBounds(device.locationCoordinate.x, device.locationCoordinate.y, bounds)) {
       if (!userMap.has(deviceId)) {
         userMap.set(deviceId, [
@@ -25,73 +28,65 @@ function processFloorData(body, userMap, bounds) {
   }
 }
 
-let uniqUserGround = new Map();
-let uniqUserFirst = new Map();
-let uniqUserSecond = new Map();
-let uniqUserThird = new Map();
+// ---------------------------------------------------------------------------
+// King Library — data collection
+// All state is local to this invocation; no module-level mutable globals.
+// ---------------------------------------------------------------------------
 
-let uniqKingAll = new Set();
-let rec_uniqRecAll = new Set();
-
-function king_resetALLarray() {
-  uniqUserGround = new Map();
-  uniqUserFirst = new Map();
-  uniqUserSecond = new Map();
-  uniqUserThird = new Map();
-  uniqKingAll = new Set();
-}
+// Floor boundary boxes (coordinate units from the CMX map)
+const KING_FLOOR_BOUNDS = {
+  ground: { minX: 10,  maxX: 314, minY: 36, maxY: 190 },
+  first:  { minX: 16,  maxX: 314, minY: 29, maxY: 190 },
+  second: { minX: 10,  maxX: 314, minY: 36, maxY: 190 },
+  third:  { minX: 10,  maxX: 314, minY: 36, maxY: 190 },
+};
 
 async function king_start() {
-  king_resetALLarray();
+  // Local state per invocation — no shared mutation, no race condition.
+  const uniqUserGround = new Map();
+  const uniqUserFirst  = new Map();
+  const uniqUserSecond = new Map();
+  const uniqUserThird  = new Map();
+  const uniqKingAll    = new Set();
 
-  // Define floor boundaries
-  const floorBounds = {
-    ground: { minX: 10, maxX: 314, minY: 36, maxY: 190 },
-    first: { minX: 16, maxX: 314, minY: 29, maxY: 190 },
-    second: { minX: 10, maxX: 314, minY: 36, maxY: 190 },
-    third: { minX: 10, maxX: 314, minY: 36, maxY: 190 }
-  };
-
-  // Process each floor
   await axiosApi.getGroundRequest((body) => {
-    processFloorData(body, uniqUserGround, floorBounds.ground);
-    uniqUserGround.forEach((value, key) => uniqKingAll.add(key));
+    processFloorData(body, uniqUserGround, KING_FLOOR_BOUNDS.ground);
+    uniqUserGround.forEach((_, key) => uniqKingAll.add(key));
   });
 
   await axiosApi.getFirstRequest((body) => {
-    processFloorData(body, uniqUserFirst, floorBounds.first);
-    uniqUserFirst.forEach((value, key) => uniqKingAll.add(key));
+    processFloorData(body, uniqUserFirst, KING_FLOOR_BOUNDS.first);
+    uniqUserFirst.forEach((_, key) => uniqKingAll.add(key));
   });
 
   await axiosApi.getSecondRequest((body) => {
-    processFloorData(body, uniqUserSecond, floorBounds.second);
-    uniqUserSecond.forEach((value, key) => uniqKingAll.add(key));
+    processFloorData(body, uniqUserSecond, KING_FLOOR_BOUNDS.second);
+    uniqUserSecond.forEach((_, key) => uniqKingAll.add(key));
   });
 
   await axiosApi.getThirdRequest((body) => {
-    processFloorData(body, uniqUserThird, floorBounds.third);
-    uniqUserThird.forEach((value, key) => uniqKingAll.add(key));
+    processFloorData(body, uniqUserThird, KING_FLOOR_BOUNDS.third);
+    uniqUserThird.forEach((_, key) => uniqKingAll.add(key));
   });
 
-  await saveToDatabase();
+  await saveToDatabase({ uniqUserGround, uniqUserFirst, uniqUserSecond, uniqUserThird, uniqKingAll });
 }
 
-// Helper: Database connection and save logic
-async function saveToDatabase() {
-  const isServer = global.onServer;
-  console.log(`[${dateTime()}] global on server? ${isServer}`);
-
+// ---------------------------------------------------------------------------
+// Save collected King Library data to PostgreSQL
+// ---------------------------------------------------------------------------
+async function saveToDatabase({ uniqUserGround, uniqUserFirst, uniqUserSecond, uniqUserThird, uniqKingAll }) {
   try {
-    console.log(`[${dateTime()}] App Core connected to database`);
+    const now = new Date();
 
     const floorDocument = {
-      timeStamp: dateTime(),
-      uniqUserTotal: Array.from(uniqKingAll),
+      timeStamp:      now,
+      uniqUserTotal:  Array.from(uniqKingAll),
       uniqUserGround: Object.fromEntries(uniqUserGround),
-      uniqUserFirst: Object.fromEntries(uniqUserFirst),
+      uniqUserFirst:  Object.fromEntries(uniqUserFirst),
       uniqUserSecond: Object.fromEntries(uniqUserSecond),
-      uniqUserThird: Object.fromEntries(uniqUserThird),
-      patrons: uniqKingAll.size,
+      uniqUserThird:  Object.fromEntries(uniqUserThird),
+      patrons:        uniqKingAll.size,
       countByFloor: [
         uniqUserGround.size,
         uniqUserFirst.size,
@@ -100,219 +95,224 @@ async function saveToDatabase() {
       ],
     };
 
-    // Avoid time entry redundancy caused by Chrome
+    // Avoid duplicate entries: only write if the most recent DB record is
+    // older than 60 seconds (guards against duplicate triggers / late fires).
     const checkDBTime = await prisma.deviceData.findFirst({
-      orderBy: { timeStamp: 'desc' }
+      orderBy: { timeStamp: "desc" },
+      select:  { timeStamp: true },
     });
-    
+
     if (!checkDBTime) {
       await prisma.deviceData.create({ data: floorDocument });
-    } else {
-      const timeDiff = Date.parse(floorDocument.timeStamp) - Date.parse(checkDBTime.timeStamp);
-      console.log(`[${dateTime()}] time diff: ${timeDiff}`);
-      
-      if (timeDiff > 30000) {
-        // Get current hour in NY timezone
-        const nyTime = new Date().toLocaleString("en-US", {
-          timeZone: "America/New_York"
-        });
-        const currentHour = new Date(nyTime).getHours();
-        if (currentHour < 2 || currentHour > 6) {
-          await prisma.deviceData.create({ data: floorDocument });
-        }
+      console.log(`[${dateTime()}] Saved first record to database (${uniqKingAll.size} patrons)`);
+      return;
+    }
+
+    // Use .getTime() directly — no string parsing (fixes issue 1.5).
+    const timeDiffMs = now.getTime() - checkDBTime.timeStamp.getTime();
+    console.log(`[${dateTime()}] Time since last DB write: ${Math.round(timeDiffMs / 1000)}s`);
+
+    if (timeDiffMs > 60000) {
+      // Skip silent hours (2 AM – 6 AM Eastern) to avoid noise in overnight data.
+      const currentHour = new Date(
+        new Date().toLocaleString("en-US", { timeZone: "America/New_York" })
+      ).getHours();
+
+      if (currentHour < 2 || currentHour > 6) {
+        await prisma.deviceData.create({ data: floorDocument });
+        console.log(`[${dateTime()}] Saved to database (${uniqKingAll.size} patrons)`);
+      } else {
+        console.log(`[${dateTime()}] Skipping DB write during silent hours (${currentHour}:xx)`);
       }
+    } else {
+      console.log(`[${dateTime()}] Skipping duplicate write (last write was ${Math.round(timeDiffMs / 1000)}s ago)`);
     }
   } catch (err) {
-    console.log(`[${dateTime()}] Error: ${err.stack}`);
+    console.error(`[${dateTime()}] saveToDatabase error: ${err.stack}`);
   }
 }
 
-// Helper: Process recreation center data
-function rec_resetALLarray() {
-  rec_uniqRecAll = new Set();
-}
+// ---------------------------------------------------------------------------
+// Recreation Center — data collection
+// ---------------------------------------------------------------------------
 
-function processRecData(body, bounds) {
+const REC_FLOOR_BOUNDS = {
+  ground: { minX: 10,  maxX: 300, minY: 20,  maxY: 214 },
+  first:  { minX: 190, maxX: 425, minY: 25,  maxY: 270 },
+};
+
+function processRecData(body, recSet) {
+  // If the CMX API returned null skip this floor safely.
+  if (!body || !Array.isArray(body)) return;
+
   for (let i = 0; i < body.length; i++) {
     const device = body[i];
-    const deviceId = device.deviceId;
-    
-    if (isValidDevice(device) && 
-        isWithinBounds(device.locationCoordinate.x, device.locationCoordinate.y, bounds)) {
-      rec_uniqRecAll.add(deviceId);
+    if (
+      isValidDevice(device) &&
+      isWithinBounds(device.locationCoordinate.x, device.locationCoordinate.y, recSet.bounds)
+    ) {
+      recSet.devices.add(device.deviceId);
     }
   }
 }
 
 async function rec_start() {
-  rec_resetALLarray();
+  const groundSet = { bounds: REC_FLOOR_BOUNDS.ground, devices: new Set() };
+  const firstSet  = { bounds: REC_FLOOR_BOUNDS.first,  devices: new Set() };
 
-  // Define recreation center boundaries
-  const recBounds = {
-    ground: { minX: 10, maxX: 300, minY: 20, maxY: 214 },
-    first: { minX: 190, maxX: 425, minY: 25, maxY: 270 }
-  };
+  await axiosApi.getRecGroundRequest((body) => processRecData(body, groundSet));
+  await axiosApi.getRecFirstRequest((body)  => processRecData(body, firstSet));
 
-  // Process recreation center floors
-  await axiosApi.getRecGroundRequest((body) => {
-    processRecData(body, recBounds.ground);
-  });
-
-  await axiosApi.getRecFirstRequest((body) => {
-    processRecData(body, recBounds.first);
-  });
+  // Merge unique device IDs across both floors
+  const allRec = new Set([...groundSet.devices, ...firstSet.devices]);
 
   return {
-    timeStamp: dateTime(),
-    patrons: rec_uniqRecAll.size,
+    timeStamp: new Date(),
+    patrons:   allRec.size,
   };
 }
 
-// Service class for managing device data collection
+// ---------------------------------------------------------------------------
+// DeviceDataService — 15-minute aligned scheduler
+// ---------------------------------------------------------------------------
 class DeviceDataService {
   constructor() {
     this.isRunning = false;
-    this.intervalId = null;
+    this._timeoutId = null;
   }
 
-  // Start the service with proper Express app lifecycle integration
   start() {
     if (this.isRunning) {
       console.log(`[${dateTime()}] Device data service already running`);
       return;
     }
-
     console.log(`[${dateTime()}] Starting device data collection service...`);
     this.isRunning = true;
-
-    // Run initial collection
-    this.collectData();
-
-    // Schedule to run every 15 minutes aligned to :00, :15, :30, :45
-    this.scheduleNextRun();
+    this.collectData();        // immediate first run
+    this._scheduleNextRun();
   }
 
-  // Stop the service gracefully
   stop() {
-    if (this.intervalId) {
-      clearInterval(this.intervalId);
-      this.intervalId = null;
+    if (this._timeoutId) {
+      clearTimeout(this._timeoutId);
+      this._timeoutId = null;
     }
     this.isRunning = false;
     console.log(`[${dateTime()}] Device data service stopped`);
   }
 
-  // Schedule next run aligned to 15-minute intervals (:00, :15, :30, :45)
-  scheduleNextRun() {
-    // Clear any existing interval
-    if (this.intervalId) {
-      clearInterval(this.intervalId);
-      this.intervalId = null;
+  // Schedule the next run aligned to :00, :15, :30, :45 Eastern time.
+  _scheduleNextRun() {
+    if (this._timeoutId) {
+      clearTimeout(this._timeoutId);
+      this._timeoutId = null;
     }
 
-    // Use NY timezone for scheduling
-    const nyTimeString = new Date().toLocaleString("en-US", {
-      timeZone: "America/New_York"
-    });
-    const now = new Date(nyTimeString);
-    const currentMinutes = now.getMinutes();
-    
-    // Find next valid minute mark (:00, :15, :30, :45)
-    const validMinutes = [0, 15, 30, 45];
-    let nextValidMinute = validMinutes.find(minute => minute > currentMinutes);
-    
-    // If no valid minute found in current hour, use :00 of next hour
-    if (!nextValidMinute) {
-      nextValidMinute = 0;
-    }
-    
-    // Calculate milliseconds until next valid time
+    const now = new Date();
+    const currentMinutes  = now.getMinutes();
+    const currentSeconds  = now.getSeconds();
+    const currentMs       = now.getMilliseconds();
+
+    const validMinutes    = [0, 15, 30, 45];
+    // Fix 1.4: use === undefined instead of falsy check (0 is a valid minute mark)
+    let nextValidMinute   = validMinutes.find((m) => m > currentMinutes);
+    if (nextValidMinute === undefined) nextValidMinute = 0;  // top of next hour
+
     let msUntilNext;
     if (nextValidMinute === 0 && currentMinutes >= 45) {
-      // Next hour at :00
-      msUntilNext = (60 - currentMinutes) * 60 * 1000 - now.getSeconds() * 1000 - now.getMilliseconds();
+      // Roll over to :00 of the next hour
+      msUntilNext =
+        (60 - currentMinutes) * 60 * 1000 -
+        currentSeconds * 1000 -
+        currentMs;
     } else {
-      // Same hour at next valid minute
-      msUntilNext = (nextValidMinute - currentMinutes) * 60 * 1000 - now.getSeconds() * 1000 - now.getMilliseconds();
+      msUntilNext =
+        (nextValidMinute - currentMinutes) * 60 * 1000 -
+        currentSeconds * 1000 -
+        currentMs;
     }
 
-    console.log(`Next data collection in ${Math.round(msUntilNext / 1000)} seconds (at :${nextValidMinute.toString().padStart(2, '0')})`);
+    console.log(
+      `[${dateTime()}] Next data collection in ${Math.round(msUntilNext / 1000)}s` +
+      ` (at :${String(nextValidMinute).padStart(2, "0")})`
+    );
 
-    setTimeout(() => {
-      this.collectDataWithValidation();
-      // Schedule the next run recursively to maintain alignment
-      this.scheduleNextRun();
+    this._timeoutId = setTimeout(() => {
+      this._collectDataWithValidation();
+      this._scheduleNextRun();
     }, msUntilNext);
   }
 
-  // Enhanced collectData with minute validation
-  async collectDataWithValidation() {
-    // Double-check that we're at a valid minute mark in NY timezone
-    const nyTimeString = new Date().toLocaleString("en-US", {
-      timeZone: "America/New_York"
-    });
-    const now = new Date(nyTimeString);
-    const currentMinute = now.getMinutes();
-    
-    // Only proceed if we're at :00, :15, :30, or :45
+  // Double-check we're at a valid minute mark before firing.
+  async _collectDataWithValidation() {
+    const currentMinute = new Date().getMinutes();
     if (![0, 15, 30, 45].includes(currentMinute)) {
-      console.log(`[${dateTime()}] Skipping API call - current minute is :${currentMinute.toString().padStart(2, '0')}, not at valid interval`);
+      console.log(
+        `[${dateTime()}] Skipping API call — current minute :${String(currentMinute).padStart(2, "0")} ` +
+        `is not a valid interval`
+      );
       return;
     }
-
-    console.log(`[${dateTime()}] Collecting device data at valid minute mark :${currentMinute.toString().padStart(2, '0')}`);
+    console.log(
+      `[${dateTime()}] Collecting device data at :${String(currentMinute).padStart(2, "0")}`
+    );
     await this.collectData();
   }
 
-  // Collect data from both king and recreation center
+  // Collect data from both buildings then refresh the patron cache.
   async collectData() {
     try {
-      console.log("Collecting device data...");
+      console.log(`[${dateTime()}] Collecting device data...`);
       await Promise.all([
-        king_start(),        // Saves to database via Prisma
-        rec_start_cached()   // Caches in memory only
+        king_start(),          // Saves to DB
+        rec_start_cached(),    // Caches in memory only
       ]);
-      console.log("Device data collection completed");
+      console.log(`[${dateTime()}] Device data collection completed`);
+
+      // Fix 2.3: trigger patron cache refresh immediately after collection
+      // so the dashboard reflects the latest counts without waiting for the
+      // cache's own timer.
+      const patronCache = require("./patronCache");
+      patronCache.updateCache();
     } catch (error) {
-      console.error("Error during data collection:", error);
+      console.error(`[${dateTime()}] Error during data collection:`, error);
     }
   }
 
-  // Get current status
   getStatus() {
     return {
-      isRunning: this.isRunning,
-      lastCollection: dateTime()
+      isRunning:     this.isRunning,
+      lastCollection: dateTime(),
     };
   }
 }
 
-// Create singleton instance
-const deviceDataService = new DeviceDataService();
-
-// Cache for recreation data (in-memory only, not saved to DB)
+// ---------------------------------------------------------------------------
+// Recreation center in-memory cache (not persisted to DB — intentional)
+// ---------------------------------------------------------------------------
 let recDataCache = {
-  timeStamp: null,
-  patrons: 0,
-  lastUpdated: null
+  timeStamp:   null,
+  patrons:     0,
+  lastUpdated: null,
 };
 
-// Enhanced rec_start to cache data in memory
 async function rec_start_cached() {
   const data = await rec_start();
   recDataCache = {
     ...data,
-    lastUpdated: dateTime()
+    lastUpdated: new Date(),
   };
   return recDataCache;
 }
 
-// Get cached recreation data
 function getRecData() {
   return recDataCache;
 }
 
-// Legacy function for backward compatibility
+// Singleton service instance
+const deviceDataService = new DeviceDataService();
+
+// Legacy shim for backward compatibility
 function restart() {
   deviceDataService.start();
 }
@@ -323,8 +323,7 @@ module.exports = {
   getRecData,
   restart,
   deviceDataService,
-  // Export individual functions for API use
   king_start,
   processFloorData,
-  processRecData
+  processRecData,
 };

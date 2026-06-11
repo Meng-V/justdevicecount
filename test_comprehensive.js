@@ -22,7 +22,10 @@ const path = require('path');
 
 // Test configuration
 const TEST_CONFIG = {
-  baseUrl: 'https://localhost:3012',
+  // Dev server runs HTTP; production runs HTTPS. Auto-detect based on NODE_ENV.
+  baseUrl: process.env.NODE_ENV === 'production'
+    ? 'https://localhost:3012'
+    : 'http://localhost:3012',
   timeout: 30000,
   retryAttempts: 3,
   waitBetweenTests: 2000
@@ -206,13 +209,14 @@ runner.afterAll(async () => {
 
 // Test 1: Server Health Check
 runner.test('Server Health Check', async () => {
-  const response = await makeRequest(`${TEST_CONFIG.baseUrl}/`);
+  const response = await makeRequest(`${TEST_CONFIG.baseUrl}/crowdindex/`);
   assert.truthy(response.status >= 200 && response.status < 400, 'Server should be accessible');
 });
 
 // Test 2: Database Connectivity
 runner.test('Database Connectivity', async () => {
-  const prisma = new PrismaClient();
+  const { PrismaClient: PC } = require('@prisma/client');
+  const prisma = new PC();
   try {
     await prisma.$connect();
     log('Database connection successful', 'INFO');
@@ -224,7 +228,7 @@ runner.test('Database Connectivity', async () => {
 
 // Test 3: Patron API Endpoint
 runner.test('Patron API Endpoint', async () => {
-  const response = await makeRequest(`${TEST_CONFIG.baseUrl}/patronapi`);
+  const response = await makeRequest(`${TEST_CONFIG.baseUrl}/crowdindex/patronapi`);
   assert.statusCode(response, 200, 'Patron API should return 200');
   
   const data = response.data;
@@ -239,7 +243,7 @@ runner.test('Patron API Endpoint', async () => {
 
 // Test 4: Recreation API Endpoint
 runner.test('Recreation API Endpoint', async () => {
-  const response = await makeRequest(`${TEST_CONFIG.baseUrl}/recapi`);
+  const response = await makeRequest(`${TEST_CONFIG.baseUrl}/crowdindex/recapi`);
   assert.statusCode(response, 200, 'Recreation API should return 200');
   
   const data = response.data;
@@ -254,7 +258,7 @@ runner.test('Recreation API Endpoint', async () => {
 
 // Test 5: Count by Floor API Endpoint
 runner.test('Count by Floor API Endpoint', async () => {
-  const response = await makeRequest(`${TEST_CONFIG.baseUrl}/count_by_floor`);
+  const response = await makeRequest(`${TEST_CONFIG.baseUrl}/crowdindex/count_by_floor`);
   assert.statusCode(response, 200, 'Count by Floor API should return 200');
   
   const data = response.data;
@@ -265,12 +269,13 @@ runner.test('Count by Floor API Endpoint', async () => {
 // Test 6: CMX API Configuration
 runner.test('CMX API Configuration', async () => {
   const cmxConfig = config.get('address');
-  const authConfig = config.get('app.auth');
-  
+  // Auth is read from CMX_AUTH env var first, then config file fallback.
+  const authConfig = process.env.CMX_AUTH || config.get('app.auth');
+
   assert.exists(cmxConfig.host, 'CMX host should be configured');
   assert.exists(authConfig, 'CMX auth should be configured');
   assert.truthy(cmxConfig.host.startsWith('https://'), 'CMX host should use HTTPS');
-  
+
   // Test basic auth format
   assert.truthy(authConfig.startsWith('Basic '), 'Auth should be Basic auth format');
 });
@@ -279,10 +284,10 @@ runner.test('CMX API Configuration', async () => {
 runner.test('Device Utility Functions', async () => {
   const { dateTime, validRssi, validTime, isValidDevice, isWithinBounds } = require('./modules/deviceUtils');
   
-  // Test dateTime function
+  // Test dateTime function — returns a Date object (not a string)
   const timestamp = dateTime();
   assert.truthy(timestamp, 'dateTime should return a value');
-  assert.truthy(typeof timestamp === 'string', 'dateTime should return a string');
+  assert.truthy(timestamp instanceof Date, 'dateTime should return a Date object');
   
   // Test validRssi function
   assert.equal(validRssi(-50), true, 'RSSI -50 should be valid');
@@ -326,16 +331,16 @@ runner.test('Data Processing Functions', async () => {
   processFloorData(mockDevices, userMap, bounds);
   assert.equal(userMap.size, 1, 'Should process one valid device');
   
-  // Test processRecData
-  processRecData(mockDevices, bounds);
-  // This function modifies a global set, so we can't easily test the result
-  // but we can verify it doesn't throw an error
+  // Test processRecData — now accepts { bounds, devices } object
+  const recSet = { bounds, devices: new Set() };
+  processRecData(mockDevices, recSet);
+  assert.equal(recSet.devices.size, 1, 'Should process one valid rec device');
 });
 
 // Test 9: API Response Time
 runner.test('API Response Time', async () => {
   const startTime = Date.now();
-  const response = await makeRequest(`${TEST_CONFIG.baseUrl}/patronapi`);
+  const response = await makeRequest(`${TEST_CONFIG.baseUrl}/crowdindex/patronapi`);
   const responseTime = Date.now() - startTime;
   
   assert.statusCode(response, 200, 'API should respond successfully');
@@ -345,7 +350,7 @@ runner.test('API Response Time', async () => {
 // Test 10: Error Handling
 runner.test('Error Handling', async () => {
   // Test non-existent endpoint
-  const response = await makeRequest(`${TEST_CONFIG.baseUrl}/nonexistent`);
+  const response = await makeRequest(`${TEST_CONFIG.baseUrl}/crowdindex/nonexistent`);
   assert.statusCode(response, 404, 'Non-existent endpoint should return 404');
 });
 

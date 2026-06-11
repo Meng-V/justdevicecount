@@ -1,36 +1,33 @@
-const { PrismaClient } = require("@prisma/client");
-const config = require("config");
+const prisma = require("./prisma");
 const { dateTime } = require("./deviceUtils");
 
-const prisma = new PrismaClient();
+// 30 days × 24 hours × 4 intervals/hour = 2 880 records maximum.
+// Keeping only the most recent 30 days protects DB query performance and
+// memory usage as the dataset grows.
+const MAX_RECORDS = 30 * 24 * 4;
 
 class PatronCache {
   constructor() {
     this.cachedData = {
-      patrons: 0,
-      timeMap: [],
-      findMax: [],
-      lastTen: [],
+      patrons:     0,
+      timeMap:     [],   // [{ time: ISOString, total: number }]  — raw data, no HTML
+      findMax:     null, // { time: ISOString, patrons: number }
+      lastTen:     [],   // [{ time: ISOString, patrons: number, countByFloor: number[] }]
       lastUpdated: null,
     };
-    this.isUpdating = false;
+    this.isUpdating    = false;
     this.updateInterval = null;
   }
 
-  // Start the background job to update cache every 15 minutes
+  // Start background refresh.  The interval is intentionally kept as a
+  // safety net; the primary trigger is now DeviceDataService.collectData()
+  // calling updateCache() immediately after each collection cycle (fix 2.3).
   startCacheUpdater() {
-    // Initial fetch
     this.updateCache();
-
-    // Set interval for every 15 minutes (900,000 milliseconds)
-    this.updateInterval = setInterval(() => {
-      this.updateCache();
-    }, 15 * 60 * 1000);
-
-    console.log(`[${dateTime()}] Patron cache updater started - will refresh every 15 minutes`);
+    this.updateInterval = setInterval(() => this.updateCache(), 15 * 60 * 1000);
+    console.log(`[${dateTime()}] Patron cache updater started`);
   }
 
-  // Stop the background job
   stopCacheUpdater() {
     if (this.updateInterval) {
       clearInterval(this.updateInterval);
@@ -39,107 +36,79 @@ class PatronCache {
     }
   }
 
-  // Get cached data
+  // Return cached data plus how old the cache is.
   getCachedData() {
     return {
       ...this.cachedData,
-      cacheAge: this.cachedData.lastUpdated
+      cacheAgeMs: this.cachedData.lastUpdated
         ? Date.now() - this.cachedData.lastUpdated
         : null,
     };
   }
 
-  // Update cache by fetching from database
+  // Refresh cache — skips if an update is already in progress.
   async updateCache() {
     if (this.isUpdating) {
-      console.log(`[${dateTime()}] Cache update already in progress, skipping...`);
+      console.log(`[${dateTime()}] Cache update already in progress, skipping`);
       return;
     }
-
     this.isUpdating = true;
     console.log(`[${dateTime()}] Updating patron cache...`);
-
     try {
-      const data = await this.fetchFromDatabase();
-      this.cachedData = {
-        ...data,
-        lastUpdated: Date.now(),
-      };
-      console.log(`[${dateTime()}] Cache updated successfully`);
+      const data = await this._fetchFromDatabase();
+      this.cachedData = { ...data, lastUpdated: Date.now() };
+      console.log(`[${dateTime()}] Cache updated (${data.timeMap.length} data points)`);
     } catch (error) {
-      console.error(`[${dateTime()}] Failed to update cache:`, error);
+      console.error(`[${dateTime()}] Failed to update patron cache:`, error);
     } finally {
       this.isUpdating = false;
     }
   }
 
-  // Database connection and data fetching logic
-  async fetchFromDatabase() {
-    let outputArray = [];
-    let lastTenOutput = [];
+  async _fetchFromDatabase() {
+    // Fetch only the columns actually needed — skip large JSON blobs
+    // (uniqUserGround, uniqUserFirst, etc.) to keep queries fast.
+    const records = await prisma.deviceData.findMany({
+      orderBy: { timeStamp: "desc" },
+      take:    MAX_RECORDS,
+      select:  { timeStamp: true, patrons: true, countByFloor: true },
+    });
 
-    try {
-      console.log(`[${dateTime()}] Cache updater connected to database`);
+    // Most recent patron count
+    const patrons = records[0]?.patrons ?? 0;
 
-      // Fetch all data ordered by timestamp descending
-      const inputArray = await prisma.deviceData.findMany({
-        orderBy: { timeStamp: "desc" },
-      });
+    // Full time-series for charts (oldest → newest for chart rendering)
+    const timeMap = records
+      .slice()
+      .reverse()
+      .map((r) => ({ time: r.timeStamp.toISOString(), total: r.patrons }));
 
-      // Find max patrons record
-      const findMaxArray = await prisma.deviceData.findMany({
-        orderBy: { patrons: "desc" },
-        take: 1,
-      });
+    // All-time peak (separate lightweight query)
+    const peakRecord = await prisma.deviceData.findFirst({
+      orderBy: { patrons: "desc" },
+      select:  { timeStamp: true, patrons: true },
+    });
+    const findMax = peakRecord
+      ? { time: peakRecord.timeStamp.toISOString(), patrons: peakRecord.patrons }
+      : null;
 
-      // Get last 10 records
-      const lastTenRecords = await prisma.deviceData.findMany({
-        orderBy: { timeStamp: "desc" },
-        take: 10,
-      });
+    // Last 10 records for the recent-data table (raw objects, no HTML)
+    const lastTen = records.slice(0, 10).map((r) => ({
+      time:        r.timeStamp.toISOString(),
+      patrons:     r.patrons,
+      countByFloor: r.countByFloor ?? [],
+    }));
 
-      lastTenRecords.forEach((e) => {
-        lastTenOutput.push(
-          "<li class='me-5'>" +
-            e.timeStamp.toISOString() +
-            "  " +
-            e.patrons +
-            "</li>"
-        );
-      });
-
-      let timeMap = new Map();
-      inputArray.forEach((e) => {
-        timeMap.set(e.timeStamp.toISOString(), e.patrons);
-      });
-      outputArray = Array.from(timeMap, ([time, total]) => ({ time, total }));
-
-      return {
-        patrons: inputArray[0]?.patrons || 0,
-        timeMap: outputArray,
-        findMax: findMaxArray[0]
-          ? [
-              findMaxArray[0].timeStamp.toISOString(),
-              "  ",
-              findMaxArray[0].patrons,
-            ]
-          : [],
-        lastTen: lastTenOutput,
-      };
-    } catch (error) {
-      console.error("Database fetch error:", error);
-      throw error;
-    }
+    return { patrons, timeMap, findMax, lastTen };
   }
 
-  // Force an immediate cache update (useful for manual refresh)
+  // Force an immediate refresh (useful for manual triggers / health checks).
   async forceUpdate() {
     await this.updateCache();
     return this.getCachedData();
   }
 }
 
-// Create singleton instance
+// Singleton
 const patronCache = new PatronCache();
-
 module.exports = patronCache;

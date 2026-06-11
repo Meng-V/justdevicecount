@@ -12,6 +12,9 @@
   },
   "app": {
     "port": 3012,
-    "auth": "Basic cXVtOkJ0IWpoemUyenFkcmZ6d3Fu"
+    "auth": "Basic YOUR_BASE64_ENCODED_CREDENTIALS_HERE"
+  },
+  "rec": {
+    "staffOffset": 15
   }
 }
