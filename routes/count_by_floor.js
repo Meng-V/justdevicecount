@@ -1,43 +1,40 @@
-// Staff accounts are reduced.
+// count_by_floor — returns per-floor patron counts for all stored records.
+// Uses the shared Prisma singleton and selects only the columns needed.
 
 const express = require("express");
-const { PrismaClient } = require('@prisma/client');
+const prisma  = require("../modules/prisma");
 const { dateTime } = require("../modules/deviceUtils");
-const router = express.Router();
+const router  = express.Router();
 
-const prisma = new PrismaClient();
+// Match the dashboard window: return at most 30 days of 15-minute intervals.
+const MAX_RECORDS = 30 * 24 * 4;
 
 router.get("/", async (req, res) => {
   try {
-    console.log(`[${dateTime()}] Count by floor API called`);
-    
-    // Fetch all device data ordered by timestamp descending
-    const countByFloorArray = await prisma.deviceData.findMany({
-      orderBy: { timeStamp: 'desc' }
+    console.log(`[${dateTime()}] Count-by-floor API called`);
+
+    const records = await prisma.deviceData.findMany({
+      orderBy: { timeStamp: "desc" },
+      take:    MAX_RECORDS,
+      select:  { timeStamp: true, countByFloor: true },
     });
 
-    let floorMap = new Map();
-    countByFloorArray.forEach((e) => {
-      // Convert timestamp to NY timezone format for consistency
-      const nyTimeString = e.timeStamp.toLocaleString("en-US", {
-        timeZone: "America/New_York"
-      });
-      floorMap.set(nyTimeString, e.countByFloor);
-    });
-    
-    const outputArray = Array.from(floorMap, ([time, countByFloor]) => ({ time, countByFloor }));
+    // Return oldest-first so clients can render a chronological chart.
+    const floorMap = records
+      .slice()
+      .reverse()
+      .map((r) => ({
+        time:        r.timeStamp.toLocaleString("en-US", { timeZone: "America/New_York" }),
+        countByFloor: r.countByFloor,
+      }));
 
-    res.json({
-      floorMap: outputArray,
-    });
+    res.json({ floorMap });
   } catch (err) {
     console.error("Error in count_by_floor:", err.stack);
     res.status(500).json({ error: "Internal server error" });
   }
 });
 
-router.post("/", (req, res) => {
-  res.redirect("/");
-});
+router.post("/", (req, res) => res.redirect("/"));
 
 module.exports = router;

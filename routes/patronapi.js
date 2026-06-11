@@ -1,45 +1,42 @@
-// PatronAPI is now used as the counting source to the Crowd Index.
-// Returns cached King Library data from database in JSON format
+// PatronAPI — returns cached King Library patron data in JSON format.
+// The cache is updated immediately after each 15-minute collection cycle and
+// also refreshed on a 15-minute background interval as a safety net.
 
 const express = require("express");
-const router = express.Router();
+const router  = express.Router();
 const patronCache = require("../modules/patronCache");
 
-router.get("/", async (req, res) => {
+router.get("/", (req, res) => {
   try {
-    // Get cached data from patron cache (King Library data from DB)
-    const cachedData = patronCache.getCachedData();
-    
-    // Format response for API consumers
-    const response = {
+    const cached = patronCache.getCachedData();
+
+    res.json({
       success: true,
       data: {
-        patrons: cachedData.patrons,
-        timeMap: cachedData.timeMap,
-        findMax: cachedData.findMax,
-        lastTen: cachedData.lastTen
+        patrons:  cached.patrons,
+        timeMap:  cached.timeMap,   // [{ time: ISOString, total: number }] — oldest first
+        findMax:  cached.findMax,   // { time: ISOString, patrons: number } | null
+        lastTen:  cached.lastTen,   // [{ time, patrons, countByFloor }]
       },
       metadata: {
-        cached: true,
-        cacheAgeMinutes: cachedData.cacheAge ? Math.floor(cachedData.cacheAge / (1000 * 60)) : null,
-        source: "King Library Database",
-        refreshInterval: "15 minutes"
-      }
-    };
-    
-    res.json(response);
+        cached:          true,
+        cacheAgeMinutes: cached.cacheAgeMs != null
+          ? Math.floor(cached.cacheAgeMs / (1000 * 60))
+          : null,
+        source:          "King Library Database",
+        refreshInterval: "15 minutes",
+      },
+    });
   } catch (err) {
     console.error("Error serving cached patron data:", err);
-    res.status(500).json({ 
+    res.status(500).json({
       success: false,
-      error: "Failed to retrieve patron data",
-      message: err.message 
+      error:   "Failed to retrieve patron data",
+      message: err.message,
     });
   }
 });
 
-router.post("/", (req, res) => {
-  res.redirect("/");
-});
+router.post("/", (req, res) => res.redirect("/"));
 
 module.exports = router;

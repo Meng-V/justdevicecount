@@ -13,5 +13,8 @@
   "app": {
     "port": 3012,
     "auth": "Basic YOUR_BASE64_ENCODED_CREDENTIALS_HERE"
+  },
+  "rec": {
+    "staffOffset": 15
   }
 }

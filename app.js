@@ -7,11 +7,13 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const createError = require("http-errors");
 const cors = require("cors");
+const cron = require("node-cron");
 
 const indexRouter = require("./routes/index");
 const patronapiRouter = require("./routes/patronapi");
 const recapiRouter = require("./routes/recapi");
 const countByFloorRouter = require("./routes/count_by_floor");
+const healthRouter = require("./routes/health");
 const patronCache = require("./modules/patronCache");
 const { deviceDataService } = require("./modules/app_core");
 
@@ -22,58 +24,80 @@ app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
 
 app.use(cors());
-app.use(
-  bodyParser.urlencoded({
-    extended: false,
-  })
-);
-app.use(
-  bodyParser.json({
-    strict: false,
-  })
-);
-// Set base path for the application
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json({ strict: false }));
+
+// Base path for all routes
 const basePath = "/crowdindex";
 
 app.use(basePath, express.static(path.join(__dirname, "public")));
-
-app.use(basePath + "/", indexRouter);
-app.use(basePath + "/patronapi", patronapiRouter);
-app.use(basePath + "/recapi", recapiRouter);
+app.use(basePath + "/",             indexRouter);
+app.use(basePath + "/patronapi",    patronapiRouter);
+app.use(basePath + "/recapi",       recapiRouter);
 app.use(basePath + "/count_by_floor", countByFloorRouter);
+app.use(basePath + "/health",       healthRouter);
 
 // Start background services
 patronCache.startCacheUpdater();
 deviceDataService.start();
 
-// Graceful shutdown handling
-process.on('SIGTERM', () => {
-  console.log(`[${new Date().toLocaleString('en-US', {timeZone: 'America/New_York'})}] SIGTERM received, shutting down gracefully`);
+// ---------------------------------------------------------------------------
+// Monthly export-and-purge CRON job
+// Runs at 00:00 on the 1st of every month (Eastern Time).
+// Exports data older than 2 months to stored_data/ and deletes it from the DB.
+// See scripts/export_and_purge.js for full documentation of the date logic.
+// ---------------------------------------------------------------------------
+cron.schedule(
+  "0 0 1 * *",
+  () => {
+    console.log(
+      `[${new Date().toLocaleString("en-US", { timeZone: "America/New_York" })}]` +
+      " Monthly export-and-purge job triggered"
+    );
+    // Fork a child process so the CRON job runs in isolation and cannot crash
+    // the main Express server even on unexpected errors.
+    const { fork } = require("child_process");
+    const child = fork(
+      require("path").join(__dirname, "scripts", "export_and_purge.js"),
+      [],
+      { env: { ...process.env } }
+    );
+    child.on("exit", (code) => {
+      console.log(
+        `[${new Date().toLocaleString("en-US", { timeZone: "America/New_York" })}]` +
+        ` export_and_purge.js exited with code ${code}`
+      );
+    });
+  },
+  { timezone: "America/New_York" }
+);
+
+// ---------------------------------------------------------------------------
+// Graceful shutdown
+// ---------------------------------------------------------------------------
+function shutdown(signal) {
+  console.log(`[${new Date().toLocaleString("en-US", { timeZone: "America/New_York" })}] ${signal} received, shutting down gracefully`);
   patronCache.stopCacheUpdater();
   deviceDataService.stop();
   process.exit(0);
-});
+}
 
-process.on('SIGINT', () => {
-  console.log(`[${new Date().toLocaleString('en-US', {timeZone: 'America/New_York'})}] SIGINT received, shutting down gracefully`);
-  patronCache.stopCacheUpdater();
-  deviceDataService.stop();
-  process.exit(0);
-});
+process.on("SIGTERM", () => shutdown("SIGTERM"));
+process.on("SIGINT",  () => shutdown("SIGINT"));
 
-// catch 404 and forward to error handler
+// 404 handler
 app.use((req, res, next) => {
-  console.log(`[${new Date().toLocaleString('en-US', {timeZone: 'America/New_York'})}] 404 - Route not found: ${req.method} ${req.url}`);
+  console.log(
+    `[${new Date().toLocaleString("en-US", { timeZone: "America/New_York" })}]` +
+    ` 404 - Route not found: ${req.method} ${req.url}`
+  );
   next(createError(404));
 });
 
-// error handler
+// Error handler
 app.use((err, req, res, next) => {
-  // set locals, only providing error in development
   res.locals.message = err.message;
-  res.locals.error = req.app.get("env") === "development" ? err : {};
-
-  // render the error page
+  res.locals.error   = req.app.get("env") === "development" ? err : {};
   res.status(err.status || 500);
   res.send("error");
 });
