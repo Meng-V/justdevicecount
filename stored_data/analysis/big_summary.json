@@ -1,0 +1,7801 @@
+{
+  "generated_at": "2026-06-12T21:00:31Z",
+  "et_offset_hours": -4,
+  "global": {
+    "overall_stats": {
+      "total_records": 18394,
+      "months_covered": [
+        "2025-10",
+        "2025-11",
+        "2025-12",
+        "2026-01",
+        "2026-02",
+        "2026-03",
+        "2026-04",
+        "2026-05"
+      ],
+      "all_time_avg": 278,
+      "all_time_peak": 1554,
+      "all_time_low": 10,
+      "peak_record": {
+        "timestamp_utc": "2025-12-09T03:15:06.000Z",
+        "timestamp_et": "2025-12-08 23:15 ET",
+        "weekday": "Monday",
+        "patrons": 1554,
+        "countByFloor": [
+          332,
+          1008,
+          145,
+          70
+        ]
+      },
+      "quiet_record": {
+        "timestamp_utc": "2026-05-22T01:00:01.000Z",
+        "timestamp_et": "2026-05-21 21:00 ET",
+        "weekday": "Thursday",
+        "patrons": 10,
+        "countByFloor": [
+          1,
+          4,
+          0,
+          5
+        ]
+      }
+    },
+    "monthly_overview": [
+      {
+        "month": "2025-10",
+        "record_count": 2317,
+        "avg_patrons": 387,
+        "peak_patrons": 1083,
+        "peak_date": "2025-10-28 16:15 ET",
+        "peak_weekday": "Tuesday"
+      },
+      {
+        "month": "2025-11",
+        "record_count": 2281,
+        "avg_patrons": 327,
+        "peak_patrons": 963,
+        "peak_date": "2025-11-05 15:45 ET",
+        "peak_weekday": "Wednesday"
+      },
+      {
+        "month": "2025-12",
+        "record_count": 2122,
+        "avg_patrons": 184,
+        "peak_patrons": 1554,
+        "peak_date": "2025-12-08 23:15 ET",
+        "peak_weekday": "Monday"
+      },
+      {
+        "month": "2026-01",
+        "record_count": 2424,
+        "avg_patrons": 78,
+        "peak_patrons": 315,
+        "peak_date": "2026-01-29 13:51 ET",
+        "peak_weekday": "Thursday"
+      },
+      {
+        "month": "2026-02",
+        "record_count": 2275,
+        "avg_patrons": 263,
+        "peak_patrons": 869,
+        "peak_date": "2026-02-25 17:15 ET",
+        "peak_weekday": "Wednesday"
+      },
+      {
+        "month": "2026-03",
+        "record_count": 2360,
+        "avg_patrons": 359,
+        "peak_patrons": 1006,
+        "peak_date": "2026-03-16 16:30 ET",
+        "peak_weekday": "Monday"
+      },
+      {
+        "month": "2026-04",
+        "record_count": 2279,
+        "avg_patrons": 436,
+        "peak_patrons": 1039,
+        "peak_date": "2026-04-08 15:30 ET",
+        "peak_weekday": "Wednesday"
+      },
+      {
+        "month": "2026-05",
+        "record_count": 2336,
+        "avg_patrons": 195,
+        "peak_patrons": 1311,
+        "peak_date": "2026-05-11 21:30 ET",
+        "peak_weekday": "Monday"
+      }
+    ],
+    "day_of_week_profile": [
+      {
+        "weekday": "Monday",
+        "avg": 348,
+        "peak": 1554,
+        "low": 0,
+        "samples": 2573
+      },
+      {
+        "weekday": "Tuesday",
+        "avg": 356,
+        "peak": 1208,
+        "low": 0,
+        "samples": 2618
+      },
+      {
+        "weekday": "Wednesday",
+        "avg": 345,
+        "peak": 1039,
+        "low": 32,
+        "samples": 2671
+      },
+      {
+        "weekday": "Thursday",
+        "avg": 291,
+        "peak": 863,
+        "low": 10,
+        "samples": 2704
+      },
+      {
+        "weekday": "Friday",
+        "avg": 219,
+        "peak": 741,
+        "low": 29,
+        "samples": 2643
+      },
+      {
+        "weekday": "Saturday",
+        "avg": 161,
+        "peak": 526,
+        "low": 24,
+        "samples": 2597
+      },
+      {
+        "weekday": "Sunday",
+        "avg": 227,
+        "peak": 952,
+        "low": 26,
+        "samples": 2588
+      }
+    ],
+    "hourly_profile": [
+      {
+        "hour_et": 0,
+        "label": "00:00",
+        "avg": 199,
+        "peak": 1208,
+        "samples": 962
+      },
+      {
+        "hour_et": 1,
+        "label": "01:00",
+        "avg": 168,
+        "peak": 673,
+        "samples": 963
+      },
+      {
+        "hour_et": 2,
+        "label": "02:00",
+        "avg": 123,
+        "peak": 594,
+        "samples": 500
+      },
+      {
+        "hour_et": 3,
+        "label": "03:00",
+        "avg": 0,
+        "peak": 0,
+        "samples": 1
+      },
+      {
+        "hour_et": 4,
+        "label": "04:00",
+        "avg": 0,
+        "peak": 0,
+        "samples": 1
+      },
+      {
+        "hour_et": 5,
+        "label": "05:00",
+        "avg": 0,
+        "peak": 0,
+        "samples": 1
+      },
+      {
+        "hour_et": 6,
+        "label": "06:00",
+        "avg": 0,
+        "peak": 0,
+        "samples": 1
+      },
+      {
+        "hour_et": 7,
+        "label": "07:00",
+        "avg": 194,
+        "peak": 651,
+        "samples": 464
+      },
+      {
+        "hour_et": 8,
+        "label": "08:00",
+        "avg": 166,
+        "peak": 674,
+        "samples": 968
+      },
+      {
+        "hour_et": 9,
+        "label": "09:00",
+        "avg": 190,
+        "peak": 761,
+        "samples": 966
+      },
+      {
+        "hour_et": 10,
+        "label": "10:00",
+        "avg": 233,
+        "peak": 825,
+        "samples": 961
+      },
+      {
+        "hour_et": 11,
+        "label": "11:00",
+        "avg": 282,
+        "peak": 890,
+        "samples": 966
+      },
+      {
+        "hour_et": 12,
+        "label": "12:00",
+        "avg": 314,
+        "peak": 924,
+        "samples": 969
+      },
+      {
+        "hour_et": 13,
+        "label": "13:00",
+        "avg": 342,
+        "peak": 970,
+        "samples": 968
+      },
+      {
+        "hour_et": 14,
+        "label": "14:00",
+        "avg": 367,
+        "peak": 1163,
+        "samples": 984
+      },
+      {
+        "hour_et": 15,
+        "label": "15:00",
+        "avg": 381,
+        "peak": 1226,
+        "samples": 986
+      },
+      {
+        "hour_et": 16,
+        "label": "16:00",
+        "avg": 377,
+        "peak": 1213,
+        "samples": 983
+      },
+      {
+        "hour_et": 17,
+        "label": "17:00",
+        "avg": 354,
+        "peak": 1235,
+        "samples": 969
+      },
+      {
+        "hour_et": 18,
+        "label": "18:00",
+        "avg": 326,
+        "peak": 1151,
+        "samples": 967
+      },
+      {
+        "hour_et": 19,
+        "label": "19:00",
+        "avg": 310,
+        "peak": 1048,
+        "samples": 971
+      },
+      {
+        "hour_et": 20,
+        "label": "20:00",
+        "avg": 306,
+        "peak": 1159,
+        "samples": 964
+      },
+      {
+        "hour_et": 21,
+        "label": "21:00",
+        "avg": 298,
+        "peak": 1455,
+        "samples": 964
+      },
+      {
+        "hour_et": 22,
+        "label": "22:00",
+        "avg": 274,
+        "peak": 1536,
+        "samples": 960
+      },
+      {
+        "hour_et": 23,
+        "label": "23:00",
+        "avg": 236,
+        "peak": 1554,
+        "samples": 959
+      }
+    ],
+    "floor_breakdown": [
+      {
+        "floor": "Ground",
+        "avg": 38,
+        "peak": 425,
+        "low": 0,
+        "top_hours": [
+          {
+            "hour_et": 15,
+            "label": "15:00",
+            "avg": 60
+          },
+          {
+            "hour_et": 16,
+            "label": "16:00",
+            "avg": 60
+          },
+          {
+            "hour_et": 17,
+            "label": "17:00",
+            "avg": 57
+          },
+          {
+            "hour_et": 14,
+            "label": "14:00",
+            "avg": 56
+          },
+          {
+            "hour_et": 18,
+            "label": "18:00",
+            "avg": 52
+          }
+        ],
+        "top_dates": [
+          {
+            "date": "2025-12-08",
+            "avg": 362
+          },
+          {
+            "date": "2025-12-09",
+            "avg": 207
+          },
+          {
+            "date": "2026-05-11",
+            "avg": 179
+          },
+          {
+            "date": "2026-05-10",
+            "avg": 149
+          },
+          {
+            "date": "2026-05-12",
+            "avg": 147
+          }
+        ]
+      },
+      {
+        "floor": "First",
+        "avg": 166,
+        "peak": 1008,
+        "low": 0,
+        "top_hours": [
+          {
+            "hour_et": 15,
+            "label": "15:00",
+            "avg": 209
+          },
+          {
+            "hour_et": 16,
+            "label": "16:00",
+            "avg": 208
+          },
+          {
+            "hour_et": 14,
+            "label": "14:00",
+            "avg": 203
+          },
+          {
+            "hour_et": 17,
+            "label": "17:00",
+            "avg": 202
+          },
+          {
+            "hour_et": 18,
+            "label": "18:00",
+            "avg": 194
+          }
+        ],
+        "top_dates": [
+          {
+            "date": "2025-10-28",
+            "avg": 645
+          },
+          {
+            "date": "2025-10-29",
+            "avg": 630
+          },
+          {
+            "date": "2025-11-04",
+            "avg": 592
+          },
+          {
+            "date": "2025-10-27",
+            "avg": 580
+          },
+          {
+            "date": "2025-12-08",
+            "avg": 580
+          }
+        ]
+      },
+      {
+        "floor": "Second",
+        "avg": 42,
+        "peak": 246,
+        "low": 0,
+        "top_hours": [
+          {
+            "hour_et": 15,
+            "label": "15:00",
+            "avg": 63
+          },
+          {
+            "hour_et": 16,
+            "label": "16:00",
+            "avg": 62
+          },
+          {
+            "hour_et": 14,
+            "label": "14:00",
+            "avg": 60
+          },
+          {
+            "hour_et": 17,
+            "label": "17:00",
+            "avg": 57
+          },
+          {
+            "hour_et": 13,
+            "label": "13:00",
+            "avg": 55
+          }
+        ],
+        "top_dates": [
+          {
+            "date": "2025-12-08",
+            "avg": 191
+          },
+          {
+            "date": "2026-05-11",
+            "avg": 138
+          },
+          {
+            "date": "2025-12-09",
+            "avg": 131
+          },
+          {
+            "date": "2026-05-12",
+            "avg": 119
+          },
+          {
+            "date": "2026-05-10",
+            "avg": 110
+          }
+        ]
+      },
+      {
+        "floor": "Third",
+        "avg": 33,
+        "peak": 137,
+        "low": 0,
+        "top_hours": [
+          {
+            "hour_et": 15,
+            "label": "15:00",
+            "avg": 49
+          },
+          {
+            "hour_et": 14,
+            "label": "14:00",
+            "avg": 47
+          },
+          {
+            "hour_et": 16,
+            "label": "16:00",
+            "avg": 47
+          },
+          {
+            "hour_et": 13,
+            "label": "13:00",
+            "avg": 46
+          },
+          {
+            "hour_et": 12,
+            "label": "12:00",
+            "avg": 42
+          }
+        ],
+        "top_dates": [
+          {
+            "date": "2025-12-08",
+            "avg": 79
+          },
+          {
+            "date": "2025-10-15",
+            "avg": 57
+          },
+          {
+            "date": "2025-10-01",
+            "avg": 56
+          },
+          {
+            "date": "2025-12-09",
+            "avg": 56
+          },
+          {
+            "date": "2026-05-11",
+            "avg": 55
+          }
+        ]
+      }
+    ],
+    "cross_month_top10_days": [
+      {
+        "date": "2025-12-08",
+        "weekday": "Monday",
+        "avg": 1212,
+        "peak": 1554
+      },
+      {
+        "date": "2025-10-28",
+        "weekday": "Tuesday",
+        "avg": 869,
+        "peak": 1083
+      },
+      {
+        "date": "2025-10-29",
+        "weekday": "Wednesday",
+        "avg": 822,
+        "peak": 1014
+      },
+      {
+        "date": "2026-04-08",
+        "weekday": "Wednesday",
+        "avg": 789,
+        "peak": 1039
+      },
+      {
+        "date": "2026-04-07",
+        "weekday": "Tuesday",
+        "avg": 787,
+        "peak": 1020
+      },
+      {
+        "date": "2025-11-04",
+        "weekday": "Tuesday",
+        "avg": 782,
+        "peak": 940
+      },
+      {
+        "date": "2025-10-27",
+        "weekday": "Monday",
+        "avg": 780,
+        "peak": 1014
+      },
+      {
+        "date": "2025-11-05",
+        "weekday": "Wednesday",
+        "avg": 757,
+        "peak": 963
+      },
+      {
+        "date": "2025-11-03",
+        "weekday": "Monday",
+        "avg": 730,
+        "peak": 950
+      },
+      {
+        "date": "2026-03-17",
+        "weekday": "Tuesday",
+        "avg": 728,
+        "peak": 929
+      }
+    ],
+    "cross_month_low10_days": [
+      {
+        "date": "2026-05-25",
+        "weekday": "Monday",
+        "avg": 26,
+        "peak": 30
+      },
+      {
+        "date": "2026-05-24",
+        "weekday": "Sunday",
+        "avg": 30,
+        "peak": 35
+      },
+      {
+        "date": "2026-05-23",
+        "weekday": "Saturday",
+        "avg": 31,
+        "peak": 36
+      },
+      {
+        "date": "2026-01-01",
+        "weekday": "Thursday",
+        "avg": 37,
+        "peak": 39
+      },
+      {
+        "date": "2025-12-31",
+        "weekday": "Wednesday",
+        "avg": 37,
+        "peak": 39
+      },
+      {
+        "date": "2025-12-30",
+        "weekday": "Tuesday",
+        "avg": 38,
+        "peak": 42
+      },
+      {
+        "date": "2025-12-29",
+        "weekday": "Monday",
+        "avg": 40,
+        "peak": 42
+      },
+      {
+        "date": "2025-12-28",
+        "weekday": "Sunday",
+        "avg": 40,
+        "peak": 43
+      },
+      {
+        "date": "2025-12-27",
+        "weekday": "Saturday",
+        "avg": 40,
+        "peak": 43
+      },
+      {
+        "date": "2025-12-26",
+        "weekday": "Friday",
+        "avg": 40,
+        "peak": 43
+      }
+    ]
+  },
+  "months": {
+    "2025-10": {
+      "month": "2025-10",
+      "summary": {
+        "record_count": 2317,
+        "avg_patrons": 387,
+        "peak_patrons": 1083,
+        "low_patrons": 57
+      },
+      "peak_record": {
+        "timestamp_utc": "2025-10-28T20:15:10.000Z",
+        "timestamp_et": "2025-10-28 16:15 ET",
+        "weekday": "Tuesday",
+        "patrons": 1083,
+        "countByFloor": [
+          142,
+          755,
+          114,
+          72
+        ]
+      },
+      "quiet_record": {
+        "timestamp_utc": "2025-10-12T12:45:02.000Z",
+        "timestamp_et": "2025-10-12 08:45 ET",
+        "weekday": "Sunday",
+        "patrons": 57,
+        "countByFloor": [
+          3,
+          23,
+          9,
+          22
+        ]
+      },
+      "top10_days": [
+        {
+          "date": "2025-10-28",
+          "weekday": "Tuesday",
+          "avg": 869,
+          "peak": 1083,
+          "low": 570,
+          "samples": 76
+        },
+        {
+          "date": "2025-10-29",
+          "weekday": "Wednesday",
+          "avg": 822,
+          "peak": 1014,
+          "low": 597,
+          "samples": 76
+        },
+        {
+          "date": "2025-10-27",
+          "weekday": "Monday",
+          "avg": 780,
+          "peak": 1014,
+          "low": 452,
+          "samples": 76
+        },
+        {
+          "date": "2025-10-22",
+          "weekday": "Wednesday",
+          "avg": 672,
+          "peak": 843,
+          "low": 448,
+          "samples": 76
+        },
+        {
+          "date": "2025-10-30",
+          "weekday": "Thursday",
+          "avg": 648,
+          "peak": 843,
+          "low": 461,
+          "samples": 76
+        },
+        {
+          "date": "2025-10-23",
+          "weekday": "Thursday",
+          "avg": 633,
+          "peak": 820,
+          "low": 456,
+          "samples": 76
+        },
+        {
+          "date": "2025-10-31",
+          "weekday": "Friday",
+          "avg": 538,
+          "peak": 717,
+          "low": 411,
+          "samples": 60
+        },
+        {
+          "date": "2025-10-21",
+          "weekday": "Tuesday",
+          "avg": 536,
+          "peak": 870,
+          "low": 76,
+          "samples": 76
+        },
+        {
+          "date": "2025-10-24",
+          "weekday": "Friday",
+          "avg": 507,
+          "peak": 691,
+          "low": 360,
+          "samples": 76
+        },
+        {
+          "date": "2025-10-26",
+          "weekday": "Sunday",
+          "avg": 502,
+          "peak": 659,
+          "low": 319,
+          "samples": 76
+        }
+      ],
+      "bottom10_days": [
+        {
+          "date": "2025-10-11",
+          "weekday": "Saturday",
+          "avg": 61,
+          "peak": 64,
+          "low": 58,
+          "samples": 76
+        },
+        {
+          "date": "2025-10-10",
+          "weekday": "Friday",
+          "avg": 106,
+          "peak": 180,
+          "low": 59,
+          "samples": 76
+        },
+        {
+          "date": "2025-10-18",
+          "weekday": "Saturday",
+          "avg": 129,
+          "peak": 188,
+          "low": 74,
+          "samples": 76
+        },
+        {
+          "date": "2025-10-12",
+          "weekday": "Sunday",
+          "avg": 130,
+          "peak": 229,
+          "low": 57,
+          "samples": 76
+        },
+        {
+          "date": "2025-10-09",
+          "weekday": "Thursday",
+          "avg": 163,
+          "peak": 290,
+          "low": 75,
+          "samples": 76
+        },
+        {
+          "date": "2025-10-04",
+          "weekday": "Saturday",
+          "avg": 171,
+          "peak": 267,
+          "low": 100,
+          "samples": 76
+        },
+        {
+          "date": "2025-10-17",
+          "weekday": "Friday",
+          "avg": 193,
+          "peak": 354,
+          "low": 74,
+          "samples": 76
+        },
+        {
+          "date": "2025-10-19",
+          "weekday": "Sunday",
+          "avg": 198,
+          "peak": 348,
+          "low": 72,
+          "samples": 76
+        },
+        {
+          "date": "2025-10-03",
+          "weekday": "Friday",
+          "avg": 223,
+          "peak": 421,
+          "low": 78,
+          "samples": 76
+        },
+        {
+          "date": "2025-10-20",
+          "weekday": "Monday",
+          "avg": 273,
+          "peak": 472,
+          "low": 69,
+          "samples": 76
+        }
+      ],
+      "all_days": [
+        {
+          "date": "2025-10-01",
+          "weekday": "Wednesday",
+          "avg": 417,
+          "peak": 569,
+          "low": 169,
+          "samples": 50
+        },
+        {
+          "date": "2025-10-02",
+          "weekday": "Thursday",
+          "avg": 291,
+          "peak": 519,
+          "low": 70,
+          "samples": 79
+        },
+        {
+          "date": "2025-10-03",
+          "weekday": "Friday",
+          "avg": 223,
+          "peak": 421,
+          "low": 78,
+          "samples": 76
+        },
+        {
+          "date": "2025-10-04",
+          "weekday": "Saturday",
+          "avg": 171,
+          "peak": 267,
+          "low": 100,
+          "samples": 76
+        },
+        {
+          "date": "2025-10-05",
+          "weekday": "Sunday",
+          "avg": 298,
+          "peak": 512,
+          "low": 96,
+          "samples": 76
+        },
+        {
+          "date": "2025-10-06",
+          "weekday": "Monday",
+          "avg": 427,
+          "peak": 654,
+          "low": 109,
+          "samples": 76
+        },
+        {
+          "date": "2025-10-07",
+          "weekday": "Tuesday",
+          "avg": 331,
+          "peak": 482,
+          "low": 99,
+          "samples": 76
+        },
+        {
+          "date": "2025-10-08",
+          "weekday": "Wednesday",
+          "avg": 288,
+          "peak": 521,
+          "low": 83,
+          "samples": 76
+        },
+        {
+          "date": "2025-10-09",
+          "weekday": "Thursday",
+          "avg": 163,
+          "peak": 290,
+          "low": 75,
+          "samples": 76
+        },
+        {
+          "date": "2025-10-10",
+          "weekday": "Friday",
+          "avg": 106,
+          "peak": 180,
+          "low": 59,
+          "samples": 76
+        },
+        {
+          "date": "2025-10-11",
+          "weekday": "Saturday",
+          "avg": 61,
+          "peak": 64,
+          "low": 58,
+          "samples": 76
+        },
+        {
+          "date": "2025-10-12",
+          "weekday": "Sunday",
+          "avg": 130,
+          "peak": 229,
+          "low": 57,
+          "samples": 76
+        },
+        {
+          "date": "2025-10-13",
+          "weekday": "Monday",
+          "avg": 344,
+          "peak": 581,
+          "low": 57,
+          "samples": 76
+        },
+        {
+          "date": "2025-10-14",
+          "weekday": "Tuesday",
+          "avg": 424,
+          "peak": 675,
+          "low": 71,
+          "samples": 76
+        },
+        {
+          "date": "2025-10-15",
+          "weekday": "Wednesday",
+          "avg": 380,
+          "peak": 611,
+          "low": 84,
+          "samples": 76
+        },
+        {
+          "date": "2025-10-16",
+          "weekday": "Thursday",
+          "avg": 320,
+          "peak": 564,
+          "low": 79,
+          "samples": 76
+        },
+        {
+          "date": "2025-10-17",
+          "weekday": "Friday",
+          "avg": 193,
+          "peak": 354,
+          "low": 74,
+          "samples": 76
+        },
+        {
+          "date": "2025-10-18",
+          "weekday": "Saturday",
+          "avg": 129,
+          "peak": 188,
+          "low": 74,
+          "samples": 76
+        },
+        {
+          "date": "2025-10-19",
+          "weekday": "Sunday",
+          "avg": 198,
+          "peak": 348,
+          "low": 72,
+          "samples": 76
+        },
+        {
+          "date": "2025-10-20",
+          "weekday": "Monday",
+          "avg": 273,
+          "peak": 472,
+          "low": 69,
+          "samples": 76
+        },
+        {
+          "date": "2025-10-21",
+          "weekday": "Tuesday",
+          "avg": 536,
+          "peak": 870,
+          "low": 76,
+          "samples": 76
+        },
+        {
+          "date": "2025-10-22",
+          "weekday": "Wednesday",
+          "avg": 672,
+          "peak": 843,
+          "low": 448,
+          "samples": 76
+        },
+        {
+          "date": "2025-10-23",
+          "weekday": "Thursday",
+          "avg": 633,
+          "peak": 820,
+          "low": 456,
+          "samples": 76
+        },
+        {
+          "date": "2025-10-24",
+          "weekday": "Friday",
+          "avg": 507,
+          "peak": 691,
+          "low": 360,
+          "samples": 76
+        },
+        {
+          "date": "2025-10-25",
+          "weekday": "Saturday",
+          "avg": 377,
+          "peak": 440,
+          "low": 321,
+          "samples": 76
+        },
+        {
+          "date": "2025-10-26",
+          "weekday": "Sunday",
+          "avg": 502,
+          "peak": 659,
+          "low": 319,
+          "samples": 76
+        },
+        {
+          "date": "2025-10-27",
+          "weekday": "Monday",
+          "avg": 780,
+          "peak": 1014,
+          "low": 452,
+          "samples": 76
+        },
+        {
+          "date": "2025-10-28",
+          "weekday": "Tuesday",
+          "avg": 869,
+          "peak": 1083,
+          "low": 570,
+          "samples": 76
+        },
+        {
+          "date": "2025-10-29",
+          "weekday": "Wednesday",
+          "avg": 822,
+          "peak": 1014,
+          "low": 597,
+          "samples": 76
+        },
+        {
+          "date": "2025-10-30",
+          "weekday": "Thursday",
+          "avg": 648,
+          "peak": 843,
+          "low": 461,
+          "samples": 76
+        },
+        {
+          "date": "2025-10-31",
+          "weekday": "Friday",
+          "avg": 538,
+          "peak": 717,
+          "low": 411,
+          "samples": 60
+        }
+      ],
+      "day_of_week": [
+        {
+          "weekday": "Monday",
+          "avg": 456,
+          "peak": 1014,
+          "low": 57,
+          "samples": 304
+        },
+        {
+          "weekday": "Tuesday",
+          "avg": 540,
+          "peak": 1083,
+          "low": 71,
+          "samples": 304
+        },
+        {
+          "weekday": "Wednesday",
+          "avg": 523,
+          "peak": 1014,
+          "low": 83,
+          "samples": 354
+        },
+        {
+          "weekday": "Thursday",
+          "avg": 410,
+          "peak": 843,
+          "low": 70,
+          "samples": 383
+        },
+        {
+          "weekday": "Friday",
+          "avg": 304,
+          "peak": 717,
+          "low": 59,
+          "samples": 364
+        },
+        {
+          "weekday": "Saturday",
+          "avg": 185,
+          "peak": 440,
+          "low": 58,
+          "samples": 304
+        },
+        {
+          "weekday": "Sunday",
+          "avg": 282,
+          "peak": 659,
+          "low": 57,
+          "samples": 304
+        }
+      ],
+      "hourly_profile": [
+        {
+          "hour_et": 0,
+          "label": "00:00",
+          "avg": 253,
+          "peak": 792,
+          "samples": 120
+        },
+        {
+          "hour_et": 1,
+          "label": "01:00",
+          "avg": 213,
+          "peak": 673,
+          "samples": 120
+        },
+        {
+          "hour_et": 2,
+          "label": "02:00",
+          "avg": 0,
+          "peak": 0,
+          "samples": 1
+        },
+        {
+          "hour_et": 3,
+          "label": "03:00",
+          "avg": 0,
+          "peak": 0,
+          "samples": 1
+        },
+        {
+          "hour_et": 4,
+          "label": "04:00",
+          "avg": 0,
+          "peak": 0,
+          "samples": 1
+        },
+        {
+          "hour_et": 5,
+          "label": "05:00",
+          "avg": 0,
+          "peak": 0,
+          "samples": 1
+        },
+        {
+          "hour_et": 6,
+          "label": "06:00",
+          "avg": 0,
+          "peak": 0,
+          "samples": 1
+        },
+        {
+          "hour_et": 7,
+          "label": "07:00",
+          "avg": 212,
+          "peak": 651,
+          "samples": 120
+        },
+        {
+          "hour_et": 8,
+          "label": "08:00",
+          "avg": 236,
+          "peak": 674,
+          "samples": 120
+        },
+        {
+          "hour_et": 9,
+          "label": "09:00",
+          "avg": 285,
+          "peak": 761,
+          "samples": 120
+        },
+        {
+          "hour_et": 10,
+          "label": "10:00",
+          "avg": 366,
+          "peak": 825,
+          "samples": 120
+        },
+        {
+          "hour_et": 11,
+          "label": "11:00",
+          "avg": 421,
+          "peak": 890,
+          "samples": 122
+        },
+        {
+          "hour_et": 12,
+          "label": "12:00",
+          "avg": 452,
+          "peak": 924,
+          "samples": 124
+        },
+        {
+          "hour_et": 13,
+          "label": "13:00",
+          "avg": 481,
+          "peak": 968,
+          "samples": 124
+        },
+        {
+          "hour_et": 14,
+          "label": "14:00",
+          "avg": 514,
+          "peak": 1037,
+          "samples": 125
+        },
+        {
+          "hour_et": 15,
+          "label": "15:00",
+          "avg": 515,
+          "peak": 983,
+          "samples": 125
+        },
+        {
+          "hour_et": 16,
+          "label": "16:00",
+          "avg": 511,
+          "peak": 1083,
+          "samples": 125
+        },
+        {
+          "hour_et": 17,
+          "label": "17:00",
+          "avg": 472,
+          "peak": 1033,
+          "samples": 124
+        },
+        {
+          "hour_et": 18,
+          "label": "18:00",
+          "avg": 439,
+          "peak": 1023,
+          "samples": 124
+        },
+        {
+          "hour_et": 19,
+          "label": "19:00",
+          "avg": 432,
+          "peak": 1048,
+          "samples": 124
+        },
+        {
+          "hour_et": 20,
+          "label": "20:00",
+          "avg": 438,
+          "peak": 1045,
+          "samples": 120
+        },
+        {
+          "hour_et": 21,
+          "label": "21:00",
+          "avg": 420,
+          "peak": 1025,
+          "samples": 120
+        },
+        {
+          "hour_et": 22,
+          "label": "22:00",
+          "avg": 369,
+          "peak": 981,
+          "samples": 120
+        },
+        {
+          "hour_et": 23,
+          "label": "23:00",
+          "avg": 303,
+          "peak": 895,
+          "samples": 120
+        }
+      ],
+      "floor_breakdown": [
+        {
+          "floor": "Ground",
+          "avg": 52,
+          "peak": 200,
+          "low": 2,
+          "top_hours": [
+            {
+              "hour_et": 16,
+              "label": "16:00",
+              "avg": 81
+            },
+            {
+              "hour_et": 15,
+              "label": "15:00",
+              "avg": 79
+            },
+            {
+              "hour_et": 14,
+              "label": "14:00",
+              "avg": 76
+            },
+            {
+              "hour_et": 17,
+              "label": "17:00",
+              "avg": 76
+            },
+            {
+              "hour_et": 20,
+              "label": "20:00",
+              "avg": 74
+            }
+          ],
+          "top_dates": [
+            {
+              "date": "2025-10-14",
+              "avg": 105
+            },
+            {
+              "date": "2025-10-28",
+              "avg": 94
+            },
+            {
+              "date": "2025-10-27",
+              "avg": 88
+            },
+            {
+              "date": "2025-10-01",
+              "avg": 84
+            },
+            {
+              "date": "2025-10-13",
+              "avg": 82
+            }
+          ]
+        },
+        {
+          "floor": "First",
+          "avg": 245,
+          "peak": 771,
+          "low": 22,
+          "top_hours": [
+            {
+              "hour_et": 14,
+              "label": "14:00",
+              "avg": 302
+            },
+            {
+              "hour_et": 16,
+              "label": "16:00",
+              "avg": 300
+            },
+            {
+              "hour_et": 15,
+              "label": "15:00",
+              "avg": 295
+            },
+            {
+              "hour_et": 17,
+              "label": "17:00",
+              "avg": 290
+            },
+            {
+              "hour_et": 13,
+              "label": "13:00",
+              "avg": 286
+            }
+          ],
+          "top_dates": [
+            {
+              "date": "2025-10-28",
+              "avg": 645
+            },
+            {
+              "date": "2025-10-29",
+              "avg": 630
+            },
+            {
+              "date": "2025-10-27",
+              "avg": 580
+            },
+            {
+              "date": "2025-10-30",
+              "avg": 521
+            },
+            {
+              "date": "2025-10-22",
+              "avg": 497
+            }
+          ]
+        },
+        {
+          "floor": "Second",
+          "avg": 50,
+          "peak": 132,
+          "low": 8,
+          "top_hours": [
+            {
+              "hour_et": 16,
+              "label": "16:00",
+              "avg": 74
+            },
+            {
+              "hour_et": 15,
+              "label": "15:00",
+              "avg": 73
+            },
+            {
+              "hour_et": 14,
+              "label": "14:00",
+              "avg": 72
+            },
+            {
+              "hour_et": 13,
+              "label": "13:00",
+              "avg": 65
+            },
+            {
+              "hour_et": 17,
+              "label": "17:00",
+              "avg": 64
+            }
+          ],
+          "top_dates": [
+            {
+              "date": "2025-10-01",
+              "avg": 91
+            },
+            {
+              "date": "2025-10-28",
+              "avg": 81
+            },
+            {
+              "date": "2025-10-06",
+              "avg": 80
+            },
+            {
+              "date": "2025-10-14",
+              "avg": 73
+            },
+            {
+              "date": "2025-10-27",
+              "avg": 73
+            }
+          ]
+        },
+        {
+          "floor": "Third",
+          "avg": 40,
+          "peak": 137,
+          "low": 19,
+          "top_hours": [
+            {
+              "hour_et": 15,
+              "label": "15:00",
+              "avg": 69
+            },
+            {
+              "hour_et": 14,
+              "label": "14:00",
+              "avg": 64
+            },
+            {
+              "hour_et": 13,
+              "label": "13:00",
+              "avg": 61
+            },
+            {
+              "hour_et": 16,
+              "label": "16:00",
+              "avg": 57
+            },
+            {
+              "hour_et": 12,
+              "label": "12:00",
+              "avg": 54
+            }
+          ],
+          "top_dates": [
+            {
+              "date": "2025-10-15",
+              "avg": 57
+            },
+            {
+              "date": "2025-10-01",
+              "avg": 56
+            },
+            {
+              "date": "2025-10-02",
+              "avg": 54
+            },
+            {
+              "date": "2025-10-29",
+              "avg": 53
+            },
+            {
+              "date": "2025-10-16",
+              "avg": 52
+            }
+          ]
+        }
+      ]
+    },
+    "2025-11": {
+      "month": "2025-11",
+      "summary": {
+        "record_count": 2281,
+        "avg_patrons": 327,
+        "peak_patrons": 963,
+        "low_patrons": 37
+      },
+      "peak_record": {
+        "timestamp_utc": "2025-11-05T19:45:09.000Z",
+        "timestamp_et": "2025-11-05 15:45 ET",
+        "weekday": "Wednesday",
+        "patrons": 963,
+        "countByFloor": [
+          100,
+          689,
+          111,
+          63
+        ]
+      },
+      "quiet_record": {
+        "timestamp_utc": "2025-11-10T13:45:02.000Z",
+        "timestamp_et": "2025-11-10 09:45 ET",
+        "weekday": "Monday",
+        "patrons": 37,
+        "countByFloor": [
+          4,
+          11,
+          4,
+          18
+        ]
+      },
+      "top10_days": [
+        {
+          "date": "2025-11-04",
+          "weekday": "Tuesday",
+          "avg": 782,
+          "peak": 940,
+          "low": 534,
+          "samples": 77
+        },
+        {
+          "date": "2025-11-05",
+          "weekday": "Wednesday",
+          "avg": 757,
+          "peak": 963,
+          "low": 573,
+          "samples": 76
+        },
+        {
+          "date": "2025-11-03",
+          "weekday": "Monday",
+          "avg": 730,
+          "peak": 950,
+          "low": 437,
+          "samples": 76
+        },
+        {
+          "date": "2025-11-06",
+          "weekday": "Thursday",
+          "avg": 636,
+          "peak": 832,
+          "low": 477,
+          "samples": 76
+        },
+        {
+          "date": "2025-11-07",
+          "weekday": "Friday",
+          "avg": 534,
+          "peak": 708,
+          "low": 412,
+          "samples": 76
+        },
+        {
+          "date": "2025-11-02",
+          "weekday": "Sunday",
+          "avg": 522,
+          "peak": 750,
+          "low": 303,
+          "samples": 76
+        },
+        {
+          "date": "2025-11-09",
+          "weekday": "Sunday",
+          "avg": 499,
+          "peak": 681,
+          "low": 323,
+          "samples": 76
+        },
+        {
+          "date": "2025-11-08",
+          "weekday": "Saturday",
+          "avg": 411,
+          "peak": 485,
+          "low": 366,
+          "samples": 76
+        },
+        {
+          "date": "2025-11-17",
+          "weekday": "Monday",
+          "avg": 398,
+          "peak": 707,
+          "low": 90,
+          "samples": 76
+        },
+        {
+          "date": "2025-10-31",
+          "weekday": "Friday",
+          "avg": 386,
+          "peak": 417,
+          "low": 356,
+          "samples": 16
+        }
+      ],
+      "bottom10_days": [
+        {
+          "date": "2025-11-29",
+          "weekday": "Saturday",
+          "avg": 59,
+          "peak": 62,
+          "low": 56,
+          "samples": 76
+        },
+        {
+          "date": "2025-11-28",
+          "weekday": "Friday",
+          "avg": 59,
+          "peak": 64,
+          "low": 55,
+          "samples": 76
+        },
+        {
+          "date": "2025-11-27",
+          "weekday": "Thursday",
+          "avg": 65,
+          "peak": 68,
+          "low": 61,
+          "samples": 76
+        },
+        {
+          "date": "2025-11-26",
+          "weekday": "Wednesday",
+          "avg": 81,
+          "peak": 99,
+          "low": 65,
+          "samples": 76
+        },
+        {
+          "date": "2025-11-30",
+          "weekday": "Sunday",
+          "avg": 83,
+          "peak": 161,
+          "low": 52,
+          "samples": 60
+        },
+        {
+          "date": "2025-11-25",
+          "weekday": "Tuesday",
+          "avg": 115,
+          "peak": 178,
+          "low": 71,
+          "samples": 76
+        },
+        {
+          "date": "2025-11-22",
+          "weekday": "Saturday",
+          "avg": 132,
+          "peak": 223,
+          "low": 74,
+          "samples": 76
+        },
+        {
+          "date": "2025-11-21",
+          "weekday": "Friday",
+          "avg": 181,
+          "peak": 333,
+          "low": 72,
+          "samples": 76
+        },
+        {
+          "date": "2025-11-15",
+          "weekday": "Saturday",
+          "avg": 188,
+          "peak": 295,
+          "low": 83,
+          "samples": 76
+        },
+        {
+          "date": "2025-11-24",
+          "weekday": "Monday",
+          "avg": 195,
+          "peak": 349,
+          "low": 77,
+          "samples": 76
+        }
+      ],
+      "all_days": [
+        {
+          "date": "2025-10-31",
+          "weekday": "Friday",
+          "avg": 386,
+          "peak": 417,
+          "low": 356,
+          "samples": 16
+        },
+        {
+          "date": "2025-11-01",
+          "weekday": "Saturday",
+          "avg": 383,
+          "peak": 454,
+          "low": 329,
+          "samples": 76
+        },
+        {
+          "date": "2025-11-02",
+          "weekday": "Sunday",
+          "avg": 522,
+          "peak": 750,
+          "low": 303,
+          "samples": 76
+        },
+        {
+          "date": "2025-11-03",
+          "weekday": "Monday",
+          "avg": 730,
+          "peak": 950,
+          "low": 437,
+          "samples": 76
+        },
+        {
+          "date": "2025-11-04",
+          "weekday": "Tuesday",
+          "avg": 782,
+          "peak": 940,
+          "low": 534,
+          "samples": 77
+        },
+        {
+          "date": "2025-11-05",
+          "weekday": "Wednesday",
+          "avg": 757,
+          "peak": 963,
+          "low": 573,
+          "samples": 76
+        },
+        {
+          "date": "2025-11-06",
+          "weekday": "Thursday",
+          "avg": 636,
+          "peak": 832,
+          "low": 477,
+          "samples": 76
+        },
+        {
+          "date": "2025-11-07",
+          "weekday": "Friday",
+          "avg": 534,
+          "peak": 708,
+          "low": 412,
+          "samples": 76
+        },
+        {
+          "date": "2025-11-08",
+          "weekday": "Saturday",
+          "avg": 411,
+          "peak": 485,
+          "low": 366,
+          "samples": 76
+        },
+        {
+          "date": "2025-11-09",
+          "weekday": "Sunday",
+          "avg": 499,
+          "peak": 681,
+          "low": 323,
+          "samples": 76
+        },
+        {
+          "date": "2025-11-10",
+          "weekday": "Monday",
+          "avg": 377,
+          "peak": 549,
+          "low": 37,
+          "samples": 76
+        },
+        {
+          "date": "2025-11-11",
+          "weekday": "Tuesday",
+          "avg": 335,
+          "peak": 601,
+          "low": 52,
+          "samples": 76
+        },
+        {
+          "date": "2025-11-12",
+          "weekday": "Wednesday",
+          "avg": 328,
+          "peak": 531,
+          "low": 63,
+          "samples": 76
+        },
+        {
+          "date": "2025-11-13",
+          "weekday": "Thursday",
+          "avg": 271,
+          "peak": 458,
+          "low": 73,
+          "samples": 76
+        },
+        {
+          "date": "2025-11-14",
+          "weekday": "Friday",
+          "avg": 218,
+          "peak": 400,
+          "low": 71,
+          "samples": 76
+        },
+        {
+          "date": "2025-11-15",
+          "weekday": "Saturday",
+          "avg": 188,
+          "peak": 295,
+          "low": 83,
+          "samples": 76
+        },
+        {
+          "date": "2025-11-16",
+          "weekday": "Sunday",
+          "avg": 282,
+          "peak": 516,
+          "low": 77,
+          "samples": 76
+        },
+        {
+          "date": "2025-11-17",
+          "weekday": "Monday",
+          "avg": 398,
+          "peak": 707,
+          "low": 90,
+          "samples": 76
+        },
+        {
+          "date": "2025-11-18",
+          "weekday": "Tuesday",
+          "avg": 345,
+          "peak": 537,
+          "low": 94,
+          "samples": 76
+        },
+        {
+          "date": "2025-11-19",
+          "weekday": "Wednesday",
+          "avg": 315,
+          "peak": 575,
+          "low": 82,
+          "samples": 76
+        },
+        {
+          "date": "2025-11-20",
+          "weekday": "Thursday",
+          "avg": 266,
+          "peak": 493,
+          "low": 74,
+          "samples": 76
+        },
+        {
+          "date": "2025-11-21",
+          "weekday": "Friday",
+          "avg": 181,
+          "peak": 333,
+          "low": 72,
+          "samples": 76
+        },
+        {
+          "date": "2025-11-22",
+          "weekday": "Saturday",
+          "avg": 132,
+          "peak": 223,
+          "low": 74,
+          "samples": 76
+        },
+        {
+          "date": "2025-11-23",
+          "weekday": "Sunday",
+          "avg": 201,
+          "peak": 401,
+          "low": 76,
+          "samples": 76
+        },
+        {
+          "date": "2025-11-24",
+          "weekday": "Monday",
+          "avg": 195,
+          "peak": 349,
+          "low": 77,
+          "samples": 76
+        },
+        {
+          "date": "2025-11-25",
+          "weekday": "Tuesday",
+          "avg": 115,
+          "peak": 178,
+          "low": 71,
+          "samples": 76
+        },
+        {
+          "date": "2025-11-26",
+          "weekday": "Wednesday",
+          "avg": 81,
+          "peak": 99,
+          "low": 65,
+          "samples": 76
+        },
+        {
+          "date": "2025-11-27",
+          "weekday": "Thursday",
+          "avg": 65,
+          "peak": 68,
+          "low": 61,
+          "samples": 76
+        },
+        {
+          "date": "2025-11-28",
+          "weekday": "Friday",
+          "avg": 59,
+          "peak": 64,
+          "low": 55,
+          "samples": 76
+        },
+        {
+          "date": "2025-11-29",
+          "weekday": "Saturday",
+          "avg": 59,
+          "peak": 62,
+          "low": 56,
+          "samples": 76
+        },
+        {
+          "date": "2025-11-30",
+          "weekday": "Sunday",
+          "avg": 83,
+          "peak": 161,
+          "low": 52,
+          "samples": 60
+        }
+      ],
+      "day_of_week": [
+        {
+          "weekday": "Monday",
+          "avg": 425,
+          "peak": 950,
+          "low": 37,
+          "samples": 304
+        },
+        {
+          "weekday": "Tuesday",
+          "avg": 396,
+          "peak": 940,
+          "low": 52,
+          "samples": 305
+        },
+        {
+          "weekday": "Wednesday",
+          "avg": 370,
+          "peak": 963,
+          "low": 63,
+          "samples": 304
+        },
+        {
+          "weekday": "Thursday",
+          "avg": 310,
+          "peak": 832,
+          "low": 61,
+          "samples": 304
+        },
+        {
+          "weekday": "Friday",
+          "avg": 255,
+          "peak": 708,
+          "low": 55,
+          "samples": 320
+        },
+        {
+          "weekday": "Saturday",
+          "avg": 234,
+          "peak": 485,
+          "low": 56,
+          "samples": 380
+        },
+        {
+          "weekday": "Sunday",
+          "avg": 328,
+          "peak": 750,
+          "low": 52,
+          "samples": 364
+        }
+      ],
+      "hourly_profile": [
+        {
+          "hour_et": 0,
+          "label": "00:00",
+          "avg": 258,
+          "peak": 776,
+          "samples": 120
+        },
+        {
+          "hour_et": 1,
+          "label": "01:00",
+          "avg": 223,
+          "peak": 668,
+          "samples": 120
+        },
+        {
+          "hour_et": 2,
+          "label": "02:00",
+          "avg": 188,
+          "peak": 594,
+          "samples": 116
+        },
+        {
+          "hour_et": 3,
+          "label": "03:00",
+          "avg": 0,
+          "peak": 0,
+          "samples": 1
+        },
+        {
+          "hour_et": 4,
+          "label": "04:00",
+          "avg": 0,
+          "peak": 0,
+          "samples": 1
+        },
+        {
+          "hour_et": 5,
+          "label": "05:00",
+          "avg": 0,
+          "peak": 0,
+          "samples": 1
+        },
+        {
+          "hour_et": 6,
+          "label": "06:00",
+          "avg": 0,
+          "peak": 0,
+          "samples": 1
+        },
+        {
+          "hour_et": 7,
+          "label": "07:00",
+          "avg": 331,
+          "peak": 333,
+          "samples": 4
+        },
+        {
+          "hour_et": 8,
+          "label": "08:00",
+          "avg": 194,
+          "peak": 581,
+          "samples": 120
+        },
+        {
+          "hour_et": 9,
+          "label": "09:00",
+          "avg": 205,
+          "peak": 614,
+          "samples": 120
+        },
+        {
+          "hour_et": 10,
+          "label": "10:00",
+          "avg": 232,
+          "peak": 695,
+          "samples": 120
+        },
+        {
+          "hour_et": 11,
+          "label": "11:00",
+          "avg": 297,
+          "peak": 755,
+          "samples": 120
+        },
+        {
+          "hour_et": 12,
+          "label": "12:00",
+          "avg": 343,
+          "peak": 826,
+          "samples": 120
+        },
+        {
+          "hour_et": 13,
+          "label": "13:00",
+          "avg": 375,
+          "peak": 876,
+          "samples": 120
+        },
+        {
+          "hour_et": 14,
+          "label": "14:00",
+          "avg": 415,
+          "peak": 933,
+          "samples": 120
+        },
+        {
+          "hour_et": 15,
+          "label": "15:00",
+          "avg": 440,
+          "peak": 963,
+          "samples": 120
+        },
+        {
+          "hour_et": 16,
+          "label": "16:00",
+          "avg": 440,
+          "peak": 904,
+          "samples": 121
+        },
+        {
+          "hour_et": 17,
+          "label": "17:00",
+          "avg": 434,
+          "peak": 905,
+          "samples": 120
+        },
+        {
+          "hour_et": 18,
+          "label": "18:00",
+          "avg": 398,
+          "peak": 895,
+          "samples": 120
+        },
+        {
+          "hour_et": 19,
+          "label": "19:00",
+          "avg": 375,
+          "peak": 865,
+          "samples": 120
+        },
+        {
+          "hour_et": 20,
+          "label": "20:00",
+          "avg": 376,
+          "peak": 919,
+          "samples": 120
+        },
+        {
+          "hour_et": 21,
+          "label": "21:00",
+          "avg": 370,
+          "peak": 950,
+          "samples": 120
+        },
+        {
+          "hour_et": 22,
+          "label": "22:00",
+          "avg": 345,
+          "peak": 931,
+          "samples": 120
+        },
+        {
+          "hour_et": 23,
+          "label": "23:00",
+          "avg": 303,
+          "peak": 864,
+          "samples": 120
+        }
+      ],
+      "floor_breakdown": [
+        {
+          "floor": "Ground",
+          "avg": 44,
+          "peak": 164,
+          "low": 2,
+          "top_hours": [
+            {
+              "hour_et": 17,
+              "label": "17:00",
+              "avg": 72
+            },
+            {
+              "hour_et": 16,
+              "label": "16:00",
+              "avg": 71
+            },
+            {
+              "hour_et": 15,
+              "label": "15:00",
+              "avg": 68
+            },
+            {
+              "hour_et": 18,
+              "label": "18:00",
+              "avg": 65
+            },
+            {
+              "hour_et": 14,
+              "label": "14:00",
+              "avg": 63
+            }
+          ],
+          "top_dates": [
+            {
+              "date": "2025-11-04",
+              "avg": 87
+            },
+            {
+              "date": "2025-11-03",
+              "avg": 86
+            },
+            {
+              "date": "2025-11-17",
+              "avg": 79
+            },
+            {
+              "date": "2025-11-18",
+              "avg": 76
+            },
+            {
+              "date": "2025-11-11",
+              "avg": 73
+            }
+          ]
+        },
+        {
+          "floor": "First",
+          "avg": 210,
+          "peak": 694,
+          "low": 11,
+          "top_hours": [
+            {
+              "hour_et": 7,
+              "label": "07:00",
+              "avg": 272
+            },
+            {
+              "hour_et": 15,
+              "label": "15:00",
+              "avg": 262
+            },
+            {
+              "hour_et": 17,
+              "label": "17:00",
+              "avg": 255
+            },
+            {
+              "hour_et": 16,
+              "label": "16:00",
+              "avg": 254
+            },
+            {
+              "hour_et": 14,
+              "label": "14:00",
+              "avg": 248
+            }
+          ],
+          "top_dates": [
+            {
+              "date": "2025-11-04",
+              "avg": 592
+            },
+            {
+              "date": "2025-11-05",
+              "avg": 579
+            },
+            {
+              "date": "2025-11-03",
+              "avg": 537
+            },
+            {
+              "date": "2025-11-06",
+              "avg": 498
+            },
+            {
+              "date": "2025-11-07",
+              "avg": 412
+            }
+          ]
+        },
+        {
+          "floor": "Second",
+          "avg": 42,
+          "peak": 141,
+          "low": 4,
+          "top_hours": [
+            {
+              "hour_et": 16,
+              "label": "16:00",
+              "avg": 66
+            },
+            {
+              "hour_et": 17,
+              "label": "17:00",
+              "avg": 66
+            },
+            {
+              "hour_et": 15,
+              "label": "15:00",
+              "avg": 65
+            },
+            {
+              "hour_et": 14,
+              "label": "14:00",
+              "avg": 59
+            },
+            {
+              "hour_et": 18,
+              "label": "18:00",
+              "avg": 57
+            }
+          ],
+          "top_dates": [
+            {
+              "date": "2025-11-17",
+              "avg": 71
+            },
+            {
+              "date": "2025-11-04",
+              "avg": 70
+            },
+            {
+              "date": "2025-11-03",
+              "avg": 68
+            },
+            {
+              "date": "2025-11-05",
+              "avg": 67
+            },
+            {
+              "date": "2025-11-10",
+              "avg": 62
+            }
+          ]
+        },
+        {
+          "floor": "Third",
+          "avg": 32,
+          "peak": 114,
+          "low": 17,
+          "top_hours": [
+            {
+              "hour_et": 16,
+              "label": "16:00",
+              "avg": 49
+            },
+            {
+              "hour_et": 14,
+              "label": "14:00",
+              "avg": 46
+            },
+            {
+              "hour_et": 15,
+              "label": "15:00",
+              "avg": 45
+            },
+            {
+              "hour_et": 13,
+              "label": "13:00",
+              "avg": 44
+            },
+            {
+              "hour_et": 17,
+              "label": "17:00",
+              "avg": 41
+            }
+          ],
+          "top_dates": [
+            {
+              "date": "2025-11-19",
+              "avg": 44
+            },
+            {
+              "date": "2025-11-05",
+              "avg": 43
+            },
+            {
+              "date": "2025-11-17",
+              "avg": 41
+            },
+            {
+              "date": "2025-11-03",
+              "avg": 39
+            },
+            {
+              "date": "2025-11-11",
+              "avg": 39
+            }
+          ]
+        }
+      ]
+    },
+    "2025-12": {
+      "month": "2025-12",
+      "summary": {
+        "record_count": 2122,
+        "avg_patrons": 184,
+        "peak_patrons": 1554,
+        "low_patrons": 24
+      },
+      "peak_record": {
+        "timestamp_utc": "2025-12-09T03:15:06.000Z",
+        "timestamp_et": "2025-12-08 23:15 ET",
+        "weekday": "Monday",
+        "patrons": 1554,
+        "countByFloor": [
+          332,
+          1008,
+          145,
+          70
+        ]
+      },
+      "quiet_record": {
+        "timestamp_utc": "2025-12-20T12:00:01.000Z",
+        "timestamp_et": "2025-12-20 08:00 ET",
+        "weekday": "Saturday",
+        "patrons": 24,
+        "countByFloor": [
+          1,
+          11,
+          7,
+          5
+        ]
+      },
+      "top10_days": [
+        {
+          "date": "2025-12-08",
+          "weekday": "Monday",
+          "avg": 1212,
+          "peak": 1554,
+          "low": 921,
+          "samples": 39
+        },
+        {
+          "date": "2025-12-09",
+          "weekday": "Tuesday",
+          "avg": 703,
+          "peak": 1208,
+          "low": 96,
+          "samples": 76
+        },
+        {
+          "date": "2025-12-10",
+          "weekday": "Wednesday",
+          "avg": 512,
+          "peak": 830,
+          "low": 93,
+          "samples": 76
+        },
+        {
+          "date": "2025-12-02",
+          "weekday": "Tuesday",
+          "avg": 412,
+          "peak": 701,
+          "low": 78,
+          "samples": 76
+        },
+        {
+          "date": "2025-12-05",
+          "weekday": "Friday",
+          "avg": 404,
+          "peak": 741,
+          "low": 90,
+          "samples": 31
+        },
+        {
+          "date": "2025-12-03",
+          "weekday": "Wednesday",
+          "avg": 391,
+          "peak": 676,
+          "low": 84,
+          "samples": 77
+        },
+        {
+          "date": "2025-12-01",
+          "weekday": "Monday",
+          "avg": 379,
+          "peak": 698,
+          "low": 59,
+          "samples": 76
+        },
+        {
+          "date": "2025-12-04",
+          "weekday": "Thursday",
+          "avg": 375,
+          "peak": 637,
+          "low": 84,
+          "samples": 76
+        },
+        {
+          "date": "2025-12-11",
+          "weekday": "Thursday",
+          "avg": 332,
+          "peak": 514,
+          "low": 109,
+          "samples": 76
+        },
+        {
+          "date": "2025-11-30",
+          "weekday": "Sunday",
+          "avg": 184,
+          "peak": 225,
+          "low": 123,
+          "samples": 16
+        }
+      ],
+      "bottom10_days": [
+        {
+          "date": "2025-12-31",
+          "weekday": "Wednesday",
+          "avg": 37,
+          "peak": 39,
+          "low": 34,
+          "samples": 60
+        },
+        {
+          "date": "2025-12-30",
+          "weekday": "Tuesday",
+          "avg": 38,
+          "peak": 42,
+          "low": 35,
+          "samples": 76
+        },
+        {
+          "date": "2025-12-29",
+          "weekday": "Monday",
+          "avg": 40,
+          "peak": 42,
+          "low": 37,
+          "samples": 76
+        },
+        {
+          "date": "2025-12-28",
+          "weekday": "Sunday",
+          "avg": 40,
+          "peak": 43,
+          "low": 35,
+          "samples": 76
+        },
+        {
+          "date": "2025-12-27",
+          "weekday": "Saturday",
+          "avg": 40,
+          "peak": 43,
+          "low": 38,
+          "samples": 76
+        },
+        {
+          "date": "2025-12-26",
+          "weekday": "Friday",
+          "avg": 40,
+          "peak": 43,
+          "low": 37,
+          "samples": 76
+        },
+        {
+          "date": "2025-12-25",
+          "weekday": "Thursday",
+          "avg": 40,
+          "peak": 43,
+          "low": 37,
+          "samples": 76
+        },
+        {
+          "date": "2025-12-24",
+          "weekday": "Wednesday",
+          "avg": 42,
+          "peak": 46,
+          "low": 38,
+          "samples": 76
+        },
+        {
+          "date": "2025-12-21",
+          "weekday": "Sunday",
+          "avg": 53,
+          "peak": 56,
+          "low": 49,
+          "samples": 76
+        },
+        {
+          "date": "2025-12-20",
+          "weekday": "Saturday",
+          "avg": 54,
+          "peak": 63,
+          "low": 24,
+          "samples": 76
+        }
+      ],
+      "all_days": [
+        {
+          "date": "2025-11-30",
+          "weekday": "Sunday",
+          "avg": 184,
+          "peak": 225,
+          "low": 123,
+          "samples": 16
+        },
+        {
+          "date": "2025-12-01",
+          "weekday": "Monday",
+          "avg": 379,
+          "peak": 698,
+          "low": 59,
+          "samples": 76
+        },
+        {
+          "date": "2025-12-02",
+          "weekday": "Tuesday",
+          "avg": 412,
+          "peak": 701,
+          "low": 78,
+          "samples": 76
+        },
+        {
+          "date": "2025-12-03",
+          "weekday": "Wednesday",
+          "avg": 391,
+          "peak": 676,
+          "low": 84,
+          "samples": 77
+        },
+        {
+          "date": "2025-12-04",
+          "weekday": "Thursday",
+          "avg": 375,
+          "peak": 637,
+          "low": 84,
+          "samples": 76
+        },
+        {
+          "date": "2025-12-05",
+          "weekday": "Friday",
+          "avg": 404,
+          "peak": 741,
+          "low": 90,
+          "samples": 31
+        },
+        {
+          "date": "2025-12-08",
+          "weekday": "Monday",
+          "avg": 1212,
+          "peak": 1554,
+          "low": 921,
+          "samples": 39
+        },
+        {
+          "date": "2025-12-09",
+          "weekday": "Tuesday",
+          "avg": 703,
+          "peak": 1208,
+          "low": 96,
+          "samples": 76
+        },
+        {
+          "date": "2025-12-10",
+          "weekday": "Wednesday",
+          "avg": 512,
+          "peak": 830,
+          "low": 93,
+          "samples": 76
+        },
+        {
+          "date": "2025-12-11",
+          "weekday": "Thursday",
+          "avg": 332,
+          "peak": 514,
+          "low": 109,
+          "samples": 76
+        },
+        {
+          "date": "2025-12-12",
+          "weekday": "Friday",
+          "avg": 128,
+          "peak": 216,
+          "low": 88,
+          "samples": 76
+        },
+        {
+          "date": "2025-12-13",
+          "weekday": "Saturday",
+          "avg": 83,
+          "peak": 90,
+          "low": 77,
+          "samples": 76
+        },
+        {
+          "date": "2025-12-14",
+          "weekday": "Sunday",
+          "avg": 79,
+          "peak": 88,
+          "low": 75,
+          "samples": 76
+        },
+        {
+          "date": "2025-12-15",
+          "weekday": "Monday",
+          "avg": 92,
+          "peak": 124,
+          "low": 71,
+          "samples": 76
+        },
+        {
+          "date": "2025-12-16",
+          "weekday": "Tuesday",
+          "avg": 83,
+          "peak": 121,
+          "low": 59,
+          "samples": 76
+        },
+        {
+          "date": "2025-12-17",
+          "weekday": "Wednesday",
+          "avg": 77,
+          "peak": 112,
+          "low": 55,
+          "samples": 76
+        },
+        {
+          "date": "2025-12-18",
+          "weekday": "Thursday",
+          "avg": 73,
+          "peak": 125,
+          "low": 48,
+          "samples": 76
+        },
+        {
+          "date": "2025-12-19",
+          "weekday": "Friday",
+          "avg": 62,
+          "peak": 85,
+          "low": 49,
+          "samples": 75
+        },
+        {
+          "date": "2025-12-20",
+          "weekday": "Saturday",
+          "avg": 54,
+          "peak": 63,
+          "low": 24,
+          "samples": 76
+        },
+        {
+          "date": "2025-12-21",
+          "weekday": "Sunday",
+          "avg": 53,
+          "peak": 56,
+          "low": 49,
+          "samples": 76
+        },
+        {
+          "date": "2025-12-22",
+          "weekday": "Monday",
+          "avg": 61,
+          "peak": 83,
+          "low": 46,
+          "samples": 76
+        },
+        {
+          "date": "2025-12-23",
+          "weekday": "Tuesday",
+          "avg": 55,
+          "peak": 78,
+          "low": 39,
+          "samples": 76
+        },
+        {
+          "date": "2025-12-24",
+          "weekday": "Wednesday",
+          "avg": 42,
+          "peak": 46,
+          "low": 38,
+          "samples": 76
+        },
+        {
+          "date": "2025-12-25",
+          "weekday": "Thursday",
+          "avg": 40,
+          "peak": 43,
+          "low": 37,
+          "samples": 76
+        },
+        {
+          "date": "2025-12-26",
+          "weekday": "Friday",
+          "avg": 40,
+          "peak": 43,
+          "low": 37,
+          "samples": 76
+        },
+        {
+          "date": "2025-12-27",
+          "weekday": "Saturday",
+          "avg": 40,
+          "peak": 43,
+          "low": 38,
+          "samples": 76
+        },
+        {
+          "date": "2025-12-28",
+          "weekday": "Sunday",
+          "avg": 40,
+          "peak": 43,
+          "low": 35,
+          "samples": 76
+        },
+        {
+          "date": "2025-12-29",
+          "weekday": "Monday",
+          "avg": 40,
+          "peak": 42,
+          "low": 37,
+          "samples": 76
+        },
+        {
+          "date": "2025-12-30",
+          "weekday": "Tuesday",
+          "avg": 38,
+          "peak": 42,
+          "low": 35,
+          "samples": 76
+        },
+        {
+          "date": "2025-12-31",
+          "weekday": "Wednesday",
+          "avg": 37,
+          "peak": 39,
+          "low": 34,
+          "samples": 60
+        }
+      ],
+      "day_of_week": [
+        {
+          "weekday": "Monday",
+          "avg": 264,
+          "peak": 1554,
+          "low": 37,
+          "samples": 343
+        },
+        {
+          "weekday": "Tuesday",
+          "avg": 258,
+          "peak": 1208,
+          "low": 35,
+          "samples": 380
+        },
+        {
+          "weekday": "Wednesday",
+          "avg": 220,
+          "peak": 830,
+          "low": 34,
+          "samples": 365
+        },
+        {
+          "weekday": "Thursday",
+          "avg": 205,
+          "peak": 637,
+          "low": 37,
+          "samples": 304
+        },
+        {
+          "weekday": "Friday",
+          "avg": 116,
+          "peak": 741,
+          "low": 37,
+          "samples": 258
+        },
+        {
+          "weekday": "Saturday",
+          "avg": 59,
+          "peak": 90,
+          "low": 24,
+          "samples": 228
+        },
+        {
+          "weekday": "Sunday",
+          "avg": 66,
+          "peak": 225,
+          "low": 35,
+          "samples": 244
+        }
+      ],
+      "hourly_profile": [
+        {
+          "hour_et": 0,
+          "label": "00:00",
+          "avg": 147,
+          "peak": 1208,
+          "samples": 112
+        },
+        {
+          "hour_et": 1,
+          "label": "01:00",
+          "avg": 103,
+          "peak": 548,
+          "samples": 112
+        },
+        {
+          "hour_et": 2,
+          "label": "02:00",
+          "avg": 77,
+          "peak": 277,
+          "samples": 112
+        },
+        {
+          "hour_et": 3,
+          "label": "03:00",
+          "avg": 0,
+          "peak": 0,
+          "samples": 1
+        },
+        {
+          "hour_et": 4,
+          "label": "04:00",
+          "avg": 0,
+          "peak": 0,
+          "samples": 1
+        },
+        {
+          "hour_et": 5,
+          "label": "05:00",
+          "avg": 0,
+          "peak": 0,
+          "samples": 1
+        },
+        {
+          "hour_et": 6,
+          "label": "06:00",
+          "avg": 0,
+          "peak": 0,
+          "samples": 1
+        },
+        {
+          "hour_et": 7,
+          "label": "07:00",
+          "avg": 0,
+          "peak": 0,
+          "samples": 1
+        },
+        {
+          "hour_et": 8,
+          "label": "08:00",
+          "avg": 68,
+          "peak": 127,
+          "samples": 111
+        },
+        {
+          "hour_et": 9,
+          "label": "09:00",
+          "avg": 80,
+          "peak": 205,
+          "samples": 108
+        },
+        {
+          "hour_et": 10,
+          "label": "10:00",
+          "avg": 106,
+          "peak": 354,
+          "samples": 108
+        },
+        {
+          "hour_et": 11,
+          "label": "11:00",
+          "avg": 141,
+          "peak": 527,
+          "samples": 108
+        },
+        {
+          "hour_et": 12,
+          "label": "12:00",
+          "avg": 174,
+          "peak": 727,
+          "samples": 108
+        },
+        {
+          "hour_et": 13,
+          "label": "13:00",
+          "avg": 197,
+          "peak": 862,
+          "samples": 107
+        },
+        {
+          "hour_et": 14,
+          "label": "14:00",
+          "avg": 234,
+          "peak": 1163,
+          "samples": 111
+        },
+        {
+          "hour_et": 15,
+          "label": "15:00",
+          "avg": 269,
+          "peak": 1226,
+          "samples": 114
+        },
+        {
+          "hour_et": 16,
+          "label": "16:00",
+          "avg": 274,
+          "peak": 1213,
+          "samples": 117
+        },
+        {
+          "hour_et": 17,
+          "label": "17:00",
+          "avg": 272,
+          "peak": 1235,
+          "samples": 116
+        },
+        {
+          "hour_et": 18,
+          "label": "18:00",
+          "avg": 245,
+          "peak": 1151,
+          "samples": 116
+        },
+        {
+          "hour_et": 19,
+          "label": "19:00",
+          "avg": 220,
+          "peak": 982,
+          "samples": 114
+        },
+        {
+          "hour_et": 20,
+          "label": "20:00",
+          "avg": 221,
+          "peak": 1147,
+          "samples": 112
+        },
+        {
+          "hour_et": 21,
+          "label": "21:00",
+          "avg": 231,
+          "peak": 1455,
+          "samples": 112
+        },
+        {
+          "hour_et": 22,
+          "label": "22:00",
+          "avg": 223,
+          "peak": 1536,
+          "samples": 112
+        },
+        {
+          "hour_et": 23,
+          "label": "23:00",
+          "avg": 198,
+          "peak": 1554,
+          "samples": 112
+        }
+      ],
+      "floor_breakdown": [
+        {
+          "floor": "Ground",
+          "avg": 39,
+          "peak": 425,
+          "low": 1,
+          "top_hours": [
+            {
+              "hour_et": 16,
+              "label": "16:00",
+              "avg": 68
+            },
+            {
+              "hour_et": 17,
+              "label": "17:00",
+              "avg": 68
+            },
+            {
+              "hour_et": 15,
+              "label": "15:00",
+              "avg": 62
+            },
+            {
+              "hour_et": 18,
+              "label": "18:00",
+              "avg": 62
+            },
+            {
+              "hour_et": 21,
+              "label": "21:00",
+              "avg": 58
+            }
+          ],
+          "top_dates": [
+            {
+              "date": "2025-12-08",
+              "avg": 362
+            },
+            {
+              "date": "2025-12-09",
+              "avg": 207
+            },
+            {
+              "date": "2025-12-10",
+              "avg": 139
+            },
+            {
+              "date": "2025-12-05",
+              "avg": 120
+            },
+            {
+              "date": "2025-12-02",
+              "avg": 103
+            }
+          ]
+        },
+        {
+          "floor": "First",
+          "avg": 83,
+          "peak": 1008,
+          "low": 9,
+          "top_hours": [
+            {
+              "hour_et": 15,
+              "label": "15:00",
+              "avg": 117
+            },
+            {
+              "hour_et": 16,
+              "label": "16:00",
+              "avg": 116
+            },
+            {
+              "hour_et": 17,
+              "label": "17:00",
+              "avg": 116
+            },
+            {
+              "hour_et": 18,
+              "label": "18:00",
+              "avg": 112
+            },
+            {
+              "hour_et": 21,
+              "label": "21:00",
+              "avg": 107
+            }
+          ],
+          "top_dates": [
+            {
+              "date": "2025-12-08",
+              "avg": 580
+            },
+            {
+              "date": "2025-12-09",
+              "avg": 309
+            },
+            {
+              "date": "2025-12-10",
+              "avg": 232
+            },
+            {
+              "date": "2025-12-03",
+              "avg": 200
+            },
+            {
+              "date": "2025-12-02",
+              "avg": 197
+            }
+          ]
+        },
+        {
+          "floor": "Second",
+          "avg": 33,
+          "peak": 246,
+          "low": 6,
+          "top_hours": [
+            {
+              "hour_et": 16,
+              "label": "16:00",
+              "avg": 53
+            },
+            {
+              "hour_et": 17,
+              "label": "17:00",
+              "avg": 51
+            },
+            {
+              "hour_et": 15,
+              "label": "15:00",
+              "avg": 50
+            },
+            {
+              "hour_et": 14,
+              "label": "14:00",
+              "avg": 44
+            },
+            {
+              "hour_et": 18,
+              "label": "18:00",
+              "avg": 42
+            }
+          ],
+          "top_dates": [
+            {
+              "date": "2025-12-08",
+              "avg": 191
+            },
+            {
+              "date": "2025-12-09",
+              "avg": 131
+            },
+            {
+              "date": "2025-12-10",
+              "avg": 96
+            },
+            {
+              "date": "2025-12-02",
+              "avg": 72
+            },
+            {
+              "date": "2025-12-03",
+              "avg": 71
+            }
+          ]
+        },
+        {
+          "floor": "Third",
+          "avg": 28,
+          "peak": 106,
+          "low": 5,
+          "top_hours": [
+            {
+              "hour_et": 15,
+              "label": "15:00",
+              "avg": 40
+            },
+            {
+              "hour_et": 16,
+              "label": "16:00",
+              "avg": 38
+            },
+            {
+              "hour_et": 17,
+              "label": "17:00",
+              "avg": 38
+            },
+            {
+              "hour_et": 14,
+              "label": "14:00",
+              "avg": 37
+            },
+            {
+              "hour_et": 13,
+              "label": "13:00",
+              "avg": 34
+            }
+          ],
+          "top_dates": [
+            {
+              "date": "2025-12-08",
+              "avg": 79
+            },
+            {
+              "date": "2025-12-09",
+              "avg": 56
+            },
+            {
+              "date": "2025-12-04",
+              "avg": 46
+            },
+            {
+              "date": "2025-12-10",
+              "avg": 44
+            },
+            {
+              "date": "2025-12-03",
+              "avg": 43
+            }
+          ]
+        }
+      ]
+    },
+    "2026-01": {
+      "month": "2026-01",
+      "summary": {
+        "record_count": 2424,
+        "avg_patrons": 78,
+        "peak_patrons": 315,
+        "low_patrons": 35
+      },
+      "peak_record": {
+        "timestamp_utc": "2026-01-29T17:51:32.000Z",
+        "timestamp_et": "2026-01-29 13:51 ET",
+        "weekday": "Thursday",
+        "patrons": 315,
+        "countByFloor": [
+          70,
+          132,
+          77,
+          36
+        ]
+      },
+      "quiet_record": {
+        "timestamp_utc": "2026-01-01T18:00:02.000Z",
+        "timestamp_et": "2026-01-01 14:00 ET",
+        "weekday": "Thursday",
+        "patrons": 35,
+        "countByFloor": [
+          3,
+          10,
+          7,
+          15
+        ]
+      },
+      "top10_days": [
+        {
+          "date": "2026-01-29",
+          "weekday": "Thursday",
+          "avg": 175,
+          "peak": 315,
+          "low": 67,
+          "samples": 86
+        },
+        {
+          "date": "2026-01-30",
+          "weekday": "Friday",
+          "avg": 168,
+          "peak": 300,
+          "low": 71,
+          "samples": 96
+        },
+        {
+          "date": "2026-01-28",
+          "weekday": "Wednesday",
+          "avg": 162,
+          "peak": 297,
+          "low": 47,
+          "samples": 84
+        },
+        {
+          "date": "2026-01-31",
+          "weekday": "Saturday",
+          "avg": 108,
+          "peak": 146,
+          "low": 79,
+          "samples": 70
+        },
+        {
+          "date": "2026-01-22",
+          "weekday": "Thursday",
+          "avg": 89,
+          "peak": 129,
+          "low": 55,
+          "samples": 92
+        },
+        {
+          "date": "2026-01-21",
+          "weekday": "Wednesday",
+          "avg": 85,
+          "peak": 125,
+          "low": 50,
+          "samples": 76
+        },
+        {
+          "date": "2026-01-13",
+          "weekday": "Tuesday",
+          "avg": 83,
+          "peak": 135,
+          "low": 50,
+          "samples": 76
+        },
+        {
+          "date": "2026-01-06",
+          "weekday": "Tuesday",
+          "avg": 82,
+          "peak": 115,
+          "low": 52,
+          "samples": 76
+        },
+        {
+          "date": "2026-01-15",
+          "weekday": "Thursday",
+          "avg": 80,
+          "peak": 127,
+          "low": 48,
+          "samples": 76
+        },
+        {
+          "date": "2026-01-12",
+          "weekday": "Monday",
+          "avg": 79,
+          "peak": 128,
+          "low": 47,
+          "samples": 76
+        }
+      ],
+      "bottom10_days": [
+        {
+          "date": "2026-01-01",
+          "weekday": "Thursday",
+          "avg": 37,
+          "peak": 39,
+          "low": 35,
+          "samples": 76
+        },
+        {
+          "date": "2025-12-31",
+          "weekday": "Wednesday",
+          "avg": 37,
+          "peak": 38,
+          "low": 36,
+          "samples": 16
+        },
+        {
+          "date": "2026-01-26",
+          "weekday": "Monday",
+          "avg": 47,
+          "peak": 50,
+          "low": 44,
+          "samples": 76
+        },
+        {
+          "date": "2026-01-10",
+          "weekday": "Saturday",
+          "avg": 47,
+          "peak": 52,
+          "low": 41,
+          "samples": 76
+        },
+        {
+          "date": "2026-01-03",
+          "weekday": "Saturday",
+          "avg": 47,
+          "peak": 50,
+          "low": 45,
+          "samples": 76
+        },
+        {
+          "date": "2026-01-27",
+          "weekday": "Tuesday",
+          "avg": 49,
+          "peak": 53,
+          "low": 45,
+          "samples": 77
+        },
+        {
+          "date": "2026-01-25",
+          "weekday": "Sunday",
+          "avg": 51,
+          "peak": 56,
+          "low": 46,
+          "samples": 76
+        },
+        {
+          "date": "2026-01-17",
+          "weekday": "Saturday",
+          "avg": 52,
+          "peak": 55,
+          "low": 49,
+          "samples": 76
+        },
+        {
+          "date": "2026-01-04",
+          "weekday": "Sunday",
+          "avg": 53,
+          "peak": 60,
+          "low": 45,
+          "samples": 76
+        },
+        {
+          "date": "2026-01-02",
+          "weekday": "Friday",
+          "avg": 53,
+          "peak": 74,
+          "low": 35,
+          "samples": 76
+        }
+      ],
+      "all_days": [
+        {
+          "date": "2025-12-31",
+          "weekday": "Wednesday",
+          "avg": 37,
+          "peak": 38,
+          "low": 36,
+          "samples": 16
+        },
+        {
+          "date": "2026-01-01",
+          "weekday": "Thursday",
+          "avg": 37,
+          "peak": 39,
+          "low": 35,
+          "samples": 76
+        },
+        {
+          "date": "2026-01-02",
+          "weekday": "Friday",
+          "avg": 53,
+          "peak": 74,
+          "low": 35,
+          "samples": 76
+        },
+        {
+          "date": "2026-01-03",
+          "weekday": "Saturday",
+          "avg": 47,
+          "peak": 50,
+          "low": 45,
+          "samples": 76
+        },
+        {
+          "date": "2026-01-04",
+          "weekday": "Sunday",
+          "avg": 53,
+          "peak": 60,
+          "low": 45,
+          "samples": 76
+        },
+        {
+          "date": "2026-01-05",
+          "weekday": "Monday",
+          "avg": 78,
+          "peak": 115,
+          "low": 47,
+          "samples": 76
+        },
+        {
+          "date": "2026-01-06",
+          "weekday": "Tuesday",
+          "avg": 82,
+          "peak": 115,
+          "low": 52,
+          "samples": 76
+        },
+        {
+          "date": "2026-01-07",
+          "weekday": "Wednesday",
+          "avg": 72,
+          "peak": 106,
+          "low": 48,
+          "samples": 76
+        },
+        {
+          "date": "2026-01-08",
+          "weekday": "Thursday",
+          "avg": 74,
+          "peak": 116,
+          "low": 45,
+          "samples": 76
+        },
+        {
+          "date": "2026-01-09",
+          "weekday": "Friday",
+          "avg": 64,
+          "peak": 93,
+          "low": 43,
+          "samples": 76
+        },
+        {
+          "date": "2026-01-10",
+          "weekday": "Saturday",
+          "avg": 47,
+          "peak": 52,
+          "low": 41,
+          "samples": 76
+        },
+        {
+          "date": "2026-01-11",
+          "weekday": "Sunday",
+          "avg": 55,
+          "peak": 69,
+          "low": 40,
+          "samples": 76
+        },
+        {
+          "date": "2026-01-12",
+          "weekday": "Monday",
+          "avg": 79,
+          "peak": 128,
+          "low": 47,
+          "samples": 76
+        },
+        {
+          "date": "2026-01-13",
+          "weekday": "Tuesday",
+          "avg": 83,
+          "peak": 135,
+          "low": 50,
+          "samples": 76
+        },
+        {
+          "date": "2026-01-14",
+          "weekday": "Wednesday",
+          "avg": 77,
+          "peak": 109,
+          "low": 50,
+          "samples": 76
+        },
+        {
+          "date": "2026-01-15",
+          "weekday": "Thursday",
+          "avg": 80,
+          "peak": 127,
+          "low": 48,
+          "samples": 76
+        },
+        {
+          "date": "2026-01-16",
+          "weekday": "Friday",
+          "avg": 69,
+          "peak": 101,
+          "low": 48,
+          "samples": 76
+        },
+        {
+          "date": "2026-01-17",
+          "weekday": "Saturday",
+          "avg": 52,
+          "peak": 55,
+          "low": 49,
+          "samples": 76
+        },
+        {
+          "date": "2026-01-18",
+          "weekday": "Sunday",
+          "avg": 60,
+          "peak": 68,
+          "low": 51,
+          "samples": 76
+        },
+        {
+          "date": "2026-01-19",
+          "weekday": "Monday",
+          "avg": 59,
+          "peak": 69,
+          "low": 49,
+          "samples": 76
+        },
+        {
+          "date": "2026-01-20",
+          "weekday": "Tuesday",
+          "avg": 79,
+          "peak": 119,
+          "low": 49,
+          "samples": 76
+        },
+        {
+          "date": "2026-01-21",
+          "weekday": "Wednesday",
+          "avg": 85,
+          "peak": 125,
+          "low": 50,
+          "samples": 76
+        },
+        {
+          "date": "2026-01-22",
+          "weekday": "Thursday",
+          "avg": 89,
+          "peak": 129,
+          "low": 55,
+          "samples": 92
+        },
+        {
+          "date": "2026-01-23",
+          "weekday": "Friday",
+          "avg": 75,
+          "peak": 107,
+          "low": 54,
+          "samples": 79
+        },
+        {
+          "date": "2026-01-24",
+          "weekday": "Saturday",
+          "avg": 58,
+          "peak": 66,
+          "low": 51,
+          "samples": 76
+        },
+        {
+          "date": "2026-01-25",
+          "weekday": "Sunday",
+          "avg": 51,
+          "peak": 56,
+          "low": 46,
+          "samples": 76
+        },
+        {
+          "date": "2026-01-26",
+          "weekday": "Monday",
+          "avg": 47,
+          "peak": 50,
+          "low": 44,
+          "samples": 76
+        },
+        {
+          "date": "2026-01-27",
+          "weekday": "Tuesday",
+          "avg": 49,
+          "peak": 53,
+          "low": 45,
+          "samples": 77
+        },
+        {
+          "date": "2026-01-28",
+          "weekday": "Wednesday",
+          "avg": 162,
+          "peak": 297,
+          "low": 47,
+          "samples": 84
+        },
+        {
+          "date": "2026-01-29",
+          "weekday": "Thursday",
+          "avg": 175,
+          "peak": 315,
+          "low": 67,
+          "samples": 86
+        },
+        {
+          "date": "2026-01-30",
+          "weekday": "Friday",
+          "avg": 168,
+          "peak": 300,
+          "low": 71,
+          "samples": 96
+        },
+        {
+          "date": "2026-01-31",
+          "weekday": "Saturday",
+          "avg": 108,
+          "peak": 146,
+          "low": 79,
+          "samples": 70
+        }
+      ],
+      "day_of_week": [
+        {
+          "weekday": "Monday",
+          "avg": 66,
+          "peak": 128,
+          "low": 44,
+          "samples": 304
+        },
+        {
+          "weekday": "Tuesday",
+          "avg": 73,
+          "peak": 135,
+          "low": 45,
+          "samples": 305
+        },
+        {
+          "weekday": "Wednesday",
+          "avg": 97,
+          "peak": 297,
+          "low": 36,
+          "samples": 328
+        },
+        {
+          "weekday": "Thursday",
+          "avg": 93,
+          "peak": 315,
+          "low": 35,
+          "samples": 406
+        },
+        {
+          "weekday": "Friday",
+          "avg": 90,
+          "peak": 300,
+          "low": 35,
+          "samples": 403
+        },
+        {
+          "weekday": "Saturday",
+          "avg": 62,
+          "peak": 146,
+          "low": 41,
+          "samples": 374
+        },
+        {
+          "weekday": "Sunday",
+          "avg": 55,
+          "peak": 69,
+          "low": 40,
+          "samples": 304
+        }
+      ],
+      "hourly_profile": [
+        {
+          "hour_et": 0,
+          "label": "00:00",
+          "avg": 53,
+          "peak": 90,
+          "samples": 124
+        },
+        {
+          "hour_et": 1,
+          "label": "01:00",
+          "avg": 53,
+          "peak": 88,
+          "samples": 125
+        },
+        {
+          "hour_et": 2,
+          "label": "02:00",
+          "avg": 53,
+          "peak": 85,
+          "samples": 124
+        },
+        {
+          "hour_et": 3,
+          "label": "03:00",
+          "avg": 0,
+          "peak": 0,
+          "samples": 1
+        },
+        {
+          "hour_et": 4,
+          "label": "04:00",
+          "avg": 0,
+          "peak": 0,
+          "samples": 1
+        },
+        {
+          "hour_et": 5,
+          "label": "05:00",
+          "avg": 0,
+          "peak": 0,
+          "samples": 1
+        },
+        {
+          "hour_et": 6,
+          "label": "06:00",
+          "avg": 0,
+          "peak": 0,
+          "samples": 1
+        },
+        {
+          "hour_et": 7,
+          "label": "07:00",
+          "avg": 0,
+          "peak": 0,
+          "samples": 1
+        },
+        {
+          "hour_et": 8,
+          "label": "08:00",
+          "avg": 61,
+          "peak": 94,
+          "samples": 129
+        },
+        {
+          "hour_et": 9,
+          "label": "09:00",
+          "avg": 68,
+          "peak": 135,
+          "samples": 129
+        },
+        {
+          "hour_et": 10,
+          "label": "10:00",
+          "avg": 80,
+          "peak": 183,
+          "samples": 125
+        },
+        {
+          "hour_et": 11,
+          "label": "11:00",
+          "avg": 93,
+          "peak": 248,
+          "samples": 128
+        },
+        {
+          "hour_et": 12,
+          "label": "12:00",
+          "avg": 98,
+          "peak": 283,
+          "samples": 129
+        },
+        {
+          "hour_et": 13,
+          "label": "13:00",
+          "avg": 109,
+          "peak": 315,
+          "samples": 131
+        },
+        {
+          "hour_et": 14,
+          "label": "14:00",
+          "avg": 118,
+          "peak": 310,
+          "samples": 142
+        },
+        {
+          "hour_et": 15,
+          "label": "15:00",
+          "avg": 111,
+          "peak": 302,
+          "samples": 135
+        },
+        {
+          "hour_et": 16,
+          "label": "16:00",
+          "avg": 100,
+          "peak": 267,
+          "samples": 130
+        },
+        {
+          "hour_et": 17,
+          "label": "17:00",
+          "avg": 90,
+          "peak": 269,
+          "samples": 126
+        },
+        {
+          "hour_et": 18,
+          "label": "18:00",
+          "avg": 76,
+          "peak": 217,
+          "samples": 125
+        },
+        {
+          "hour_et": 19,
+          "label": "19:00",
+          "avg": 67,
+          "peak": 167,
+          "samples": 125
+        },
+        {
+          "hour_et": 20,
+          "label": "20:00",
+          "avg": 61,
+          "peak": 131,
+          "samples": 124
+        },
+        {
+          "hour_et": 21,
+          "label": "21:00",
+          "avg": 60,
+          "peak": 114,
+          "samples": 125
+        },
+        {
+          "hour_et": 22,
+          "label": "22:00",
+          "avg": 56,
+          "peak": 108,
+          "samples": 124
+        },
+        {
+          "hour_et": 23,
+          "label": "23:00",
+          "avg": 54,
+          "peak": 103,
+          "samples": 124
+        }
+      ],
+      "floor_breakdown": [
+        {
+          "floor": "Ground",
+          "avg": 7,
+          "peak": 74,
+          "low": 2,
+          "top_hours": [
+            {
+              "hour_et": 14,
+              "label": "14:00",
+              "avg": 15
+            },
+            {
+              "hour_et": 13,
+              "label": "13:00",
+              "avg": 13
+            },
+            {
+              "hour_et": 15,
+              "label": "15:00",
+              "avg": 12
+            },
+            {
+              "hour_et": 16,
+              "label": "16:00",
+              "avg": 11
+            },
+            {
+              "hour_et": 12,
+              "label": "12:00",
+              "avg": 10
+            }
+          ],
+          "top_dates": [
+            {
+              "date": "2026-01-29",
+              "avg": 29
+            },
+            {
+              "date": "2026-01-28",
+              "avg": 24
+            },
+            {
+              "date": "2026-01-30",
+              "avg": 22
+            },
+            {
+              "date": "2026-01-31",
+              "avg": 14
+            },
+            {
+              "date": "2026-01-21",
+              "avg": 8
+            }
+          ]
+        },
+        {
+          "floor": "First",
+          "avg": 29,
+          "peak": 169,
+          "low": 9,
+          "top_hours": [
+            {
+              "hour_et": 14,
+              "label": "14:00",
+              "avg": 47
+            },
+            {
+              "hour_et": 13,
+              "label": "13:00",
+              "avg": 44
+            },
+            {
+              "hour_et": 15,
+              "label": "15:00",
+              "avg": 44
+            },
+            {
+              "hour_et": 12,
+              "label": "12:00",
+              "avg": 37
+            },
+            {
+              "hour_et": 16,
+              "label": "16:00",
+              "avg": 36
+            }
+          ],
+          "top_dates": [
+            {
+              "date": "2026-01-30",
+              "avg": 82
+            },
+            {
+              "date": "2026-01-29",
+              "avg": 77
+            },
+            {
+              "date": "2026-01-28",
+              "avg": 65
+            },
+            {
+              "date": "2026-01-31",
+              "avg": 54
+            },
+            {
+              "date": "2026-01-05",
+              "avg": 32
+            }
+          ]
+        },
+        {
+          "floor": "Second",
+          "avg": 17,
+          "peak": 77,
+          "low": 7,
+          "top_hours": [
+            {
+              "hour_et": 14,
+              "label": "14:00",
+              "avg": 26
+            },
+            {
+              "hour_et": 15,
+              "label": "15:00",
+              "avg": 26
+            },
+            {
+              "hour_et": 13,
+              "label": "13:00",
+              "avg": 23
+            },
+            {
+              "hour_et": 16,
+              "label": "16:00",
+              "avg": 23
+            },
+            {
+              "hour_et": 12,
+              "label": "12:00",
+              "avg": 22
+            }
+          ],
+          "top_dates": [
+            {
+              "date": "2026-01-29",
+              "avg": 38
+            },
+            {
+              "date": "2026-01-30",
+              "avg": 34
+            },
+            {
+              "date": "2026-01-28",
+              "avg": 33
+            },
+            {
+              "date": "2026-01-22",
+              "avg": 21
+            },
+            {
+              "date": "2026-01-13",
+              "avg": 20
+            }
+          ]
+        },
+        {
+          "floor": "Third",
+          "avg": 24,
+          "peak": 83,
+          "low": 14,
+          "top_hours": [
+            {
+              "hour_et": 16,
+              "label": "16:00",
+              "avg": 30
+            },
+            {
+              "hour_et": 11,
+              "label": "11:00",
+              "avg": 29
+            },
+            {
+              "hour_et": 12,
+              "label": "12:00",
+              "avg": 29
+            },
+            {
+              "hour_et": 14,
+              "label": "14:00",
+              "avg": 29
+            },
+            {
+              "hour_et": 15,
+              "label": "15:00",
+              "avg": 29
+            }
+          ],
+          "top_dates": [
+            {
+              "date": "2026-01-28",
+              "avg": 39
+            },
+            {
+              "date": "2026-01-22",
+              "avg": 32
+            },
+            {
+              "date": "2026-01-21",
+              "avg": 31
+            },
+            {
+              "date": "2026-01-29",
+              "avg": 30
+            },
+            {
+              "date": "2026-01-06",
+              "avg": 29
+            }
+          ]
+        }
+      ]
+    },
+    "2026-02": {
+      "month": "2026-02",
+      "summary": {
+        "record_count": 2275,
+        "avg_patrons": 263,
+        "peak_patrons": 869,
+        "low_patrons": 74
+      },
+      "peak_record": {
+        "timestamp_utc": "2026-02-25T21:15:14.000Z",
+        "timestamp_et": "2026-02-25 17:15 ET",
+        "weekday": "Wednesday",
+        "patrons": 869,
+        "countByFloor": [
+          86,
+          590,
+          129,
+          64
+        ]
+      },
+      "quiet_record": {
+        "timestamp_utc": "2026-02-01T12:00:02.000Z",
+        "timestamp_et": "2026-02-01 08:00 ET",
+        "weekday": "Sunday",
+        "patrons": 74,
+        "countByFloor": [
+          6,
+          35,
+          15,
+          18
+        ]
+      },
+      "top10_days": [
+        {
+          "date": "2026-02-26",
+          "weekday": "Thursday",
+          "avg": 571,
+          "peak": 820,
+          "low": 369,
+          "samples": 76
+        },
+        {
+          "date": "2026-02-25",
+          "weekday": "Wednesday",
+          "avg": 509,
+          "peak": 869,
+          "low": 129,
+          "samples": 76
+        },
+        {
+          "date": "2026-02-27",
+          "weekday": "Friday",
+          "avg": 437,
+          "peak": 580,
+          "low": 321,
+          "samples": 76
+        },
+        {
+          "date": "2026-02-24",
+          "weekday": "Tuesday",
+          "avg": 366,
+          "peak": 594,
+          "low": 103,
+          "samples": 76
+        },
+        {
+          "date": "2026-02-23",
+          "weekday": "Monday",
+          "avg": 339,
+          "peak": 531,
+          "low": 102,
+          "samples": 76
+        },
+        {
+          "date": "2026-02-17",
+          "weekday": "Tuesday",
+          "avg": 334,
+          "peak": 558,
+          "low": 103,
+          "samples": 76
+        },
+        {
+          "date": "2026-02-28",
+          "weekday": "Saturday",
+          "avg": 316,
+          "peak": 371,
+          "low": 270,
+          "samples": 60
+        },
+        {
+          "date": "2026-02-18",
+          "weekday": "Wednesday",
+          "avg": 296,
+          "peak": 497,
+          "low": 109,
+          "samples": 76
+        },
+        {
+          "date": "2026-02-16",
+          "weekday": "Monday",
+          "avg": 295,
+          "peak": 517,
+          "low": 96,
+          "samples": 76
+        },
+        {
+          "date": "2026-02-11",
+          "weekday": "Wednesday",
+          "avg": 284,
+          "peak": 457,
+          "low": 117,
+          "samples": 90
+        }
+      ],
+      "bottom10_days": [
+        {
+          "date": "2026-01-31",
+          "weekday": "Saturday",
+          "avg": 94,
+          "peak": 100,
+          "low": 89,
+          "samples": 18
+        },
+        {
+          "date": "2026-02-07",
+          "weekday": "Saturday",
+          "avg": 135,
+          "peak": 189,
+          "low": 102,
+          "samples": 86
+        },
+        {
+          "date": "2026-02-01",
+          "weekday": "Sunday",
+          "avg": 140,
+          "peak": 226,
+          "low": 74,
+          "samples": 86
+        },
+        {
+          "date": "2026-02-14",
+          "weekday": "Saturday",
+          "avg": 143,
+          "peak": 206,
+          "low": 92,
+          "samples": 76
+        },
+        {
+          "date": "2026-02-08",
+          "weekday": "Sunday",
+          "avg": 160,
+          "peak": 290,
+          "low": 99,
+          "samples": 82
+        },
+        {
+          "date": "2026-02-21",
+          "weekday": "Saturday",
+          "avg": 163,
+          "peak": 227,
+          "low": 103,
+          "samples": 76
+        },
+        {
+          "date": "2026-02-13",
+          "weekday": "Friday",
+          "avg": 173,
+          "peak": 288,
+          "low": 103,
+          "samples": 76
+        },
+        {
+          "date": "2026-02-06",
+          "weekday": "Friday",
+          "avg": 181,
+          "peak": 300,
+          "low": 101,
+          "samples": 83
+        },
+        {
+          "date": "2026-02-05",
+          "weekday": "Thursday",
+          "avg": 202,
+          "peak": 364,
+          "low": 100,
+          "samples": 85
+        },
+        {
+          "date": "2026-02-20",
+          "weekday": "Friday",
+          "avg": 204,
+          "peak": 356,
+          "low": 109,
+          "samples": 76
+        }
+      ],
+      "all_days": [
+        {
+          "date": "2026-01-31",
+          "weekday": "Saturday",
+          "avg": 94,
+          "peak": 100,
+          "low": 89,
+          "samples": 18
+        },
+        {
+          "date": "2026-02-01",
+          "weekday": "Sunday",
+          "avg": 140,
+          "peak": 226,
+          "low": 74,
+          "samples": 86
+        },
+        {
+          "date": "2026-02-02",
+          "weekday": "Monday",
+          "avg": 214,
+          "peak": 377,
+          "low": 78,
+          "samples": 99
+        },
+        {
+          "date": "2026-02-03",
+          "weekday": "Tuesday",
+          "avg": 240,
+          "peak": 395,
+          "low": 0,
+          "samples": 100
+        },
+        {
+          "date": "2026-02-04",
+          "weekday": "Wednesday",
+          "avg": 248,
+          "peak": 490,
+          "low": 99,
+          "samples": 93
+        },
+        {
+          "date": "2026-02-05",
+          "weekday": "Thursday",
+          "avg": 202,
+          "peak": 364,
+          "low": 100,
+          "samples": 85
+        },
+        {
+          "date": "2026-02-06",
+          "weekday": "Friday",
+          "avg": 181,
+          "peak": 300,
+          "low": 101,
+          "samples": 83
+        },
+        {
+          "date": "2026-02-07",
+          "weekday": "Saturday",
+          "avg": 135,
+          "peak": 189,
+          "low": 102,
+          "samples": 86
+        },
+        {
+          "date": "2026-02-08",
+          "weekday": "Sunday",
+          "avg": 160,
+          "peak": 290,
+          "low": 99,
+          "samples": 82
+        },
+        {
+          "date": "2026-02-09",
+          "weekday": "Monday",
+          "avg": 277,
+          "peak": 473,
+          "low": 100,
+          "samples": 87
+        },
+        {
+          "date": "2026-02-10",
+          "weekday": "Tuesday",
+          "avg": 281,
+          "peak": 424,
+          "low": 119,
+          "samples": 85
+        },
+        {
+          "date": "2026-02-11",
+          "weekday": "Wednesday",
+          "avg": 284,
+          "peak": 457,
+          "low": 117,
+          "samples": 90
+        },
+        {
+          "date": "2026-02-12",
+          "weekday": "Thursday",
+          "avg": 228,
+          "peak": 381,
+          "low": 107,
+          "samples": 81
+        },
+        {
+          "date": "2026-02-13",
+          "weekday": "Friday",
+          "avg": 173,
+          "peak": 288,
+          "low": 103,
+          "samples": 76
+        },
+        {
+          "date": "2026-02-14",
+          "weekday": "Saturday",
+          "avg": 143,
+          "peak": 206,
+          "low": 92,
+          "samples": 76
+        },
+        {
+          "date": "2026-02-15",
+          "weekday": "Sunday",
+          "avg": 218,
+          "peak": 434,
+          "low": 92,
+          "samples": 76
+        },
+        {
+          "date": "2026-02-16",
+          "weekday": "Monday",
+          "avg": 295,
+          "peak": 517,
+          "low": 96,
+          "samples": 76
+        },
+        {
+          "date": "2026-02-17",
+          "weekday": "Tuesday",
+          "avg": 334,
+          "peak": 558,
+          "low": 103,
+          "samples": 76
+        },
+        {
+          "date": "2026-02-18",
+          "weekday": "Wednesday",
+          "avg": 296,
+          "peak": 497,
+          "low": 109,
+          "samples": 76
+        },
+        {
+          "date": "2026-02-19",
+          "weekday": "Thursday",
+          "avg": 257,
+          "peak": 446,
+          "low": 108,
+          "samples": 76
+        },
+        {
+          "date": "2026-02-20",
+          "weekday": "Friday",
+          "avg": 204,
+          "peak": 356,
+          "low": 109,
+          "samples": 76
+        },
+        {
+          "date": "2026-02-21",
+          "weekday": "Saturday",
+          "avg": 163,
+          "peak": 227,
+          "low": 103,
+          "samples": 76
+        },
+        {
+          "date": "2026-02-22",
+          "weekday": "Sunday",
+          "avg": 276,
+          "peak": 491,
+          "low": 92,
+          "samples": 76
+        },
+        {
+          "date": "2026-02-23",
+          "weekday": "Monday",
+          "avg": 339,
+          "peak": 531,
+          "low": 102,
+          "samples": 76
+        },
+        {
+          "date": "2026-02-24",
+          "weekday": "Tuesday",
+          "avg": 366,
+          "peak": 594,
+          "low": 103,
+          "samples": 76
+        },
+        {
+          "date": "2026-02-25",
+          "weekday": "Wednesday",
+          "avg": 509,
+          "peak": 869,
+          "low": 129,
+          "samples": 76
+        },
+        {
+          "date": "2026-02-26",
+          "weekday": "Thursday",
+          "avg": 571,
+          "peak": 820,
+          "low": 369,
+          "samples": 76
+        },
+        {
+          "date": "2026-02-27",
+          "weekday": "Friday",
+          "avg": 437,
+          "peak": 580,
+          "low": 321,
+          "samples": 76
+        },
+        {
+          "date": "2026-02-28",
+          "weekday": "Saturday",
+          "avg": 316,
+          "peak": 371,
+          "low": 270,
+          "samples": 60
+        }
+      ],
+      "day_of_week": [
+        {
+          "weekday": "Monday",
+          "avg": 277,
+          "peak": 531,
+          "low": 78,
+          "samples": 338
+        },
+        {
+          "weekday": "Tuesday",
+          "avg": 300,
+          "peak": 594,
+          "low": 0,
+          "samples": 337
+        },
+        {
+          "weekday": "Wednesday",
+          "avg": 328,
+          "peak": 869,
+          "low": 99,
+          "samples": 335
+        },
+        {
+          "weekday": "Thursday",
+          "avg": 310,
+          "peak": 820,
+          "low": 100,
+          "samples": 318
+        },
+        {
+          "weekday": "Friday",
+          "avg": 247,
+          "peak": 580,
+          "low": 101,
+          "samples": 311
+        },
+        {
+          "weekday": "Saturday",
+          "avg": 176,
+          "peak": 371,
+          "low": 89,
+          "samples": 316
+        },
+        {
+          "weekday": "Sunday",
+          "avg": 196,
+          "peak": 491,
+          "low": 74,
+          "samples": 320
+        }
+      ],
+      "hourly_profile": [
+        {
+          "hour_et": 0,
+          "label": "00:00",
+          "avg": 180,
+          "peak": 538,
+          "samples": 118
+        },
+        {
+          "hour_et": 1,
+          "label": "01:00",
+          "avg": 150,
+          "peak": 462,
+          "samples": 119
+        },
+        {
+          "hour_et": 2,
+          "label": "02:00",
+          "avg": 129,
+          "peak": 404,
+          "samples": 116
+        },
+        {
+          "hour_et": 3,
+          "label": "03:00",
+          "avg": 0,
+          "peak": 0,
+          "samples": 1
+        },
+        {
+          "hour_et": 4,
+          "label": "04:00",
+          "avg": 0,
+          "peak": 0,
+          "samples": 1
+        },
+        {
+          "hour_et": 5,
+          "label": "05:00",
+          "avg": 0,
+          "peak": 0,
+          "samples": 1
+        },
+        {
+          "hour_et": 6,
+          "label": "06:00",
+          "avg": 0,
+          "peak": 0,
+          "samples": 1
+        },
+        {
+          "hour_et": 7,
+          "label": "07:00",
+          "avg": 0,
+          "peak": 0,
+          "samples": 1
+        },
+        {
+          "hour_et": 8,
+          "label": "08:00",
+          "avg": 135,
+          "peak": 384,
+          "samples": 120
+        },
+        {
+          "hour_et": 9,
+          "label": "09:00",
+          "avg": 151,
+          "peak": 409,
+          "samples": 122
+        },
+        {
+          "hour_et": 10,
+          "label": "10:00",
+          "avg": 185,
+          "peak": 472,
+          "samples": 121
+        },
+        {
+          "hour_et": 11,
+          "label": "11:00",
+          "avg": 260,
+          "peak": 631,
+          "samples": 122
+        },
+        {
+          "hour_et": 12,
+          "label": "12:00",
+          "avg": 299,
+          "peak": 710,
+          "samples": 123
+        },
+        {
+          "hour_et": 13,
+          "label": "13:00",
+          "avg": 347,
+          "peak": 751,
+          "samples": 120
+        },
+        {
+          "hour_et": 14,
+          "label": "14:00",
+          "avg": 371,
+          "peak": 777,
+          "samples": 121
+        },
+        {
+          "hour_et": 15,
+          "label": "15:00",
+          "avg": 393,
+          "peak": 820,
+          "samples": 125
+        },
+        {
+          "hour_et": 16,
+          "label": "16:00",
+          "avg": 392,
+          "peak": 852,
+          "samples": 122
+        },
+        {
+          "hour_et": 17,
+          "label": "17:00",
+          "avg": 375,
+          "peak": 869,
+          "samples": 116
+        },
+        {
+          "hour_et": 18,
+          "label": "18:00",
+          "avg": 330,
+          "peak": 869,
+          "samples": 118
+        },
+        {
+          "hour_et": 19,
+          "label": "19:00",
+          "avg": 307,
+          "peak": 795,
+          "samples": 122
+        },
+        {
+          "hour_et": 20,
+          "label": "20:00",
+          "avg": 270,
+          "peak": 690,
+          "samples": 120
+        },
+        {
+          "hour_et": 21,
+          "label": "21:00",
+          "avg": 256,
+          "peak": 667,
+          "samples": 119
+        },
+        {
+          "hour_et": 22,
+          "label": "22:00",
+          "avg": 240,
+          "peak": 655,
+          "samples": 116
+        },
+        {
+          "hour_et": 23,
+          "label": "23:00",
+          "avg": 213,
+          "peak": 606,
+          "samples": 115
+        }
+      ],
+      "floor_breakdown": [
+        {
+          "floor": "Ground",
+          "avg": 37,
+          "peak": 129,
+          "low": 0,
+          "top_hours": [
+            {
+              "hour_et": 15,
+              "label": "15:00",
+              "avg": 65
+            },
+            {
+              "hour_et": 14,
+              "label": "14:00",
+              "avg": 63
+            },
+            {
+              "hour_et": 16,
+              "label": "16:00",
+              "avg": 61
+            },
+            {
+              "hour_et": 13,
+              "label": "13:00",
+              "avg": 56
+            },
+            {
+              "hour_et": 17,
+              "label": "17:00",
+              "avg": 56
+            }
+          ],
+          "top_dates": [
+            {
+              "date": "2026-02-24",
+              "avg": 70
+            },
+            {
+              "date": "2026-02-23",
+              "avg": 66
+            },
+            {
+              "date": "2026-02-17",
+              "avg": 63
+            },
+            {
+              "date": "2026-02-16",
+              "avg": 59
+            },
+            {
+              "date": "2026-02-25",
+              "avg": 58
+            }
+          ]
+        },
+        {
+          "floor": "First",
+          "avg": 145,
+          "peak": 618,
+          "low": 0,
+          "top_hours": [
+            {
+              "hour_et": 15,
+              "label": "15:00",
+              "avg": 205
+            },
+            {
+              "hour_et": 16,
+              "label": "16:00",
+              "avg": 204
+            },
+            {
+              "hour_et": 17,
+              "label": "17:00",
+              "avg": 204
+            },
+            {
+              "hour_et": 14,
+              "label": "14:00",
+              "avg": 192
+            },
+            {
+              "hour_et": 18,
+              "label": "18:00",
+              "avg": 186
+            }
+          ],
+          "top_dates": [
+            {
+              "date": "2026-02-26",
+              "avg": 423
+            },
+            {
+              "date": "2026-02-25",
+              "avg": 328
+            },
+            {
+              "date": "2026-02-27",
+              "avg": 326
+            },
+            {
+              "date": "2026-02-28",
+              "avg": 242
+            },
+            {
+              "date": "2026-02-24",
+              "avg": 172
+            }
+          ]
+        },
+        {
+          "floor": "Second",
+          "avg": 45,
+          "peak": 129,
+          "low": 0,
+          "top_hours": [
+            {
+              "hour_et": 15,
+              "label": "15:00",
+              "avg": 72
+            },
+            {
+              "hour_et": 16,
+              "label": "16:00",
+              "avg": 71
+            },
+            {
+              "hour_et": 17,
+              "label": "17:00",
+              "avg": 69
+            },
+            {
+              "hour_et": 14,
+              "label": "14:00",
+              "avg": 67
+            },
+            {
+              "hour_et": 13,
+              "label": "13:00",
+              "avg": 65
+            }
+          ],
+          "top_dates": [
+            {
+              "date": "2026-02-25",
+              "avg": 78
+            },
+            {
+              "date": "2026-02-23",
+              "avg": 71
+            },
+            {
+              "date": "2026-02-24",
+              "avg": 71
+            },
+            {
+              "date": "2026-02-17",
+              "avg": 68
+            },
+            {
+              "date": "2026-02-26",
+              "avg": 64
+            }
+          ]
+        },
+        {
+          "floor": "Third",
+          "avg": 36,
+          "peak": 109,
+          "low": 0,
+          "top_hours": [
+            {
+              "hour_et": 16,
+              "label": "16:00",
+              "avg": 56
+            },
+            {
+              "hour_et": 13,
+              "label": "13:00",
+              "avg": 51
+            },
+            {
+              "hour_et": 15,
+              "label": "15:00",
+              "avg": 50
+            },
+            {
+              "hour_et": 14,
+              "label": "14:00",
+              "avg": 49
+            },
+            {
+              "hour_et": 17,
+              "label": "17:00",
+              "avg": 45
+            }
+          ],
+          "top_dates": [
+            {
+              "date": "2026-02-24",
+              "avg": 54
+            },
+            {
+              "date": "2026-02-09",
+              "avg": 47
+            },
+            {
+              "date": "2026-02-11",
+              "avg": 46
+            },
+            {
+              "date": "2026-02-18",
+              "avg": 46
+            },
+            {
+              "date": "2026-02-25",
+              "avg": 45
+            }
+          ]
+        }
+      ]
+    },
+    "2026-03": {
+      "month": "2026-03",
+      "summary": {
+        "record_count": 2360,
+        "avg_patrons": 359,
+        "peak_patrons": 1006,
+        "low_patrons": 16
+      },
+      "peak_record": {
+        "timestamp_utc": "2026-03-16T20:30:06.000Z",
+        "timestamp_et": "2026-03-16 16:30 ET",
+        "weekday": "Monday",
+        "patrons": 1006,
+        "countByFloor": [
+          147,
+          662,
+          145,
+          52
+        ]
+      },
+      "quiet_record": {
+        "timestamp_utc": "2026-03-24T05:45:01.000Z",
+        "timestamp_et": "2026-03-24 01:45 ET",
+        "weekday": "Tuesday",
+        "patrons": 16,
+        "countByFloor": [
+          1,
+          7,
+          3,
+          5
+        ]
+      },
+      "top10_days": [
+        {
+          "date": "2026-03-17",
+          "weekday": "Tuesday",
+          "avg": 728,
+          "peak": 929,
+          "low": 442,
+          "samples": 76
+        },
+        {
+          "date": "2026-03-16",
+          "weekday": "Monday",
+          "avg": 688,
+          "peak": 1006,
+          "low": 321,
+          "samples": 76
+        },
+        {
+          "date": "2026-03-02",
+          "weekday": "Monday",
+          "avg": 605,
+          "peak": 831,
+          "low": 356,
+          "samples": 76
+        },
+        {
+          "date": "2026-03-10",
+          "weekday": "Tuesday",
+          "avg": 603,
+          "peak": 786,
+          "low": 370,
+          "samples": 76
+        },
+        {
+          "date": "2026-03-18",
+          "weekday": "Wednesday",
+          "avg": 585,
+          "peak": 839,
+          "low": 369,
+          "samples": 76
+        },
+        {
+          "date": "2026-03-04",
+          "weekday": "Wednesday",
+          "avg": 583,
+          "peak": 865,
+          "low": 317,
+          "samples": 76
+        },
+        {
+          "date": "2026-03-11",
+          "weekday": "Wednesday",
+          "avg": 582,
+          "peak": 787,
+          "low": 364,
+          "samples": 76
+        },
+        {
+          "date": "2026-03-09",
+          "weekday": "Monday",
+          "avg": 566,
+          "peak": 759,
+          "low": 291,
+          "samples": 76
+        },
+        {
+          "date": "2026-03-31",
+          "weekday": "Tuesday",
+          "avg": 560,
+          "peak": 735,
+          "low": 311,
+          "samples": 60
+        },
+        {
+          "date": "2026-03-12",
+          "weekday": "Thursday",
+          "avg": 559,
+          "peak": 863,
+          "low": 373,
+          "samples": 76
+        }
+      ],
+      "bottom10_days": [
+        {
+          "date": "2026-03-28",
+          "weekday": "Saturday",
+          "avg": 53,
+          "peak": 57,
+          "low": 48,
+          "samples": 76
+        },
+        {
+          "date": "2026-03-22",
+          "weekday": "Sunday",
+          "avg": 53,
+          "peak": 57,
+          "low": 49,
+          "samples": 76
+        },
+        {
+          "date": "2026-03-21",
+          "weekday": "Saturday",
+          "avg": 60,
+          "peak": 67,
+          "low": 54,
+          "samples": 76
+        },
+        {
+          "date": "2026-03-27",
+          "weekday": "Friday",
+          "avg": 70,
+          "peak": 104,
+          "low": 48,
+          "samples": 76
+        },
+        {
+          "date": "2026-03-25",
+          "weekday": "Wednesday",
+          "avg": 72,
+          "peak": 104,
+          "low": 52,
+          "samples": 76
+        },
+        {
+          "date": "2026-03-26",
+          "weekday": "Thursday",
+          "avg": 73,
+          "peak": 111,
+          "low": 49,
+          "samples": 76
+        },
+        {
+          "date": "2026-03-23",
+          "weekday": "Monday",
+          "avg": 74,
+          "peak": 106,
+          "low": 49,
+          "samples": 76
+        },
+        {
+          "date": "2026-03-24",
+          "weekday": "Tuesday",
+          "avg": 75,
+          "peak": 113,
+          "low": 16,
+          "samples": 76
+        },
+        {
+          "date": "2026-03-29",
+          "weekday": "Sunday",
+          "avg": 93,
+          "peak": 159,
+          "low": 49,
+          "samples": 76
+        },
+        {
+          "date": "2026-03-20",
+          "weekday": "Friday",
+          "avg": 157,
+          "peak": 258,
+          "low": 60,
+          "samples": 76
+        }
+      ],
+      "all_days": [
+        {
+          "date": "2026-02-28",
+          "weekday": "Saturday",
+          "avg": 318,
+          "peak": 332,
+          "low": 291,
+          "samples": 16
+        },
+        {
+          "date": "2026-03-01",
+          "weekday": "Sunday",
+          "avg": 430,
+          "peak": 621,
+          "low": 262,
+          "samples": 76
+        },
+        {
+          "date": "2026-03-02",
+          "weekday": "Monday",
+          "avg": 605,
+          "peak": 831,
+          "low": 356,
+          "samples": 76
+        },
+        {
+          "date": "2026-03-03",
+          "weekday": "Tuesday",
+          "avg": 554,
+          "peak": 790,
+          "low": 395,
+          "samples": 76
+        },
+        {
+          "date": "2026-03-04",
+          "weekday": "Wednesday",
+          "avg": 583,
+          "peak": 865,
+          "low": 317,
+          "samples": 76
+        },
+        {
+          "date": "2026-03-05",
+          "weekday": "Thursday",
+          "avg": 517,
+          "peak": 737,
+          "low": 357,
+          "samples": 76
+        },
+        {
+          "date": "2026-03-06",
+          "weekday": "Friday",
+          "avg": 380,
+          "peak": 552,
+          "low": 241,
+          "samples": 76
+        },
+        {
+          "date": "2026-03-07",
+          "weekday": "Saturday",
+          "avg": 251,
+          "peak": 330,
+          "low": 206,
+          "samples": 76
+        },
+        {
+          "date": "2026-03-08",
+          "weekday": "Sunday",
+          "avg": 356,
+          "peak": 536,
+          "low": 195,
+          "samples": 80
+        },
+        {
+          "date": "2026-03-09",
+          "weekday": "Monday",
+          "avg": 566,
+          "peak": 759,
+          "low": 291,
+          "samples": 76
+        },
+        {
+          "date": "2026-03-10",
+          "weekday": "Tuesday",
+          "avg": 603,
+          "peak": 786,
+          "low": 370,
+          "samples": 76
+        },
+        {
+          "date": "2026-03-11",
+          "weekday": "Wednesday",
+          "avg": 582,
+          "peak": 787,
+          "low": 364,
+          "samples": 76
+        },
+        {
+          "date": "2026-03-12",
+          "weekday": "Thursday",
+          "avg": 559,
+          "peak": 863,
+          "low": 373,
+          "samples": 76
+        },
+        {
+          "date": "2026-03-13",
+          "weekday": "Friday",
+          "avg": 401,
+          "peak": 575,
+          "low": 274,
+          "samples": 76
+        },
+        {
+          "date": "2026-03-14",
+          "weekday": "Saturday",
+          "avg": 285,
+          "peak": 356,
+          "low": 224,
+          "samples": 76
+        },
+        {
+          "date": "2026-03-15",
+          "weekday": "Sunday",
+          "avg": 441,
+          "peak": 687,
+          "low": 211,
+          "samples": 76
+        },
+        {
+          "date": "2026-03-16",
+          "weekday": "Monday",
+          "avg": 688,
+          "peak": 1006,
+          "low": 321,
+          "samples": 76
+        },
+        {
+          "date": "2026-03-17",
+          "weekday": "Tuesday",
+          "avg": 728,
+          "peak": 929,
+          "low": 442,
+          "samples": 76
+        },
+        {
+          "date": "2026-03-18",
+          "weekday": "Wednesday",
+          "avg": 585,
+          "peak": 839,
+          "low": 369,
+          "samples": 76
+        },
+        {
+          "date": "2026-03-19",
+          "weekday": "Thursday",
+          "avg": 329,
+          "peak": 457,
+          "low": 209,
+          "samples": 76
+        },
+        {
+          "date": "2026-03-20",
+          "weekday": "Friday",
+          "avg": 157,
+          "peak": 258,
+          "low": 60,
+          "samples": 76
+        },
+        {
+          "date": "2026-03-21",
+          "weekday": "Saturday",
+          "avg": 60,
+          "peak": 67,
+          "low": 54,
+          "samples": 76
+        },
+        {
+          "date": "2026-03-22",
+          "weekday": "Sunday",
+          "avg": 53,
+          "peak": 57,
+          "low": 49,
+          "samples": 76
+        },
+        {
+          "date": "2026-03-23",
+          "weekday": "Monday",
+          "avg": 74,
+          "peak": 106,
+          "low": 49,
+          "samples": 76
+        },
+        {
+          "date": "2026-03-24",
+          "weekday": "Tuesday",
+          "avg": 75,
+          "peak": 113,
+          "low": 16,
+          "samples": 76
+        },
+        {
+          "date": "2026-03-25",
+          "weekday": "Wednesday",
+          "avg": 72,
+          "peak": 104,
+          "low": 52,
+          "samples": 76
+        },
+        {
+          "date": "2026-03-26",
+          "weekday": "Thursday",
+          "avg": 73,
+          "peak": 111,
+          "low": 49,
+          "samples": 76
+        },
+        {
+          "date": "2026-03-27",
+          "weekday": "Friday",
+          "avg": 70,
+          "peak": 104,
+          "low": 48,
+          "samples": 76
+        },
+        {
+          "date": "2026-03-28",
+          "weekday": "Saturday",
+          "avg": 53,
+          "peak": 57,
+          "low": 48,
+          "samples": 76
+        },
+        {
+          "date": "2026-03-29",
+          "weekday": "Sunday",
+          "avg": 93,
+          "peak": 159,
+          "low": 49,
+          "samples": 76
+        },
+        {
+          "date": "2026-03-30",
+          "weekday": "Monday",
+          "avg": 409,
+          "peak": 626,
+          "low": 106,
+          "samples": 76
+        },
+        {
+          "date": "2026-03-31",
+          "weekday": "Tuesday",
+          "avg": 560,
+          "peak": 735,
+          "low": 311,
+          "samples": 60
+        }
+      ],
+      "day_of_week": [
+        {
+          "weekday": "Monday",
+          "avg": 469,
+          "peak": 1006,
+          "low": 49,
+          "samples": 380
+        },
+        {
+          "weekday": "Tuesday",
+          "avg": 501,
+          "peak": 929,
+          "low": 16,
+          "samples": 364
+        },
+        {
+          "weekday": "Wednesday",
+          "avg": 455,
+          "peak": 865,
+          "low": 52,
+          "samples": 304
+        },
+        {
+          "weekday": "Thursday",
+          "avg": 369,
+          "peak": 863,
+          "low": 49,
+          "samples": 304
+        },
+        {
+          "weekday": "Friday",
+          "avg": 252,
+          "peak": 575,
+          "low": 48,
+          "samples": 304
+        },
+        {
+          "weekday": "Saturday",
+          "avg": 170,
+          "peak": 356,
+          "low": 48,
+          "samples": 320
+        },
+        {
+          "weekday": "Sunday",
+          "avg": 275,
+          "peak": 687,
+          "low": 49,
+          "samples": 384
+        }
+      ],
+      "hourly_profile": [
+        {
+          "hour_et": 0,
+          "label": "00:00",
+          "avg": 271,
+          "peak": 591,
+          "samples": 124
+        },
+        {
+          "hour_et": 1,
+          "label": "01:00",
+          "avg": 245,
+          "peak": 493,
+          "samples": 124
+        },
+        {
+          "hour_et": 2,
+          "label": "02:00",
+          "avg": 307,
+          "peak": 423,
+          "samples": 32
+        },
+        {
+          "hour_et": 3,
+          "label": "03:00",
+          "avg": 0,
+          "peak": 0,
+          "samples": 1
+        },
+        {
+          "hour_et": 4,
+          "label": "04:00",
+          "avg": 0,
+          "peak": 0,
+          "samples": 1
+        },
+        {
+          "hour_et": 5,
+          "label": "05:00",
+          "avg": 0,
+          "peak": 0,
+          "samples": 1
+        },
+        {
+          "hour_et": 6,
+          "label": "06:00",
+          "avg": 0,
+          "peak": 0,
+          "samples": 1
+        },
+        {
+          "hour_et": 7,
+          "label": "07:00",
+          "avg": 211,
+          "peak": 456,
+          "samples": 96
+        },
+        {
+          "hour_et": 8,
+          "label": "08:00",
+          "avg": 243,
+          "peak": 491,
+          "samples": 124
+        },
+        {
+          "hour_et": 9,
+          "label": "09:00",
+          "avg": 264,
+          "peak": 539,
+          "samples": 124
+        },
+        {
+          "hour_et": 10,
+          "label": "10:00",
+          "avg": 313,
+          "peak": 671,
+          "samples": 124
+        },
+        {
+          "hour_et": 11,
+          "label": "11:00",
+          "avg": 358,
+          "peak": 746,
+          "samples": 124
+        },
+        {
+          "hour_et": 12,
+          "label": "12:00",
+          "avg": 403,
+          "peak": 802,
+          "samples": 124
+        },
+        {
+          "hour_et": 13,
+          "label": "13:00",
+          "avg": 440,
+          "peak": 895,
+          "samples": 124
+        },
+        {
+          "hour_et": 14,
+          "label": "14:00",
+          "avg": 463,
+          "peak": 919,
+          "samples": 124
+        },
+        {
+          "hour_et": 15,
+          "label": "15:00",
+          "avg": 478,
+          "peak": 966,
+          "samples": 124
+        },
+        {
+          "hour_et": 16,
+          "label": "16:00",
+          "avg": 472,
+          "peak": 1006,
+          "samples": 124
+        },
+        {
+          "hour_et": 17,
+          "label": "17:00",
+          "avg": 438,
+          "peak": 941,
+          "samples": 124
+        },
+        {
+          "hour_et": 18,
+          "label": "18:00",
+          "avg": 411,
+          "peak": 878,
+          "samples": 124
+        },
+        {
+          "hour_et": 19,
+          "label": "19:00",
+          "avg": 399,
+          "peak": 868,
+          "samples": 124
+        },
+        {
+          "hour_et": 20,
+          "label": "20:00",
+          "avg": 382,
+          "peak": 876,
+          "samples": 124
+        },
+        {
+          "hour_et": 21,
+          "label": "21:00",
+          "avg": 370,
+          "peak": 881,
+          "samples": 124
+        },
+        {
+          "hour_et": 22,
+          "label": "22:00",
+          "avg": 341,
+          "peak": 818,
+          "samples": 124
+        },
+        {
+          "hour_et": 23,
+          "label": "23:00",
+          "avg": 305,
+          "peak": 700,
+          "samples": 124
+        }
+      ],
+      "floor_breakdown": [
+        {
+          "floor": "Ground",
+          "avg": 36,
+          "peak": 183,
+          "low": 1,
+          "top_hours": [
+            {
+              "hour_et": 15,
+              "label": "15:00",
+              "avg": 55
+            },
+            {
+              "hour_et": 16,
+              "label": "16:00",
+              "avg": 55
+            },
+            {
+              "hour_et": 14,
+              "label": "14:00",
+              "avg": 54
+            },
+            {
+              "hour_et": 17,
+              "label": "17:00",
+              "avg": 53
+            },
+            {
+              "hour_et": 13,
+              "label": "13:00",
+              "avg": 52
+            }
+          ],
+          "top_dates": [
+            {
+              "date": "2026-03-16",
+              "avg": 92
+            },
+            {
+              "date": "2026-03-17",
+              "avg": 92
+            },
+            {
+              "date": "2026-03-10",
+              "avg": 69
+            },
+            {
+              "date": "2026-03-31",
+              "avg": 68
+            },
+            {
+              "date": "2026-03-09",
+              "avg": 64
+            }
+          ]
+        },
+        {
+          "floor": "First",
+          "avg": 244,
+          "peak": 662,
+          "low": 7,
+          "top_hours": [
+            {
+              "hour_et": 15,
+              "label": "15:00",
+              "avg": 305
+            },
+            {
+              "hour_et": 16,
+              "label": "16:00",
+              "avg": 302
+            },
+            {
+              "hour_et": 14,
+              "label": "14:00",
+              "avg": 295
+            },
+            {
+              "hour_et": 17,
+              "label": "17:00",
+              "avg": 289
+            },
+            {
+              "hour_et": 13,
+              "label": "13:00",
+              "avg": 282
+            }
+          ],
+          "top_dates": [
+            {
+              "date": "2026-03-17",
+              "avg": 503
+            },
+            {
+              "date": "2026-03-16",
+              "avg": 474
+            },
+            {
+              "date": "2026-03-02",
+              "avg": 430
+            },
+            {
+              "date": "2026-03-18",
+              "avg": 423
+            },
+            {
+              "date": "2026-03-11",
+              "avg": 421
+            }
+          ]
+        },
+        {
+          "floor": "Second",
+          "avg": 45,
+          "peak": 145,
+          "low": 3,
+          "top_hours": [
+            {
+              "hour_et": 15,
+              "label": "15:00",
+              "avg": 68
+            },
+            {
+              "hour_et": 16,
+              "label": "16:00",
+              "avg": 68
+            },
+            {
+              "hour_et": 14,
+              "label": "14:00",
+              "avg": 65
+            },
+            {
+              "hour_et": 13,
+              "label": "13:00",
+              "avg": 59
+            },
+            {
+              "hour_et": 17,
+              "label": "17:00",
+              "avg": 59
+            }
+          ],
+          "top_dates": [
+            {
+              "date": "2026-03-17",
+              "avg": 85
+            },
+            {
+              "date": "2026-03-16",
+              "avg": 79
+            },
+            {
+              "date": "2026-03-09",
+              "avg": 76
+            },
+            {
+              "date": "2026-03-02",
+              "avg": 75
+            },
+            {
+              "date": "2026-03-31",
+              "avg": 74
+            }
+          ]
+        },
+        {
+          "floor": "Third",
+          "avg": 34,
+          "peak": 101,
+          "low": 5,
+          "top_hours": [
+            {
+              "hour_et": 15,
+              "label": "15:00",
+              "avg": 51
+            },
+            {
+              "hour_et": 14,
+              "label": "14:00",
+              "avg": 49
+            },
+            {
+              "hour_et": 13,
+              "label": "13:00",
+              "avg": 47
+            },
+            {
+              "hour_et": 16,
+              "label": "16:00",
+              "avg": 47
+            },
+            {
+              "hour_et": 12,
+              "label": "12:00",
+              "avg": 43
+            }
+          ],
+          "top_dates": [
+            {
+              "date": "2026-03-17",
+              "avg": 48
+            },
+            {
+              "date": "2026-03-31",
+              "avg": 47
+            },
+            {
+              "date": "2026-03-04",
+              "avg": 46
+            },
+            {
+              "date": "2026-03-09",
+              "avg": 46
+            },
+            {
+              "date": "2026-03-18",
+              "avg": 46
+            }
+          ]
+        }
+      ]
+    },
+    "2026-04": {
+      "month": "2026-04",
+      "summary": {
+        "record_count": 2279,
+        "avg_patrons": 436,
+        "peak_patrons": 1039,
+        "low_patrons": 50
+      },
+      "peak_record": {
+        "timestamp_utc": "2026-04-08T19:30:07.000Z",
+        "timestamp_et": "2026-04-08 15:30 ET",
+        "weekday": "Wednesday",
+        "patrons": 1039,
+        "countByFloor": [
+          111,
+          729,
+          114,
+          85
+        ]
+      },
+      "quiet_record": {
+        "timestamp_utc": "2026-04-21T05:45:02.000Z",
+        "timestamp_et": "2026-04-21 01:45 ET",
+        "weekday": "Tuesday",
+        "patrons": 50,
+        "countByFloor": [
+          4,
+          18,
+          8,
+          20
+        ]
+      },
+      "top10_days": [
+        {
+          "date": "2026-04-08",
+          "weekday": "Wednesday",
+          "avg": 789,
+          "peak": 1039,
+          "low": 529,
+          "samples": 76
+        },
+        {
+          "date": "2026-04-07",
+          "weekday": "Tuesday",
+          "avg": 787,
+          "peak": 1020,
+          "low": 524,
+          "samples": 76
+        },
+        {
+          "date": "2026-04-06",
+          "weekday": "Monday",
+          "avg": 702,
+          "peak": 967,
+          "low": 369,
+          "samples": 76
+        },
+        {
+          "date": "2026-04-13",
+          "weekday": "Monday",
+          "avg": 665,
+          "peak": 881,
+          "low": 378,
+          "samples": 76
+        },
+        {
+          "date": "2026-04-14",
+          "weekday": "Tuesday",
+          "avg": 662,
+          "peak": 820,
+          "low": 407,
+          "samples": 76
+        },
+        {
+          "date": "2026-04-15",
+          "weekday": "Wednesday",
+          "avg": 636,
+          "peak": 850,
+          "low": 438,
+          "samples": 76
+        },
+        {
+          "date": "2026-04-09",
+          "weekday": "Thursday",
+          "avg": 633,
+          "peak": 832,
+          "low": 463,
+          "samples": 76
+        },
+        {
+          "date": "2026-04-16",
+          "weekday": "Thursday",
+          "avg": 591,
+          "peak": 812,
+          "low": 407,
+          "samples": 76
+        },
+        {
+          "date": "2026-04-01",
+          "weekday": "Wednesday",
+          "avg": 574,
+          "peak": 838,
+          "low": 337,
+          "samples": 76
+        },
+        {
+          "date": "2026-03-31",
+          "weekday": "Tuesday",
+          "avg": 547,
+          "peak": 642,
+          "low": 444,
+          "samples": 16
+        }
+      ],
+      "bottom10_days": [
+        {
+          "date": "2026-04-25",
+          "weekday": "Saturday",
+          "avg": 117,
+          "peak": 177,
+          "low": 70,
+          "samples": 76
+        },
+        {
+          "date": "2026-04-24",
+          "weekday": "Friday",
+          "avg": 154,
+          "peak": 278,
+          "low": 71,
+          "samples": 76
+        },
+        {
+          "date": "2026-04-23",
+          "weekday": "Thursday",
+          "avg": 222,
+          "peak": 391,
+          "low": 68,
+          "samples": 76
+        },
+        {
+          "date": "2026-04-26",
+          "weekday": "Sunday",
+          "avg": 227,
+          "peak": 428,
+          "low": 71,
+          "samples": 76
+        },
+        {
+          "date": "2026-04-21",
+          "weekday": "Tuesday",
+          "avg": 267,
+          "peak": 460,
+          "low": 50,
+          "samples": 76
+        },
+        {
+          "date": "2026-04-22",
+          "weekday": "Wednesday",
+          "avg": 271,
+          "peak": 445,
+          "low": 63,
+          "samples": 76
+        },
+        {
+          "date": "2026-04-30",
+          "weekday": "Thursday",
+          "avg": 273,
+          "peak": 455,
+          "low": 62,
+          "samples": 60
+        },
+        {
+          "date": "2026-04-29",
+          "weekday": "Wednesday",
+          "avg": 287,
+          "peak": 467,
+          "low": 77,
+          "samples": 76
+        },
+        {
+          "date": "2026-04-04",
+          "weekday": "Saturday",
+          "avg": 314,
+          "peak": 372,
+          "low": 278,
+          "samples": 76
+        },
+        {
+          "date": "2026-04-27",
+          "weekday": "Monday",
+          "avg": 318,
+          "peak": 566,
+          "low": 74,
+          "samples": 76
+        }
+      ],
+      "all_days": [
+        {
+          "date": "2026-03-31",
+          "weekday": "Tuesday",
+          "avg": 547,
+          "peak": 642,
+          "low": 444,
+          "samples": 16
+        },
+        {
+          "date": "2026-04-01",
+          "weekday": "Wednesday",
+          "avg": 574,
+          "peak": 838,
+          "low": 337,
+          "samples": 76
+        },
+        {
+          "date": "2026-04-02",
+          "weekday": "Thursday",
+          "avg": 541,
+          "peak": 751,
+          "low": 375,
+          "samples": 76
+        },
+        {
+          "date": "2026-04-03",
+          "weekday": "Friday",
+          "avg": 426,
+          "peak": 597,
+          "low": 321,
+          "samples": 75
+        },
+        {
+          "date": "2026-04-04",
+          "weekday": "Saturday",
+          "avg": 314,
+          "peak": 372,
+          "low": 278,
+          "samples": 76
+        },
+        {
+          "date": "2026-04-05",
+          "weekday": "Sunday",
+          "avg": 390,
+          "peak": 527,
+          "low": 260,
+          "samples": 76
+        },
+        {
+          "date": "2026-04-06",
+          "weekday": "Monday",
+          "avg": 702,
+          "peak": 967,
+          "low": 369,
+          "samples": 76
+        },
+        {
+          "date": "2026-04-07",
+          "weekday": "Tuesday",
+          "avg": 787,
+          "peak": 1020,
+          "low": 524,
+          "samples": 76
+        },
+        {
+          "date": "2026-04-08",
+          "weekday": "Wednesday",
+          "avg": 789,
+          "peak": 1039,
+          "low": 529,
+          "samples": 76
+        },
+        {
+          "date": "2026-04-09",
+          "weekday": "Thursday",
+          "avg": 633,
+          "peak": 832,
+          "low": 463,
+          "samples": 76
+        },
+        {
+          "date": "2026-04-10",
+          "weekday": "Friday",
+          "avg": 476,
+          "peak": 644,
+          "low": 373,
+          "samples": 76
+        },
+        {
+          "date": "2026-04-11",
+          "weekday": "Saturday",
+          "avg": 353,
+          "peak": 392,
+          "low": 315,
+          "samples": 76
+        },
+        {
+          "date": "2026-04-12",
+          "weekday": "Sunday",
+          "avg": 435,
+          "peak": 577,
+          "low": 296,
+          "samples": 76
+        },
+        {
+          "date": "2026-04-13",
+          "weekday": "Monday",
+          "avg": 665,
+          "peak": 881,
+          "low": 378,
+          "samples": 76
+        },
+        {
+          "date": "2026-04-14",
+          "weekday": "Tuesday",
+          "avg": 662,
+          "peak": 820,
+          "low": 407,
+          "samples": 76
+        },
+        {
+          "date": "2026-04-15",
+          "weekday": "Wednesday",
+          "avg": 636,
+          "peak": 850,
+          "low": 438,
+          "samples": 76
+        },
+        {
+          "date": "2026-04-16",
+          "weekday": "Thursday",
+          "avg": 591,
+          "peak": 812,
+          "low": 407,
+          "samples": 76
+        },
+        {
+          "date": "2026-04-17",
+          "weekday": "Friday",
+          "avg": 438,
+          "peak": 588,
+          "low": 324,
+          "samples": 76
+        },
+        {
+          "date": "2026-04-18",
+          "weekday": "Saturday",
+          "avg": 347,
+          "peak": 384,
+          "low": 294,
+          "samples": 76
+        },
+        {
+          "date": "2026-04-19",
+          "weekday": "Sunday",
+          "avg": 445,
+          "peak": 614,
+          "low": 280,
+          "samples": 76
+        },
+        {
+          "date": "2026-04-20",
+          "weekday": "Monday",
+          "avg": 359,
+          "peak": 725,
+          "low": 0,
+          "samples": 76
+        },
+        {
+          "date": "2026-04-21",
+          "weekday": "Tuesday",
+          "avg": 267,
+          "peak": 460,
+          "low": 50,
+          "samples": 76
+        },
+        {
+          "date": "2026-04-22",
+          "weekday": "Wednesday",
+          "avg": 271,
+          "peak": 445,
+          "low": 63,
+          "samples": 76
+        },
+        {
+          "date": "2026-04-23",
+          "weekday": "Thursday",
+          "avg": 222,
+          "peak": 391,
+          "low": 68,
+          "samples": 76
+        },
+        {
+          "date": "2026-04-24",
+          "weekday": "Friday",
+          "avg": 154,
+          "peak": 278,
+          "low": 71,
+          "samples": 76
+        },
+        {
+          "date": "2026-04-25",
+          "weekday": "Saturday",
+          "avg": 117,
+          "peak": 177,
+          "low": 70,
+          "samples": 76
+        },
+        {
+          "date": "2026-04-26",
+          "weekday": "Sunday",
+          "avg": 227,
+          "peak": 428,
+          "low": 71,
+          "samples": 76
+        },
+        {
+          "date": "2026-04-27",
+          "weekday": "Monday",
+          "avg": 318,
+          "peak": 566,
+          "low": 74,
+          "samples": 76
+        },
+        {
+          "date": "2026-04-28",
+          "weekday": "Tuesday",
+          "avg": 326,
+          "peak": 531,
+          "low": 76,
+          "samples": 76
+        },
+        {
+          "date": "2026-04-29",
+          "weekday": "Wednesday",
+          "avg": 287,
+          "peak": 467,
+          "low": 77,
+          "samples": 76
+        },
+        {
+          "date": "2026-04-30",
+          "weekday": "Thursday",
+          "avg": 273,
+          "peak": 455,
+          "low": 62,
+          "samples": 60
+        }
+      ],
+      "day_of_week": [
+        {
+          "weekday": "Monday",
+          "avg": 511,
+          "peak": 967,
+          "low": 0,
+          "samples": 304
+        },
+        {
+          "weekday": "Tuesday",
+          "avg": 512,
+          "peak": 1020,
+          "low": 50,
+          "samples": 320
+        },
+        {
+          "weekday": "Wednesday",
+          "avg": 511,
+          "peak": 1039,
+          "low": 63,
+          "samples": 380
+        },
+        {
+          "weekday": "Thursday",
+          "avg": 460,
+          "peak": 832,
+          "low": 62,
+          "samples": 364
+        },
+        {
+          "weekday": "Friday",
+          "avg": 374,
+          "peak": 644,
+          "low": 71,
+          "samples": 303
+        },
+        {
+          "weekday": "Saturday",
+          "avg": 283,
+          "peak": 392,
+          "low": 70,
+          "samples": 304
+        },
+        {
+          "weekday": "Sunday",
+          "avg": 374,
+          "peak": 614,
+          "low": 71,
+          "samples": 304
+        }
+      ],
+      "hourly_profile": [
+        {
+          "hour_et": 0,
+          "label": "00:00",
+          "avg": 319,
+          "peak": 629,
+          "samples": 120
+        },
+        {
+          "hour_et": 1,
+          "label": "01:00",
+          "avg": 280,
+          "peak": 558,
+          "samples": 120
+        },
+        {
+          "hour_et": 2,
+          "label": "02:00",
+          "avg": 0,
+          "peak": 0,
+          "samples": 1
+        },
+        {
+          "hour_et": 3,
+          "label": "03:00",
+          "avg": 0,
+          "peak": 0,
+          "samples": 1
+        },
+        {
+          "hour_et": 4,
+          "label": "04:00",
+          "avg": 0,
+          "peak": 0,
+          "samples": 1
+        },
+        {
+          "hour_et": 5,
+          "label": "05:00",
+          "avg": 0,
+          "peak": 0,
+          "samples": 1
+        },
+        {
+          "hour_et": 6,
+          "label": "06:00",
+          "avg": 0,
+          "peak": 0,
+          "samples": 1
+        },
+        {
+          "hour_et": 7,
+          "label": "07:00",
+          "avg": 281,
+          "peak": 537,
+          "samples": 120
+        },
+        {
+          "hour_et": 8,
+          "label": "08:00",
+          "avg": 299,
+          "peak": 570,
+          "samples": 120
+        },
+        {
+          "hour_et": 9,
+          "label": "09:00",
+          "avg": 339,
+          "peak": 652,
+          "samples": 120
+        },
+        {
+          "hour_et": 10,
+          "label": "10:00",
+          "avg": 412,
+          "peak": 801,
+          "samples": 120
+        },
+        {
+          "hour_et": 11,
+          "label": "11:00",
+          "avg": 465,
+          "peak": 863,
+          "samples": 120
+        },
+        {
+          "hour_et": 12,
+          "label": "12:00",
+          "avg": 492,
+          "peak": 905,
+          "samples": 120
+        },
+        {
+          "hour_et": 13,
+          "label": "13:00",
+          "avg": 525,
+          "peak": 970,
+          "samples": 119
+        },
+        {
+          "hour_et": 14,
+          "label": "14:00",
+          "avg": 553,
+          "peak": 1003,
+          "samples": 120
+        },
+        {
+          "hour_et": 15,
+          "label": "15:00",
+          "avg": 572,
+          "peak": 1039,
+          "samples": 120
+        },
+        {
+          "hour_et": 16,
+          "label": "16:00",
+          "avg": 562,
+          "peak": 1020,
+          "samples": 120
+        },
+        {
+          "hour_et": 17,
+          "label": "17:00",
+          "avg": 514,
+          "peak": 954,
+          "samples": 120
+        },
+        {
+          "hour_et": 18,
+          "label": "18:00",
+          "avg": 487,
+          "peak": 956,
+          "samples": 120
+        },
+        {
+          "hour_et": 19,
+          "label": "19:00",
+          "avg": 470,
+          "peak": 967,
+          "samples": 120
+        },
+        {
+          "hour_et": 20,
+          "label": "20:00",
+          "avg": 476,
+          "peak": 920,
+          "samples": 120
+        },
+        {
+          "hour_et": 21,
+          "label": "21:00",
+          "avg": 457,
+          "peak": 873,
+          "samples": 120
+        },
+        {
+          "hour_et": 22,
+          "label": "22:00",
+          "avg": 418,
+          "peak": 810,
+          "samples": 120
+        },
+        {
+          "hour_et": 23,
+          "label": "23:00",
+          "avg": 366,
+          "peak": 728,
+          "samples": 120
+        }
+      ],
+      "floor_breakdown": [
+        {
+          "floor": "Ground",
+          "avg": 47,
+          "peak": 160,
+          "low": 0,
+          "top_hours": [
+            {
+              "hour_et": 15,
+              "label": "15:00",
+              "avg": 78
+            },
+            {
+              "hour_et": 16,
+              "label": "16:00",
+              "avg": 74
+            },
+            {
+              "hour_et": 14,
+              "label": "14:00",
+              "avg": 71
+            },
+            {
+              "hour_et": 17,
+              "label": "17:00",
+              "avg": 68
+            },
+            {
+              "hour_et": 20,
+              "label": "20:00",
+              "avg": 66
+            }
+          ],
+          "top_dates": [
+            {
+              "date": "2026-04-07",
+              "avg": 89
+            },
+            {
+              "date": "2026-03-31",
+              "avg": 87
+            },
+            {
+              "date": "2026-04-08",
+              "avg": 82
+            },
+            {
+              "date": "2026-04-06",
+              "avg": 80
+            },
+            {
+              "date": "2026-04-13",
+              "avg": 74
+            }
+          ]
+        },
+        {
+          "floor": "First",
+          "avg": 290,
+          "peak": 733,
+          "low": 0,
+          "top_hours": [
+            {
+              "hour_et": 16,
+              "label": "16:00",
+              "avg": 346
+            },
+            {
+              "hour_et": 15,
+              "label": "15:00",
+              "avg": 341
+            },
+            {
+              "hour_et": 14,
+              "label": "14:00",
+              "avg": 335
+            },
+            {
+              "hour_et": 17,
+              "label": "17:00",
+              "avg": 332
+            },
+            {
+              "hour_et": 18,
+              "label": "18:00",
+              "avg": 322
+            }
+          ],
+          "top_dates": [
+            {
+              "date": "2026-04-08",
+              "avg": 565
+            },
+            {
+              "date": "2026-04-07",
+              "avg": 544
+            },
+            {
+              "date": "2026-04-06",
+              "avg": 494
+            },
+            {
+              "date": "2026-04-09",
+              "avg": 470
+            },
+            {
+              "date": "2026-04-14",
+              "avg": 453
+            }
+          ]
+        },
+        {
+          "floor": "Second",
+          "avg": 59,
+          "peak": 151,
+          "low": 0,
+          "top_hours": [
+            {
+              "hour_et": 15,
+              "label": "15:00",
+              "avg": 86
+            },
+            {
+              "hour_et": 14,
+              "label": "14:00",
+              "avg": 85
+            },
+            {
+              "hour_et": 16,
+              "label": "16:00",
+              "avg": 84
+            },
+            {
+              "hour_et": 13,
+              "label": "13:00",
+              "avg": 80
+            },
+            {
+              "hour_et": 12,
+              "label": "12:00",
+              "avg": 76
+            }
+          ],
+          "top_dates": [
+            {
+              "date": "2026-04-07",
+              "avg": 100
+            },
+            {
+              "date": "2026-04-08",
+              "avg": 91
+            },
+            {
+              "date": "2026-04-14",
+              "avg": 90
+            },
+            {
+              "date": "2026-04-06",
+              "avg": 89
+            },
+            {
+              "date": "2026-04-13",
+              "avg": 88
+            }
+          ]
+        },
+        {
+          "floor": "Third",
+          "avg": 40,
+          "peak": 134,
+          "low": 0,
+          "top_hours": [
+            {
+              "hour_et": 15,
+              "label": "15:00",
+              "avg": 66
+            },
+            {
+              "hour_et": 14,
+              "label": "14:00",
+              "avg": 62
+            },
+            {
+              "hour_et": 13,
+              "label": "13:00",
+              "avg": 59
+            },
+            {
+              "hour_et": 16,
+              "label": "16:00",
+              "avg": 58
+            },
+            {
+              "hour_et": 12,
+              "label": "12:00",
+              "avg": 56
+            }
+          ],
+          "top_dates": [
+            {
+              "date": "2026-04-07",
+              "avg": 54
+            },
+            {
+              "date": "2026-04-01",
+              "avg": 51
+            },
+            {
+              "date": "2026-04-08",
+              "avg": 51
+            },
+            {
+              "date": "2026-04-13",
+              "avg": 51
+            },
+            {
+              "date": "2026-04-14",
+              "avg": 51
+            }
+          ]
+        }
+      ]
+    },
+    "2026-05": {
+      "month": "2026-05",
+      "summary": {
+        "record_count": 2336,
+        "avg_patrons": 195,
+        "peak_patrons": 1311,
+        "low_patrons": 10
+      },
+      "peak_record": {
+        "timestamp_utc": "2026-05-12T01:30:03.000Z",
+        "timestamp_et": "2026-05-11 21:30 ET",
+        "weekday": "Monday",
+        "patrons": 1311,
+        "countByFloor": [
+          222,
+          853,
+          185,
+          51
+        ]
+      },
+      "quiet_record": {
+        "timestamp_utc": "2026-05-22T01:00:01.000Z",
+        "timestamp_et": "2026-05-21 21:00 ET",
+        "weekday": "Thursday",
+        "patrons": 10,
+        "countByFloor": [
+          1,
+          4,
+          0,
+          5
+        ]
+      },
+      "top10_days": [
+        {
+          "date": "2026-05-11",
+          "weekday": "Monday",
+          "avg": 714,
+          "peak": 1311,
+          "low": 101,
+          "samples": 76
+        },
+        {
+          "date": "2026-05-12",
+          "weekday": "Tuesday",
+          "avg": 542,
+          "peak": 850,
+          "low": 122,
+          "samples": 76
+        },
+        {
+          "date": "2026-05-10",
+          "weekday": "Sunday",
+          "avg": 527,
+          "peak": 952,
+          "low": 93,
+          "samples": 76
+        },
+        {
+          "date": "2026-05-13",
+          "weekday": "Wednesday",
+          "avg": 416,
+          "peak": 611,
+          "low": 101,
+          "samples": 76
+        },
+        {
+          "date": "2026-05-04",
+          "weekday": "Monday",
+          "avg": 364,
+          "peak": 587,
+          "low": 63,
+          "samples": 76
+        },
+        {
+          "date": "2026-05-05",
+          "weekday": "Tuesday",
+          "avg": 358,
+          "peak": 647,
+          "low": 76,
+          "samples": 76
+        },
+        {
+          "date": "2026-05-06",
+          "weekday": "Wednesday",
+          "avg": 347,
+          "peak": 632,
+          "low": 73,
+          "samples": 76
+        },
+        {
+          "date": "2026-05-07",
+          "weekday": "Thursday",
+          "avg": 308,
+          "peak": 604,
+          "low": 78,
+          "samples": 76
+        },
+        {
+          "date": "2026-05-08",
+          "weekday": "Friday",
+          "avg": 305,
+          "peak": 560,
+          "low": 87,
+          "samples": 76
+        },
+        {
+          "date": "2026-05-09",
+          "weekday": "Saturday",
+          "avg": 285,
+          "peak": 526,
+          "low": 86,
+          "samples": 76
+        }
+      ],
+      "bottom10_days": [
+        {
+          "date": "2026-05-25",
+          "weekday": "Monday",
+          "avg": 26,
+          "peak": 30,
+          "low": 23,
+          "samples": 76
+        },
+        {
+          "date": "2026-05-24",
+          "weekday": "Sunday",
+          "avg": 30,
+          "peak": 35,
+          "low": 26,
+          "samples": 76
+        },
+        {
+          "date": "2026-05-23",
+          "weekday": "Saturday",
+          "avg": 31,
+          "peak": 36,
+          "low": 27,
+          "samples": 76
+        },
+        {
+          "date": "2026-05-22",
+          "weekday": "Friday",
+          "avg": 45,
+          "peak": 68,
+          "low": 29,
+          "samples": 76
+        },
+        {
+          "date": "2026-05-30",
+          "weekday": "Saturday",
+          "avg": 48,
+          "peak": 54,
+          "low": 42,
+          "samples": 67
+        },
+        {
+          "date": "2026-05-26",
+          "weekday": "Tuesday",
+          "avg": 52,
+          "peak": 82,
+          "low": 23,
+          "samples": 76
+        },
+        {
+          "date": "2026-05-31",
+          "weekday": "Sunday",
+          "avg": 53,
+          "peak": 62,
+          "low": 43,
+          "samples": 60
+        },
+        {
+          "date": "2026-05-27",
+          "weekday": "Wednesday",
+          "avg": 55,
+          "peak": 82,
+          "low": 32,
+          "samples": 75
+        },
+        {
+          "date": "2026-05-29",
+          "weekday": "Friday",
+          "avg": 65,
+          "peak": 90,
+          "low": 43,
+          "samples": 76
+        },
+        {
+          "date": "2026-05-28",
+          "weekday": "Thursday",
+          "avg": 65,
+          "peak": 98,
+          "low": 39,
+          "samples": 76
+        }
+      ],
+      "all_days": [
+        {
+          "date": "2026-04-30",
+          "weekday": "Thursday",
+          "avg": 185,
+          "peak": 222,
+          "low": 135,
+          "samples": 16
+        },
+        {
+          "date": "2026-05-01",
+          "weekday": "Friday",
+          "avg": 174,
+          "peak": 336,
+          "low": 62,
+          "samples": 76
+        },
+        {
+          "date": "2026-05-02",
+          "weekday": "Saturday",
+          "avg": 118,
+          "peak": 172,
+          "low": 65,
+          "samples": 76
+        },
+        {
+          "date": "2026-05-03",
+          "weekday": "Sunday",
+          "avg": 223,
+          "peak": 408,
+          "low": 60,
+          "samples": 76
+        },
+        {
+          "date": "2026-05-04",
+          "weekday": "Monday",
+          "avg": 364,
+          "peak": 587,
+          "low": 63,
+          "samples": 76
+        },
+        {
+          "date": "2026-05-05",
+          "weekday": "Tuesday",
+          "avg": 358,
+          "peak": 647,
+          "low": 76,
+          "samples": 76
+        },
+        {
+          "date": "2026-05-06",
+          "weekday": "Wednesday",
+          "avg": 347,
+          "peak": 632,
+          "low": 73,
+          "samples": 76
+        },
+        {
+          "date": "2026-05-07",
+          "weekday": "Thursday",
+          "avg": 308,
+          "peak": 604,
+          "low": 78,
+          "samples": 76
+        },
+        {
+          "date": "2026-05-08",
+          "weekday": "Friday",
+          "avg": 305,
+          "peak": 560,
+          "low": 87,
+          "samples": 76
+        },
+        {
+          "date": "2026-05-09",
+          "weekday": "Saturday",
+          "avg": 285,
+          "peak": 526,
+          "low": 86,
+          "samples": 76
+        },
+        {
+          "date": "2026-05-10",
+          "weekday": "Sunday",
+          "avg": 527,
+          "peak": 952,
+          "low": 93,
+          "samples": 76
+        },
+        {
+          "date": "2026-05-11",
+          "weekday": "Monday",
+          "avg": 714,
+          "peak": 1311,
+          "low": 101,
+          "samples": 76
+        },
+        {
+          "date": "2026-05-12",
+          "weekday": "Tuesday",
+          "avg": 542,
+          "peak": 850,
+          "low": 122,
+          "samples": 76
+        },
+        {
+          "date": "2026-05-13",
+          "weekday": "Wednesday",
+          "avg": 416,
+          "peak": 611,
+          "low": 101,
+          "samples": 76
+        },
+        {
+          "date": "2026-05-14",
+          "weekday": "Thursday",
+          "avg": 255,
+          "peak": 410,
+          "low": 85,
+          "samples": 76
+        },
+        {
+          "date": "2026-05-15",
+          "weekday": "Friday",
+          "avg": 109,
+          "peak": 140,
+          "low": 73,
+          "samples": 76
+        },
+        {
+          "date": "2026-05-16",
+          "weekday": "Saturday",
+          "avg": 67,
+          "peak": 81,
+          "low": 61,
+          "samples": 76
+        },
+        {
+          "date": "2026-05-17",
+          "weekday": "Sunday",
+          "avg": 69,
+          "peak": 83,
+          "low": 60,
+          "samples": 76
+        },
+        {
+          "date": "2026-05-18",
+          "weekday": "Monday",
+          "avg": 90,
+          "peak": 119,
+          "low": 62,
+          "samples": 68
+        },
+        {
+          "date": "2026-05-19",
+          "weekday": "Tuesday",
+          "avg": 84,
+          "peak": 121,
+          "low": 58,
+          "samples": 75
+        },
+        {
+          "date": "2026-05-20",
+          "weekday": "Wednesday",
+          "avg": 86,
+          "peak": 122,
+          "low": 59,
+          "samples": 74
+        },
+        {
+          "date": "2026-05-21",
+          "weekday": "Thursday",
+          "avg": 76,
+          "peak": 118,
+          "low": 10,
+          "samples": 77
+        },
+        {
+          "date": "2026-05-22",
+          "weekday": "Friday",
+          "avg": 45,
+          "peak": 68,
+          "low": 29,
+          "samples": 76
+        },
+        {
+          "date": "2026-05-23",
+          "weekday": "Saturday",
+          "avg": 31,
+          "peak": 36,
+          "low": 27,
+          "samples": 76
+        },
+        {
+          "date": "2026-05-24",
+          "weekday": "Sunday",
+          "avg": 30,
+          "peak": 35,
+          "low": 26,
+          "samples": 76
+        },
+        {
+          "date": "2026-05-25",
+          "weekday": "Monday",
+          "avg": 26,
+          "peak": 30,
+          "low": 23,
+          "samples": 76
+        },
+        {
+          "date": "2026-05-26",
+          "weekday": "Tuesday",
+          "avg": 52,
+          "peak": 82,
+          "low": 23,
+          "samples": 76
+        },
+        {
+          "date": "2026-05-27",
+          "weekday": "Wednesday",
+          "avg": 55,
+          "peak": 82,
+          "low": 32,
+          "samples": 75
+        },
+        {
+          "date": "2026-05-28",
+          "weekday": "Thursday",
+          "avg": 65,
+          "peak": 98,
+          "low": 39,
+          "samples": 76
+        },
+        {
+          "date": "2026-05-29",
+          "weekday": "Friday",
+          "avg": 65,
+          "peak": 90,
+          "low": 43,
+          "samples": 76
+        },
+        {
+          "date": "2026-05-30",
+          "weekday": "Saturday",
+          "avg": 48,
+          "peak": 54,
+          "low": 42,
+          "samples": 67
+        },
+        {
+          "date": "2026-05-31",
+          "weekday": "Sunday",
+          "avg": 53,
+          "peak": 62,
+          "low": 43,
+          "samples": 60
+        }
+      ],
+      "day_of_week": [
+        {
+          "weekday": "Monday",
+          "avg": 304,
+          "peak": 1311,
+          "low": 23,
+          "samples": 296
+        },
+        {
+          "weekday": "Tuesday",
+          "avg": 260,
+          "peak": 850,
+          "low": 23,
+          "samples": 303
+        },
+        {
+          "weekday": "Wednesday",
+          "avg": 227,
+          "peak": 632,
+          "low": 32,
+          "samples": 301
+        },
+        {
+          "weekday": "Thursday",
+          "avg": 176,
+          "peak": 604,
+          "low": 10,
+          "samples": 321
+        },
+        {
+          "weekday": "Friday",
+          "avg": 140,
+          "peak": 560,
+          "low": 29,
+          "samples": 380
+        },
+        {
+          "weekday": "Saturday",
+          "avg": 111,
+          "peak": 526,
+          "low": 27,
+          "samples": 371
+        },
+        {
+          "weekday": "Sunday",
+          "avg": 186,
+          "peak": 952,
+          "low": 26,
+          "samples": 364
+        }
+      ],
+      "hourly_profile": [
+        {
+          "hour_et": 0,
+          "label": "00:00",
+          "avg": 111,
+          "peak": 510,
+          "samples": 124
+        },
+        {
+          "hour_et": 1,
+          "label": "01:00",
+          "avg": 79,
+          "peak": 268,
+          "samples": 123
+        },
+        {
+          "hour_et": 2,
+          "label": "02:00",
+          "avg": 0,
+          "peak": 0,
+          "samples": 1
+        },
+        {
+          "hour_et": 3,
+          "label": "03:00",
+          "avg": 0,
+          "peak": 0,
+          "samples": 1
+        },
+        {
+          "hour_et": 4,
+          "label": "04:00",
+          "avg": 0,
+          "peak": 0,
+          "samples": 1
+        },
+        {
+          "hour_et": 5,
+          "label": "05:00",
+          "avg": 0,
+          "peak": 0,
+          "samples": 1
+        },
+        {
+          "hour_et": 6,
+          "label": "06:00",
+          "avg": 0,
+          "peak": 0,
+          "samples": 1
+        },
+        {
+          "hour_et": 7,
+          "label": "07:00",
+          "avg": 73,
+          "peak": 148,
+          "samples": 124
+        },
+        {
+          "hour_et": 8,
+          "label": "08:00",
+          "avg": 90,
+          "peak": 266,
+          "samples": 124
+        },
+        {
+          "hour_et": 9,
+          "label": "09:00",
+          "avg": 122,
+          "peak": 382,
+          "samples": 123
+        },
+        {
+          "hour_et": 10,
+          "label": "10:00",
+          "avg": 166,
+          "peak": 643,
+          "samples": 123
+        },
+        {
+          "hour_et": 11,
+          "label": "11:00",
+          "avg": 213,
+          "peak": 851,
+          "samples": 122
+        },
+        {
+          "hour_et": 12,
+          "label": "12:00",
+          "avg": 245,
+          "peak": 905,
+          "samples": 121
+        },
+        {
+          "hour_et": 13,
+          "label": "13:00",
+          "avg": 266,
+          "peak": 940,
+          "samples": 123
+        },
+        {
+          "hour_et": 14,
+          "label": "14:00",
+          "avg": 294,
+          "peak": 946,
+          "samples": 121
+        },
+        {
+          "hour_et": 15,
+          "label": "15:00",
+          "avg": 293,
+          "peak": 927,
+          "samples": 123
+        },
+        {
+          "hour_et": 16,
+          "label": "16:00",
+          "avg": 281,
+          "peak": 952,
+          "samples": 124
+        },
+        {
+          "hour_et": 17,
+          "label": "17:00",
+          "avg": 245,
+          "peak": 879,
+          "samples": 123
+        },
+        {
+          "hour_et": 18,
+          "label": "18:00",
+          "avg": 221,
+          "peak": 771,
+          "samples": 120
+        },
+        {
+          "hour_et": 19,
+          "label": "19:00",
+          "avg": 213,
+          "peak": 947,
+          "samples": 122
+        },
+        {
+          "hour_et": 20,
+          "label": "20:00",
+          "avg": 225,
+          "peak": 1159,
+          "samples": 124
+        },
+        {
+          "hour_et": 21,
+          "label": "21:00",
+          "avg": 224,
+          "peak": 1311,
+          "samples": 124
+        },
+        {
+          "hour_et": 22,
+          "label": "22:00",
+          "avg": 199,
+          "peak": 1308,
+          "samples": 124
+        },
+        {
+          "hour_et": 23,
+          "label": "23:00",
+          "avg": 149,
+          "peak": 914,
+          "samples": 124
+        }
+      ],
+      "floor_breakdown": [
+        {
+          "floor": "Ground",
+          "avg": 40,
+          "peak": 292,
+          "low": 1,
+          "top_hours": [
+            {
+              "hour_et": 15,
+              "label": "15:00",
+              "avg": 67
+            },
+            {
+              "hour_et": 14,
+              "label": "14:00",
+              "avg": 65
+            },
+            {
+              "hour_et": 16,
+              "label": "16:00",
+              "avg": 65
+            },
+            {
+              "hour_et": 13,
+              "label": "13:00",
+              "avg": 57
+            },
+            {
+              "hour_et": 17,
+              "label": "17:00",
+              "avg": 56
+            }
+          ],
+          "top_dates": [
+            {
+              "date": "2026-05-11",
+              "avg": 179
+            },
+            {
+              "date": "2026-05-10",
+              "avg": 149
+            },
+            {
+              "date": "2026-05-12",
+              "avg": 147
+            },
+            {
+              "date": "2026-05-13",
+              "avg": 103
+            },
+            {
+              "date": "2026-05-04",
+              "avg": 89
+            }
+          ]
+        },
+        {
+          "floor": "First",
+          "avg": 80,
+          "peak": 871,
+          "low": 4,
+          "top_hours": [
+            {
+              "hour_et": 14,
+              "label": "14:00",
+              "avg": 120
+            },
+            {
+              "hour_et": 15,
+              "label": "15:00",
+              "avg": 116
+            },
+            {
+              "hour_et": 16,
+              "label": "16:00",
+              "avg": 113
+            },
+            {
+              "hour_et": 13,
+              "label": "13:00",
+              "avg": 107
+            },
+            {
+              "hour_et": 17,
+              "label": "17:00",
+              "avg": 104
+            }
+          ],
+          "top_dates": [
+            {
+              "date": "2026-05-11",
+              "avg": 342
+            },
+            {
+              "date": "2026-05-10",
+              "avg": 226
+            },
+            {
+              "date": "2026-05-12",
+              "avg": 224
+            },
+            {
+              "date": "2026-05-13",
+              "avg": 175
+            },
+            {
+              "date": "2026-05-04",
+              "avg": 155
+            }
+          ]
+        },
+        {
+          "floor": "Second",
+          "avg": 44,
+          "peak": 208,
+          "low": 0,
+          "top_hours": [
+            {
+              "hour_et": 14,
+              "label": "14:00",
+              "avg": 66
+            },
+            {
+              "hour_et": 15,
+              "label": "15:00",
+              "avg": 66
+            },
+            {
+              "hour_et": 16,
+              "label": "16:00",
+              "avg": 63
+            },
+            {
+              "hour_et": 13,
+              "label": "13:00",
+              "avg": 61
+            },
+            {
+              "hour_et": 12,
+              "label": "12:00",
+              "avg": 57
+            }
+          ],
+          "top_dates": [
+            {
+              "date": "2026-05-11",
+              "avg": 138
+            },
+            {
+              "date": "2026-05-12",
+              "avg": 119
+            },
+            {
+              "date": "2026-05-10",
+              "avg": 110
+            },
+            {
+              "date": "2026-05-13",
+              "avg": 96
+            },
+            {
+              "date": "2026-05-06",
+              "avg": 81
+            }
+          ]
+        },
+        {
+          "floor": "Third",
+          "avg": 31,
+          "peak": 119,
+          "low": 5,
+          "top_hours": [
+            {
+              "hour_et": 15,
+              "label": "15:00",
+              "avg": 44
+            },
+            {
+              "hour_et": 14,
+              "label": "14:00",
+              "avg": 43
+            },
+            {
+              "hour_et": 12,
+              "label": "12:00",
+              "avg": 42
+            },
+            {
+              "hour_et": 13,
+              "label": "13:00",
+              "avg": 42
+            },
+            {
+              "hour_et": 11,
+              "label": "11:00",
+              "avg": 41
+            }
+          ],
+          "top_dates": [
+            {
+              "date": "2026-05-11",
+              "avg": 55
+            },
+            {
+              "date": "2026-05-05",
+              "avg": 51
+            },
+            {
+              "date": "2026-05-12",
+              "avg": 51
+            },
+            {
+              "date": "2026-05-06",
+              "avg": 47
+            },
+            {
+              "date": "2026-05-04",
+              "avg": 44
+            }
+          ]
+        }
+      ]
+    }
+  }
+}
