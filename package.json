@@ -51,7 +51,10 @@
     "export:initial": "node scripts/initial_export.js",
     "export:initial:dry": "node scripts/initial_export.js --dry-run",
     "extract:summary": "python3 scripts/extract_summary.py",
-    "extract:summary:overwrite": "python3 scripts/extract_summary.py --overwrite"
+    "extract:summary:overwrite": "python3 scripts/extract_summary.py --overwrite",
+    "analyze": "python3 scripts/big_summary.py",
+    "visualize": "python3 scripts/visualize_summary.py",
+    "analyze:all": "python3 scripts/big_summary.py && python3 scripts/visualize_summary.py"
   },
   "author": "Your Institution",
   "license": "ISC",
