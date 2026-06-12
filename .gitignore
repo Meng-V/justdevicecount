@@ -170,9 +170,6 @@ ecosystem.config.js.local
 *.sqlite
 *.sqlite3
 
-# Exported data archives — potentially large, never commit
-# stored_data/
-
 # Backup Files (may contain sensitive data)
 *.backup
 *.bak
@@ -189,4 +186,4 @@ ecosystem.config.js.local
 certs/
 
 .DS_Store
-/stored_data
+/stored_data/raw_data/
