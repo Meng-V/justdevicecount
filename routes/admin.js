@@ -1,67 +1,75 @@
 // routes/admin.js
 // Analytics dashboard at /crowdindex/admin
 //
-// Simple password gate: set ADMIN_PASSWORD in .env.
-// If not set, the route is unprotected (useful in development).
-// Access via:  GET /crowdindex/admin           → dashboard page
-//              GET /crowdindex/admin/data       → raw big_summary.json (JSON API)
-//              POST /crowdindex/admin/login     → submit password, sets session cookie
-//              GET /crowdindex/admin/logout     → clears session cookie
+// Token-based access: set ADMIN_TOKEN in .env to a long random string.
+// Share the URL with colleagues:
+//   https://your-server/crowdindex/admin?t=<ADMIN_TOKEN>
 //
-// Session is cookie-only (signed HMAC), no extra session store needed.
-// Requires ADMIN_PASSWORD and ADMIN_COOKIE_SECRET in .env for production.
+// Once the token is validated, a short-lived cookie is set so they
+// don't need the token in the URL on subsequent page loads/refreshes
+// (e.g. navigating to /admin/data).
+//
+// If ADMIN_TOKEN is not set, the route is fully open (dev mode).
+//
+// Endpoints:
+//   GET /crowdindex/admin?t=<token>   — dashboard (validates token, sets cookie)
+//   GET /crowdindex/admin             — dashboard (cookie must already be set)
+//   GET /crowdindex/admin/data        — raw big_summary.json (JSON API, same auth)
 
-const express  = require("express");
-const path     = require("path");
-const fs       = require("fs");
-const crypto   = require("crypto");
+const express = require("express");
+const path    = require("path");
+const fs      = require("fs");
+const crypto  = require("crypto");
 
-const router   = express.Router();
+const router  = express.Router();
 
 // ---------------------------------------------------------------------------
 // Config
 // ---------------------------------------------------------------------------
-const ADMIN_PASSWORD   = process.env.ADMIN_PASSWORD;          // falsy = open
-const COOKIE_SECRET    = process.env.ADMIN_COOKIE_SECRET || "dev-secret-change-me";
-const COOKIE_NAME      = "admsess";
-const COOKIE_MAX_AGE   = 8 * 60 * 60 * 1000; // 8 hours
+const ADMIN_TOKEN  = process.env.ADMIN_TOKEN;   // falsy = open access
+const COOKIE_NAME  = "admsess";
+const COOKIE_TTL   = 12 * 60 * 60 * 1000;       // 12 hours
 
 const SUMMARY_PATH = path.join(
   __dirname, "..", "stored_data", "analysis", "big_summary.json"
 );
 
 // ---------------------------------------------------------------------------
-// Tiny signed-cookie helpers (no express-session dependency)
+// Auth middleware — token in URL query OR valid cookie
 // ---------------------------------------------------------------------------
-function sign(value) {
-  const hmac = crypto.createHmac("sha256", COOKIE_SECRET);
-  hmac.update(value);
-  return value + "." + hmac.digest("base64url");
+function requireToken(req, res, next) {
+  if (!ADMIN_TOKEN) return next();  // no token configured → fully open
+
+  // 1. Token supplied in query string → validate, set cookie, strip from URL
+  const qToken = req.query.t;
+  if (qToken) {
+    // timingSafeEqual requires equal-length buffers — pad/truncate to avoid crashes on wrong-length input
+    const a = Buffer.alloc(64); Buffer.from(ADMIN_TOKEN).copy(a);
+    const b = Buffer.alloc(64); Buffer.from(qToken).copy(b);
+    if (!crypto.timingSafeEqual(a, b)) {
+      return res.status(403).send("Invalid access token.");
+    }
+    // Valid — set a cookie so subsequent requests (same browser) don't need the token
+    res.cookie(COOKIE_NAME, "ok", {
+      maxAge:   COOKIE_TTL,
+      httpOnly: true,
+      sameSite: "lax",
+    });
+    // Redirect to the clean URL (no ?t=) so the token doesn't stay in browser history
+    return res.redirect(req.baseUrl + "/");
+  }
+
+  // 2. Cookie already set → let through
+  if (req.cookies?.[COOKIE_NAME] === "ok") return next();
+
+  // 3. Neither → 403
+  return res.status(403).send(
+    "Access denied. Use the full URL with the access token your administrator shared with you."
+  );
 }
 
-function verify(signed) {
-  if (!signed || !signed.includes(".")) return null;
-  const idx   = signed.lastIndexOf(".");
-  const value = signed.slice(0, idx);
-  return sign(value) === signed ? value : null;
-}
-
 // ---------------------------------------------------------------------------
-// Auth middleware
-// ---------------------------------------------------------------------------
-function requireAuth(req, res, next) {
-  if (!ADMIN_PASSWORD) return next(); // password not configured → open
-
-  const raw    = req.cookies?.[COOKIE_NAME];
-  const payload = verify(raw || "");
-  if (payload === "authenticated") return next();
-
-  // Not authenticated — store redirect target and go to login
-  res.redirect(req.baseUrl + "/login?next=" + encodeURIComponent(req.originalUrl));
-}
-
-// ---------------------------------------------------------------------------
-// Load summary data (cached in memory, reloaded if file changes)
+// Load summary data (cached in memory, auto-reloaded when file changes)
 // ---------------------------------------------------------------------------
 let cachedSummary    = null;
 let cachedSummaryMtm = 0;
@@ -74,7 +82,7 @@ function loadSummary() {
       cachedSummaryMtm = stat.mtimeMs;
     }
     return cachedSummary;
-  } catch (e) {
+  } catch {
     return null;
   }
 }
@@ -93,91 +101,45 @@ function monthLabel(mk) {
 // Routes
 // ---------------------------------------------------------------------------
 
-// GET /admin/login  — login page
-router.get("/login", (req, res) => {
-  if (!ADMIN_PASSWORD) return res.redirect(req.baseUrl + "/");
-  const next = req.query.next || req.baseUrl + "/";
-  res.render("admin_login", {
-    title: "Admin Login",
-    next,
-    error: null,
-  });
-});
-
-// POST /admin/login  — authenticate
-router.post("/login", express.urlencoded({ extended: false }), (req, res) => {
-  const { password, next } = req.body;
-  const redirectTo = next || req.baseUrl + "/";
-
-  if (password === ADMIN_PASSWORD) {
-    res.cookie(COOKIE_NAME, sign("authenticated"), {
-      maxAge:   COOKIE_MAX_AGE,
-      httpOnly: true,
-      sameSite: "lax",
-    });
-    return res.redirect(redirectTo);
-  }
-
-  res.render("admin_login", {
-    title: "Admin Login",
-    next: redirectTo,
-    error: "Incorrect password. Please try again.",
-  });
-});
-
-// GET /admin/logout
-router.get("/logout", (req, res) => {
-  res.clearCookie(COOKIE_NAME);
-  res.redirect(req.baseUrl + "/login");
-});
-
-// GET /admin/data  — raw JSON API (also protected)
-router.get("/data", requireAuth, (req, res) => {
+// GET /admin/data — raw JSON (protected)
+router.get("/data", requireToken, (req, res) => {
   const doc = loadSummary();
   if (!doc) {
     return res.status(503).json({
-      error: "big_summary.json not found. Run: python3 scripts/big_summary.py"
+      error: "big_summary.json not found. Run: python3 scripts/big_summary.py",
     });
   }
   res.json(doc);
 });
 
 // GET /admin  — main dashboard
-router.get("/", requireAuth, (req, res) => {
+router.get("/", requireToken, (req, res) => {
   const doc = loadSummary();
   if (!doc) {
-    return res.status(503).render("admin_error", {
-      title:   "Analytics Dashboard",
-      message: "Analysis data not found.",
-      hint:    "Run <code>python3 scripts/big_summary.py</code> to generate it.",
-    });
+    return res.status(503).send(
+      "<h2>Analytics data not found.</h2>" +
+      "<p>Run <code>python3 scripts/big_summary.py</code> to generate it.</p>"
+    );
   }
 
-  // Pre-process data server-side so the template stays clean
-  const global   = doc.global;
-  const months   = doc.months;
-  const overview = global.overall_stats;
-
-  // Build month labels map
   const monthLabels = {};
-  Object.keys(months).forEach(mk => { monthLabels[mk] = monthLabel(mk); });
+  Object.keys(doc.months).forEach(mk => { monthLabels[mk] = monthLabel(mk); });
 
   res.render("admin", {
-    title:        "Analytics Dashboard",
-    generatedAt:  doc.generated_at,
-    etOffset:     doc.et_offset_hours,
-    overview,
-    monthlyOverview:   global.monthly_overview,
-    top10Days:         global.cross_month_top10_days,
-    bottom10Days:      global.cross_month_low10_days,
-    dowProfile:        global.day_of_week_profile,
-    hourlyProfile:     global.hourly_profile,
-    floorBreakdown:    global.floor_breakdown,
-    months,
-    monthKeys:         Object.keys(months).sort(),
+    title:           "Analytics Dashboard",
+    generatedAt:     doc.generated_at,
+    etOffset:        doc.et_offset_hours,
+    overview:        doc.global.overall_stats,
+    monthlyOverview: doc.global.monthly_overview,
+    top10Days:       doc.global.cross_month_top10_days,
+    bottom10Days:    doc.global.cross_month_low10_days,
+    dowProfile:      doc.global.day_of_week_profile,
+    hourlyProfile:   doc.global.hourly_profile,
+    floorBreakdown:  doc.global.floor_breakdown,
+    months:          doc.months,
+    monthKeys:       Object.keys(doc.months).sort(),
     monthLabels,
-    // Pass full doc as JSON for client-side Plotly rendering
-    summaryJson:  JSON.stringify(doc),
+    summaryJson:     JSON.stringify(doc),
   });
 });
 
