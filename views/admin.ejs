@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %> — King Library</title>
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      background: #f0f2f5;
+      color: #212529;
+    }
+
+    /* ---- top nav bar ---- */
+    .topbar {
+      background: #fff;
+      border-bottom: 3px solid #0066cc;
+      padding: 14px 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 2px 6px rgba(0,0,0,.09);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .topbar-brand { display: flex; align-items: center; gap: 14px; }
+    .topbar-brand h1 { margin: 0; font-size: 1.25em; color: #0066cc; }
+    .topbar-brand p  { margin: 0; font-size: .78em; color: #6c757d; }
+    .topbar-links { display: flex; align-items: center; gap: 14px; font-size: .85em; }
+    .topbar-links a {
+      color: #6c757d;
+      text-decoration: none;
+      padding: 5px 11px;
+      border-radius: 5px;
+      transition: background .12s;
+    }
+    .topbar-links a:hover { background: #f0f2f5; color: #0066cc; }
+    .topbar-links .logout {
+      background: #f8d7da;
+      color: #842029;
+      font-weight: 600;
+    }
+    .topbar-links .logout:hover { background: #f1aeb5; }
+
+    /* ---- side nav ---- */
+    .layout { display: flex; min-height: calc(100vh - 67px); }
+    .sidenav {
+      width: 210px;
+      flex-shrink: 0;
+      background: #fff;
+      border-right: 1px solid #dee2e6;
+      padding: 20px 0;
+      position: sticky;
+      top: 67px;
+      height: calc(100vh - 67px);
+      overflow-y: auto;
+    }
+    .sidenav-section {
+      font-size: .68em;
+      text-transform: uppercase;
+      letter-spacing: .07em;
+      color: #adb5bd;
+      padding: 14px 18px 4px;
+      font-weight: 700;
+    }
+    .sidenav a {
+      display: block;
+      padding: 8px 18px;
+      font-size: .85em;
+      color: #444;
+      text-decoration: none;
+      border-left: 3px solid transparent;
+      transition: all .12s;
+    }
+    .sidenav a:hover { background: #f0f6ff; color: #0066cc; border-left-color: #0066cc; }
+    .sidenav a.active { background: #e9f2ff; color: #0066cc; border-left-color: #0066cc; font-weight: 600; }
+
+    /* ---- main content ---- */
+    .main {
+      flex: 1;
+      padding: 24px 28px;
+      max-width: 1120px;
+    }
+
+    /* ---- section headings ---- */
+    .section-label {
+      font-size: .7em;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: #6c757d;
+      font-weight: 700;
+      margin: 32px 0 10px;
+    }
+    .section-label:first-child { margin-top: 0; }
+
+    /* ---- stat cards ---- */
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+    .stat-card {
+      color: #fff;
+      padding: 20px 18px;
+      border-radius: 10px;
+      transition: transform .12s;
+    }
+    .stat-card:hover { transform: translateY(-2px); }
+    .stat-card .label { font-size: .78em; opacity: .85; margin-bottom: 6px; }
+    .stat-card .value { font-size: 2.1em; font-weight: 700; line-height: 1.1; }
+    .stat-card .sub   { font-size: .73em; opacity: .72; margin-top: 5px; }
+    .card-blue   { background: linear-gradient(135deg, #0066cc, #004fa3); }
+    .card-teal   { background: linear-gradient(135deg, #0d9488, #0f766e); }
+    .card-red    { background: linear-gradient(135deg, #dc3545, #b02a37); }
+    .card-grey   { background: linear-gradient(135deg, #6c757d, #495057); }
+
+    /* ---- insight boxes ---- */
+    .insights-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 12px;
+      margin-bottom: 28px;
+    }
+    .insight {
+      padding: 13px 16px;
+      border-radius: 7px;
+      font-size: .86em;
+      line-height: 1.45;
+    }
+    .insight.blue   { background: #e9f2ff; border-left: 3px solid #0066cc; }
+    .insight.red    { background: #ffeaea; border-left: 3px solid #dc3545; }
+    .insight.green  { background: #e6f9f1; border-left: 3px solid #198754; }
+    .insight.yellow { background: #fff8e1; border-left: 3px solid #ffc107; }
+    .insight strong { display: block; margin-bottom: 3px; color: #333; }
+
+    /* ---- chart cards ---- */
+    .chart-card {
+      background: #fff;
+      border: 1px solid #dee2e6;
+      border-radius: 8px;
+      padding: 18px 20px;
+      margin-bottom: 22px;
+      box-shadow: 0 1px 6px rgba(0,0,0,.07);
+    }
+    .chart-card h2 {
+      margin: 0 0 14px;
+      font-size: 1em;
+      color: #0066cc;
+      border-bottom: 2px solid #0066cc;
+      padding-bottom: 7px;
+    }
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+    @media (max-width: 860px) { .grid-2 { grid-template-columns: 1fr; } }
+
+    /* ---- dropdown selector ---- */
+    .month-select-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+    .month-select-row label { font-size: .83em; font-weight: 600; color: #555; }
+    .month-select-row select {
+      padding: 5px 10px;
+      border: 1px solid #ced4da;
+      border-radius: 5px;
+      font-size: .88em;
+      color: #333;
+      cursor: pointer;
+    }
+
+    /* ---- table ---- */
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: .85em;
+    }
+    .data-table th {
+      background: #0066cc;
+      color: #fff;
+      padding: 9px 12px;
+      text-align: left;
+      font-weight: 600;
+    }
+    .data-table td {
+      padding: 8px 12px;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .data-table tr:nth-child(even) td { background: #f8f9fa; }
+    .data-table tr:hover td { background: #e9f2ff; }
+    .rank-badge {
+      display: inline-block;
+      width: 24px; height: 24px;
+      border-radius: 50%;
+      background: #0066cc;
+      color: #fff;
+      font-size: .78em;
+      font-weight: 700;
+      line-height: 24px;
+      text-align: center;
+    }
+    .rank-badge.red { background: #dc3545; }
+
+    .meta-bar {
+      font-size: .76em;
+      color: #6c757d;
+      text-align: right;
+      margin-top: 28px;
+      padding-top: 14px;
+      border-top: 1px solid #dee2e6;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ===== TOP NAV ===== -->
+<div class="topbar">
+  <div class="topbar-brand">
+    <div>
+      <h1>King Library · Analytics Dashboard</h1>
+      <p>Generated: <%= generatedAt %> &nbsp;·&nbsp; Eastern Time (UTC<%= etOffset >= 0 ? '+' : '' %><%= etOffset %>h)</p>
+    </div>
+  </div>
+  <div class="topbar-links">
+    <a href="/crowdindex/">Live Dashboard</a>
+    <a href="data">Raw JSON</a>
+    <a href="logout" class="logout">Sign Out</a>
+  </div>
+</div>
+
+<!-- ===== LAYOUT ===== -->
+<div class="layout">
+
+  <!-- side nav -->
+  <nav class="sidenav">
+    <div class="sidenav-section">Overview</div>
+    <a href="#overview" class="active">Key Stats</a>
+    <a href="#insights">Insights</a>
+    <a href="#monthly">Monthly Trends</a>
+    <a href="#timeline">Daily Timeline</a>
+
+    <div class="sidenav-section">Patterns</div>
+    <a href="#best-worst">Best &amp; Worst Days</a>
+    <a href="#weekday">Day of Week</a>
+    <a href="#hourly">Hourly Profile</a>
+    <a href="#heatmaps">Heatmaps</a>
+
+    <div class="sidenav-section">Drill-Down</div>
+    <a href="#month-drill">By Month</a>
+    <a href="#top-tables">Top/Bottom Tables</a>
+
+    <div class="sidenav-section">Floors</div>
+    <a href="#floors">Floor Analysis</a>
+  </nav>
+
+  <!-- main content -->
+  <main class="main">
+
+    <!-- ===== OVERVIEW CARDS ===== -->
+    <div class="section-label" id="overview">Overview</div>
+    <div class="cards-grid">
+      <div class="stat-card card-blue">
+        <div class="label">Total 15-min Readings</div>
+        <div class="value"><%= overview.total_records.toLocaleString() %></div>
+        <div class="sub"><%= overview.months_covered.length %> months · <%= overview.months_covered[0] %> → <%= overview.months_covered[overview.months_covered.length-1] %></div>
+      </div>
+      <div class="stat-card card-teal">
+        <div class="label">All-Time Avg Patrons</div>
+        <div class="value"><%= overview.all_time_avg %></div>
+        <div class="sub">per 15-minute interval</div>
+      </div>
+      <div class="stat-card card-red">
+        <div class="label">All-Time Peak</div>
+        <div class="value"><%= overview.peak_record.patrons %></div>
+        <div class="sub"><%= overview.peak_record.timestamp_et %> · <%= overview.peak_record.weekday %></div>
+      </div>
+      <div class="stat-card card-grey">
+        <div class="label">Quietest Reading</div>
+        <div class="value"><%= overview.all_time_low %></div>
+        <div class="sub"><%= overview.quiet_record.timestamp_et %> · <%= overview.quiet_record.weekday %></div>
+      </div>
+    </div>
+
+    <!-- ===== INSIGHTS ===== -->
+    <div class="section-label" id="insights">Key Insights</div>
+    <div class="insights-grid" id="insights-boxes">
+      <!-- populated by JS from summaryData -->
+    </div>
+
+    <!-- ===== MONTHLY BARS ===== -->
+    <div class="section-label" id="monthly">Monthly Trends</div>
+    <div class="chart-card">
+      <h2>Monthly Average vs Peak Patron Count</h2>
+      <div id="chart-monthly-bars" style="height:340px;"></div>
+    </div>
+
+    <!-- ===== DAILY TIMELINE ===== -->
+    <div class="chart-card" id="timeline">
+      <h2>Daily Average Patron Count — All Months</h2>
+      <div id="chart-daily-timeline" style="height:360px;"></div>
+    </div>
+
+    <!-- ===== BEST / WORST DAYS ===== -->
+    <div class="section-label" id="best-worst">Best &amp; Worst Days (All-Time)</div>
+    <div class="grid-2">
+      <div class="chart-card">
+        <h2>Top-10 Days by Daily Average</h2>
+        <div id="chart-top10" style="height:360px;"></div>
+      </div>
+      <div class="chart-card">
+        <h2>Bottom-10 Days by Daily Average</h2>
+        <div id="chart-bot10" style="height:360px;"></div>
+      </div>
+    </div>
+
+    <!-- ===== WEEKDAY ===== -->
+    <div class="section-label" id="weekday">Day-of-Week Pattern</div>
+    <div class="chart-card">
+      <h2>Day-of-Week Profile — Avg, Peak &amp; Low (All Months Combined)</h2>
+      <div id="chart-weekday-global" style="height:320px;"></div>
+    </div>
+
+    <!-- ===== HOURLY ===== -->
+    <div class="section-label" id="hourly">Hourly Profile</div>
+    <div class="chart-card">
+      <h2>Average &amp; Peak Patrons by Hour of Day (Eastern Time, All Months)</h2>
+      <div id="chart-hourly-global" style="height:320px;"></div>
+    </div>
+
+    <!-- ===== HEATMAPS ===== -->
+    <div class="section-label" id="heatmaps">Heatmaps</div>
+    <div class="chart-card">
+      <h2>Average Patrons — Day of Week × Month</h2>
+      <div id="chart-heatmap-weekday" style="height:360px;"></div>
+    </div>
+    <div class="chart-card">
+      <h2>Average Patrons — Hour of Day (ET) × Month</h2>
+      <div id="chart-heatmap-hourly" style="height:360px;"></div>
+    </div>
+
+    <!-- ===== MONTH DRILL-DOWN ===== -->
+    <div class="section-label" id="month-drill">Month Drill-Down</div>
+    <div class="grid-2">
+      <div class="chart-card">
+        <h2>Weekday Profile — by Month</h2>
+        <div class="month-select-row">
+          <label for="sel-weekday">Month:</label>
+          <select id="sel-weekday"></select>
+        </div>
+        <div id="chart-weekday-drill" style="height:300px;"></div>
+      </div>
+      <div class="chart-card">
+        <h2>Hourly Profile (ET) — by Month</h2>
+        <div class="month-select-row">
+          <label for="sel-hourly">Month:</label>
+          <select id="sel-hourly"></select>
+        </div>
+        <div id="chart-hourly-drill" style="height:300px;"></div>
+      </div>
+    </div>
+
+    <!-- ===== TOP / BOTTOM TABLES ===== -->
+    <div class="section-label" id="top-tables">Top &amp; Bottom Days — by Month</div>
+    <div class="grid-2">
+      <div class="chart-card">
+        <h2>Top-10 Busiest Days</h2>
+        <div class="month-select-row">
+          <label for="sel-top10">Month:</label>
+          <select id="sel-top10"></select>
+        </div>
+        <div id="tbl-top10"></div>
+      </div>
+      <div class="chart-card">
+        <h2>Bottom-10 Quietest Days</h2>
+        <div class="month-select-row">
+          <label for="sel-bot10">Month:</label>
+          <select id="sel-bot10"></select>
+        </div>
+        <div id="tbl-bot10"></div>
+      </div>
+    </div>
+
+    <!-- ===== FLOORS ===== -->
+    <div class="section-label" id="floors">Floor Analysis</div>
+    <div class="chart-card">
+      <h2>Average Patrons per Floor × Month</h2>
+      <div id="chart-floor-bars" style="height:340px;"></div>
+    </div>
+    <div class="grid-2">
+      <div class="chart-card">
+        <h2>Per-Floor Patron Trend Across Months</h2>
+        <div id="chart-floor-lines" style="height:320px;"></div>
+      </div>
+      <div class="chart-card">
+        <h2>Floor Peak Hours — Top-5 ET Hours</h2>
+        <div id="chart-floor-radar" style="height:320px;"></div>
+      </div>
+    </div>
+
+    <div class="meta-bar">
+      Analytics Dashboard · King Library Cisco CMX WiFi Analytics ·
+      Data generated: <%= generatedAt %>
+    </div>
+
+  </main>
+</div><!-- /.layout -->
+
+
+<!-- ===== CLIENT-SIDE CHART RENDERING ===== -->
+<script>
+// Inject server-side analysis data
+const SUMMARY = <%- summaryJson %>;
+
+const G  = SUMMARY.global;
+const MS = SUMMARY.months;
+
+// ---- Palette ----
+const PRIMARY  = '#0066cc';
+const ACCENT   = '#dc3545';
+const TEAL     = '#0d9488';
+const GOLD     = '#ffc107';
+const GREY     = '#6c757d';
+const FLOOR_COLORS = { Ground: PRIMARY, First: TEAL, Second: GOLD, Third: ACCENT };
+const MONTH_COLORS = [
+  '#0066cc','#20c997','#ffc107','#dc3545',
+  '#6f42c1','#fd7e14','#0dcaf0','#198754'
+];
+
+const PLOTLY_CFG = {
+  displayModeBar: true,
+  responsive: true,
+  modeBarButtonsToRemove: ['lasso2d','select2d'],
+};
+const LAYOUT_BASE = {
+  paper_bgcolor: '#fff',
+  plot_bgcolor:  '#f8f9fa',
+  margin: { t: 20, r: 20, b: 50, l: 55 },
+  font:   { family: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif", size: 12 },
+};
+
+// ---- Helpers ----
+const MONTH_ABBR = ['Jan','Feb','Mar','Apr','May','Jun',
+                    'Jul','Aug','Sep','Oct','Nov','Dec'];
+function monthLabel(mk) {
+  const [y, m] = mk.split('-');
+  return `${MONTH_ABBR[+m - 1]} ${y}`;
+}
+
+const sortedMonthKeys = Object.keys(MS).sort();
+const sortedMonthLabels = sortedMonthKeys.map(monthLabel);
+
+// =========================================================
+// 1. MONTHLY BARS — avg vs peak
+// =========================================================
+(function() {
+  const ov    = G.monthly_overview;
+  const labels = ov.map(m => monthLabel(m.month));
+  const avgs   = ov.map(m => m.avg_patrons);
+  const peaks  = ov.map(m => m.peak_patrons);
+
+  Plotly.newPlot('chart-monthly-bars', [
+    { name: 'Monthly Avg',  x: labels, y: avgs,  type: 'bar',
+      marker: { color: PRIMARY }, text: avgs, textposition: 'outside' },
+    { name: 'Monthly Peak', x: labels, y: peaks, type: 'bar',
+      marker: { color: ACCENT  }, text: peaks, textposition: 'outside' },
+  ], {
+    ...LAYOUT_BASE,
+    barmode: 'group',
+    xaxis: { title: 'Month' },
+    yaxis: { title: 'Patrons' },
+    legend: { orientation: 'h', y: 1.05, x: 1, xanchor: 'right' },
+  }, PLOTLY_CFG);
+})();
+
+
+// =========================================================
+// 2. DAILY TIMELINE — all months overlaid
+// =========================================================
+(function() {
+  const traces = sortedMonthKeys.map((mk, i) => {
+    const days = MS[mk].all_days;
+    return {
+      name: monthLabel(mk),
+      x: days.map(d => d.date),
+      y: days.map(d => d.avg),
+      type: 'scatter', mode: 'lines',
+      line: { color: MONTH_COLORS[i % MONTH_COLORS.length], width: 1.8 },
+    };
+  });
+
+  Plotly.newPlot('chart-daily-timeline', traces, {
+    ...LAYOUT_BASE,
+    xaxis: { title: 'Date' },
+    yaxis: { title: 'Daily Avg Patrons' },
+    legend: { orientation: 'h', y: 1.05, x: 1, xanchor: 'right' },
+    margin: { ...LAYOUT_BASE.margin, b: 60 },
+  }, PLOTLY_CFG);
+})();
+
+
+// =========================================================
+// 3. TOP-10 / BOTTOM-10 DAYS (cross-month)
+// =========================================================
+(function() {
+  function horizBar(data, containerId, color) {
+    const labels = data.map(d => `${d.date} (${d.weekday.slice(0,3)})`);
+    const avgs   = data.map(d => d.avg);
+    Plotly.newPlot(containerId, [{
+      type: 'bar', orientation: 'h',
+      x: avgs, y: labels,
+      marker: { color },
+      text: avgs, textposition: 'outside',
+    }], {
+      ...LAYOUT_BASE,
+      xaxis: { title: 'Daily Avg Patrons' },
+      yaxis: { autorange: 'reversed' },
+      margin: { t: 10, r: 60, b: 40, l: 175 },
+    }, PLOTLY_CFG);
+  }
+
+  horizBar(G.cross_month_top10_days, 'chart-top10', PRIMARY);
+  horizBar(G.cross_month_low10_days, 'chart-bot10', ACCENT);
+})();
+
+
+// =========================================================
+// 4. WEEKDAY GLOBAL BAR — avg / peak / low
+// =========================================================
+(function() {
+  const wdp   = G.day_of_week_profile;
+  const days  = wdp.map(w => w.weekday);
+  Plotly.newPlot('chart-weekday-global', [
+    { name: 'Avg',  x: days, y: wdp.map(w => w.avg),  type: 'bar', marker: { color: PRIMARY } },
+    { name: 'Peak', x: days, y: wdp.map(w => w.peak), type: 'bar', marker: { color: ACCENT  } },
+    { name: 'Low',  x: days, y: wdp.map(w => w.low),  type: 'bar', marker: { color: GREY    } },
+  ], {
+    ...LAYOUT_BASE,
+    barmode: 'group',
+    xaxis: { title: 'Day of Week' },
+    yaxis: { title: 'Patrons' },
+    legend: { orientation: 'h', y: 1.05, x: 1, xanchor: 'right' },
+  }, PLOTLY_CFG);
+})();
+
+
+// =========================================================
+// 5. HOURLY GLOBAL LINE — avg + peak markers
+// =========================================================
+(function() {
+  const hp     = G.hourly_profile;
+  const labels = hp.map(h => h.label);
+  Plotly.newPlot('chart-hourly-global', [
+    {
+      name: 'Avg Patrons', x: labels, y: hp.map(h => h.avg),
+      type: 'scatter', mode: 'lines+markers',
+      line: { color: PRIMARY, width: 2.5 }, marker: { size: 6 },
+    },
+    {
+      name: 'Peak Reading', x: labels, y: hp.map(h => h.peak),
+      type: 'scatter', mode: 'markers',
+      marker: { color: ACCENT, size: 9, symbol: 'diamond' },
+    },
+  ], {
+    ...LAYOUT_BASE,
+    xaxis: { title: 'Hour (Eastern Time)' },
+    yaxis: { title: 'Patrons' },
+    legend: { orientation: 'h', y: 1.05, x: 1, xanchor: 'right' },
+  }, PLOTLY_CFG);
+})();
+
+
+// =========================================================
+// 6. HEATMAP — weekday × month
+// =========================================================
+(function() {
+  const WEEKDAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+  const z = sortedMonthKeys.map(mk => {
+    const wdMap = {};
+    MS[mk].day_of_week.forEach(w => { wdMap[w.weekday] = w.avg; });
+    return WEEKDAYS.map(w => wdMap[w] || 0);
+  });
+
+  Plotly.newPlot('chart-heatmap-weekday', [{
+    type: 'heatmap',
+    z,
+    x: WEEKDAYS,
+    y: sortedMonthLabels,
+    colorscale: 'Blues',
+    text: z.map(row => row.map(String)),
+    texttemplate: '%{text}',
+    colorbar: { title: 'Avg Patrons' },
+  }], {
+    ...LAYOUT_BASE,
+    xaxis: { title: 'Day of Week' },
+    yaxis: { title: 'Month' },
+    margin: { t: 10, r: 80, b: 50, l: 85 },
+  }, PLOTLY_CFG);
+})();
+
+
+// =========================================================
+// 7. HEATMAP — hour × month
+// =========================================================
+(function() {
+  const HOURS = Array.from({length:24}, (_, h) => `${String(h).padStart(2,'0')}:00`);
+  const z = sortedMonthKeys.map(mk => {
+    const hMap = {};
+    MS[mk].hourly_profile.forEach(h => { hMap[h.label] = h.avg; });
+    return HOURS.map(lbl => hMap[lbl] || 0);
+  });
+
+  Plotly.newPlot('chart-heatmap-hourly', [{
+    type: 'heatmap',
+    z,
+    x: HOURS,
+    y: sortedMonthLabels,
+    colorscale: 'Oranges',
+    colorbar: { title: 'Avg Patrons' },
+  }], {
+    ...LAYOUT_BASE,
+    xaxis: { title: 'Hour (ET)' },
+    yaxis: { title: 'Month' },
+    margin: { t: 10, r: 80, b: 50, l: 85 },
+  }, PLOTLY_CFG);
+})();
+
+
+// =========================================================
+// 8. WEEKDAY DRILL — dropdown per month
+// =========================================================
+(function() {
+  const WEEKDAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+  const sel = document.getElementById('sel-weekday');
+  sortedMonthKeys.forEach(mk => {
+    const opt = document.createElement('option');
+    opt.value = mk; opt.textContent = monthLabel(mk);
+    sel.appendChild(opt);
+  });
+
+  function render(mk) {
+    const wdp  = MS[mk].day_of_week;
+    const wdMap = {};
+    wdp.forEach(w => { wdMap[w.weekday] = w; });
+    const avgs  = WEEKDAYS.map(w => wdMap[w]?.avg  || 0);
+    const peaks = WEEKDAYS.map(w => wdMap[w]?.peak || 0);
+    Plotly.react('chart-weekday-drill', [
+      { name: 'Avg',  x: WEEKDAYS, y: avgs,  type: 'bar', marker: { color: PRIMARY },
+        text: avgs, textposition: 'outside' },
+      { name: 'Peak', x: WEEKDAYS, y: peaks, type: 'bar', marker: { color: ACCENT  },
+        text: peaks, textposition: 'outside' },
+    ], {
+      ...LAYOUT_BASE,
+      barmode: 'group',
+      xaxis: { title: 'Day of Week' },
+      yaxis: { title: 'Patrons' },
+      legend: { orientation: 'h', y: 1.05, x: 1, xanchor: 'right' },
+      margin: { t: 10, r: 20, b: 45, l: 55 },
+    }, PLOTLY_CFG);
+  }
+
+  sel.addEventListener('change', () => render(sel.value));
+  render(sortedMonthKeys[0]);
+})();
+
+
+// =========================================================
+// 9. HOURLY DRILL — dropdown per month
+// =========================================================
+(function() {
+  const HOURS = Array.from({length:24}, (_, h) => `${String(h).padStart(2,'0')}:00`);
+  const sel = document.getElementById('sel-hourly');
+  sortedMonthKeys.forEach(mk => {
+    const opt = document.createElement('option');
+    opt.value = mk; opt.textContent = monthLabel(mk);
+    sel.appendChild(opt);
+  });
+
+  function render(mk) {
+    const hMap = {};
+    MS[mk].hourly_profile.forEach(h => { hMap[h.label] = h.avg; });
+    const avgs = HOURS.map(lbl => hMap[lbl] || 0);
+    Plotly.react('chart-hourly-drill', [{
+      name: monthLabel(mk),
+      x: HOURS, y: avgs,
+      type: 'scatter', mode: 'lines+markers',
+      line: { color: PRIMARY, width: 2.5 },
+      marker: { size: 5 },
+    }], {
+      ...LAYOUT_BASE,
+      xaxis: { title: 'Hour (ET)' },
+      yaxis: { title: 'Avg Patrons' },
+      margin: { t: 10, r: 20, b: 45, l: 55 },
+    }, PLOTLY_CFG);
+  }
+
+  sel.addEventListener('change', () => render(sel.value));
+  render(sortedMonthKeys[0]);
+})();
+
+
+// =========================================================
+// 10. TOP-10 / BOTTOM-10 TABLES — dropdown per month
+// =========================================================
+(function() {
+  function makeTable(rows, rankColor) {
+    const rankClass = rankColor === 'red' ? 'rank-badge red' : 'rank-badge';
+    return `<table class="data-table">
+      <thead><tr>
+        <th>#</th><th>Date</th><th>Weekday</th><th>Avg</th><th>Peak</th>
+      </tr></thead>
+      <tbody>
+        ${rows.map((d, i) => `<tr>
+          <td><span class="${rankClass}">${i+1}</span></td>
+          <td>${d.date}</td>
+          <td>${d.weekday}</td>
+          <td><strong>${d.avg}</strong></td>
+          <td>${d.peak}</td>
+        </tr>`).join('')}
+      </tbody>
+    </table>`;
+  }
+
+  // Top-10
+  const selTop = document.getElementById('sel-top10');
+  sortedMonthKeys.forEach(mk => {
+    const opt = document.createElement('option');
+    opt.value = mk; opt.textContent = monthLabel(mk);
+    selTop.appendChild(opt);
+  });
+  function renderTop(mk) {
+    document.getElementById('tbl-top10').innerHTML =
+      makeTable(MS[mk].top10_days, 'blue');
+  }
+  selTop.addEventListener('change', () => renderTop(selTop.value));
+  renderTop(sortedMonthKeys[0]);
+
+  // Bottom-10
+  const selBot = document.getElementById('sel-bot10');
+  sortedMonthKeys.forEach(mk => {
+    const opt = document.createElement('option');
+    opt.value = mk; opt.textContent = monthLabel(mk);
+    selBot.appendChild(opt);
+  });
+  function renderBot(mk) {
+    document.getElementById('tbl-bot10').innerHTML =
+      makeTable(MS[mk].bottom10_days, 'red');
+  }
+  selBot.addEventListener('change', () => renderBot(selBot.value));
+  renderBot(sortedMonthKeys[0]);
+})();
+
+
+// =========================================================
+// 11. FLOOR BARS — avg per floor per month
+// =========================================================
+(function() {
+  const floors = ['Ground','First','Second','Third'];
+  const traces = floors.map(floor => ({
+    name: floor,
+    x: sortedMonthLabels,
+    y: sortedMonthKeys.map(mk => {
+      const fl = MS[mk].floor_breakdown.find(f => f.floor === floor);
+      return fl ? fl.avg : 0;
+    }),
+    type: 'bar',
+    marker: { color: FLOOR_COLORS[floor] },
+  }));
+
+  Plotly.newPlot('chart-floor-bars', traces, {
+    ...LAYOUT_BASE,
+    barmode: 'group',
+    xaxis: { title: 'Month' },
+    yaxis: { title: 'Avg Patrons' },
+    legend: { orientation: 'h', y: 1.05, x: 1, xanchor: 'right' },
+  }, PLOTLY_CFG);
+})();
+
+
+// =========================================================
+// 12. FLOOR TREND LINES — per floor across months
+// =========================================================
+(function() {
+  const floors = ['Ground','First','Second','Third'];
+  const traces = floors.map(floor => ({
+    name: floor,
+    x: sortedMonthLabels,
+    y: sortedMonthKeys.map(mk => {
+      const fl = MS[mk].floor_breakdown.find(f => f.floor === floor);
+      return fl ? fl.avg : 0;
+    }),
+    type: 'scatter', mode: 'lines+markers',
+    line:   { color: FLOOR_COLORS[floor], width: 2.5 },
+    marker: { size: 8 },
+  }));
+
+  Plotly.newPlot('chart-floor-lines', traces, {
+    ...LAYOUT_BASE,
+    xaxis: { title: 'Month' },
+    yaxis: { title: 'Avg Patrons' },
+    legend: { orientation: 'h', y: 1.05, x: 1, xanchor: 'right' },
+  }, PLOTLY_CFG);
+})();
+
+
+// =========================================================
+// 13. FLOOR RADAR — top-5 peak hours per floor
+// =========================================================
+(function() {
+  const floorData = G.floor_breakdown;
+  const traces = floorData.map(fl => {
+    const theta = fl.top_hours.map(h => h.label);
+    const r     = fl.top_hours.map(h => h.avg);
+    // Close the loop
+    return {
+      type: 'scatterpolar',
+      name: fl.floor,
+      r:     [...r, r[0]],
+      theta: [...theta, theta[0]],
+      fill: 'toself',
+      line: { color: FLOOR_COLORS[fl.floor] },
+      fillcolor: FLOOR_COLORS[fl.floor],
+      opacity: 0.42,
+    };
+  });
+
+  Plotly.newPlot('chart-floor-radar', traces, {
+    ...LAYOUT_BASE,
+    polar: { angularaxis: { direction: 'clockwise' } },
+    legend: { orientation: 'h', y: -0.15, x: 0.5, xanchor: 'center' },
+    margin: { t: 20, r: 30, b: 60, l: 30 },
+  }, PLOTLY_CFG);
+})();
+
+
+// =========================================================
+// 14. INSIGHTS BOXES — auto-generated from data
+// =========================================================
+(function() {
+  const ov      = G.monthly_overview;
+  const bestM   = ov.reduce((a, b) => b.avg_patrons  > a.avg_patrons  ? b : a);
+  const worstM  = ov.reduce((a, b) => b.avg_patrons  < a.avg_patrons  ? b : a);
+  const bestWD  = G.day_of_week_profile.reduce((a, b) => b.avg > a.avg ? b : a);
+  const worstWD = G.day_of_week_profile.reduce((a, b) => b.avg < a.avg ? b : a);
+  const peakH   = G.hourly_profile.reduce((a, b) => b.avg > a.avg ? b : a);
+  const quietH  = G.hourly_profile.filter(h => h.avg > 0).reduce((a, b) => b.avg < a.avg ? b : a);
+  const busyFl  = G.floor_breakdown.reduce((a, b) => b.avg > a.avg ? b : a);
+  const top1D   = G.cross_month_top10_days[0];
+  const bot1D   = G.cross_month_low10_days[0];
+
+  const boxes = [
+    { cls:'blue',   icon:'📈', title:'Busiest Month',
+      text:`${monthLabel(bestM.month)} — avg ${bestM.avg_patrons} patrons/interval, peak ${bestM.peak_patrons}` },
+    { cls:'red',    icon:'📉', title:'Quietest Month',
+      text:`${monthLabel(worstM.month)} — avg ${worstM.avg_patrons} patrons/interval, peak ${worstM.peak_patrons}` },
+    { cls:'blue',   icon:'📅', title:'Busiest Weekday',
+      text:`${bestWD.weekday} — avg ${bestWD.avg}, peak ${bestWD.peak}` },
+    { cls:'yellow', icon:'📅', title:'Quietest Weekday',
+      text:`${worstWD.weekday} — avg ${worstWD.avg}` },
+    { cls:'blue',   icon:'🕐', title:'Peak Hour (ET)',
+      text:`${peakH.label} — avg ${peakH.avg} patrons across all months` },
+    { cls:'yellow', icon:'🌙', title:'Quietest Hour (ET)',
+      text:`${quietH.label} — avg ${quietH.avg} patrons` },
+    { cls:'green',  icon:'🏢', title:'Busiest Floor',
+      text:`${busyFl.floor} floor — avg ${busyFl.avg}, peak ${busyFl.peak}` },
+    { cls:'blue',   icon:'🏆', title:'Best Single Day Ever',
+      text:`${top1D.date} (${top1D.weekday}) — daily avg ${top1D.avg}, peak ${top1D.peak}` },
+    { cls:'red',    icon:'🔕', title:'Quietest Single Day',
+      text:`${bot1D.date} (${bot1D.weekday}) — daily avg ${bot1D.avg}, peak ${bot1D.peak}` },
+  ];
+
+  const container = document.getElementById('insights-boxes');
+  container.innerHTML = boxes.map(b => `
+    <div class="insight ${b.cls}">
+      <strong>${b.icon} ${b.title}</strong>
+      ${b.text}
+    </div>`).join('');
+})();
+
+
+// =========================================================
+// Sidenav — highlight active section on scroll
+// =========================================================
+(function() {
+  const links    = document.querySelectorAll('.sidenav a');
+  const sections = [...links].map(a => document.querySelector(a.getAttribute('href')));
+
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        links.forEach(l => l.classList.remove('active'));
+        const active = [...links].find(l => l.getAttribute('href') === '#' + e.target.id);
+        if (active) active.classList.add('active');
+      }
+    });
+  }, { rootMargin: '-30% 0px -60% 0px' });
+
+  sections.forEach(s => s && observer.observe(s));
+})();
+</script>
+
+</body>
+</html>
