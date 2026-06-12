@@ -224,9 +224,11 @@ def fig_hourly_line(global_data: dict) -> go.Figure:
         title="Hourly Profile (All Months, Eastern Time) — Average & Peak",
         xaxis_title="Hour ET",
         yaxis_title="Patrons",
-        legend=dict(orientation="h", y=1.02, x=1, xanchor="right"),
+        legend=dict(orientation="h", y=-0.2, x=0.5, xanchor="center"),
+        margin=dict(b=80),
         plot_bgcolor=BG_CARD,
         paper_bgcolor=BG_MAIN,
+        height=480,
     )
     return fig
 
@@ -248,9 +250,11 @@ def fig_weekday_bar_global(global_data: dict) -> go.Figure:
         barmode="group",
         xaxis_title="Day",
         yaxis_title="Patrons",
-        legend=dict(orientation="h", y=1.02, x=1, xanchor="right"),
+        legend=dict(orientation="h", y=-0.2, x=0.5, xanchor="center"),
+        margin=dict(b=80),
         plot_bgcolor=BG_CARD,
         paper_bgcolor=BG_MAIN,
+        height=480,
     )
     return fig
 
@@ -344,9 +348,11 @@ def fig_floor_peak_hours_radar(global_data: dict) -> go.Figure:
     fig.update_layout(
         title="Floor Peak Hours (Top-5 ET Hours by Average Patrons)",
         polar=dict(angularaxis=dict(direction="clockwise")),
-        legend=dict(orientation="h", y=-0.15, x=0.5, xanchor="center"),
+        legend=dict(orientation="h", y=-0.2, x=0.5, xanchor="center"),
+        margin=dict(b=90),
         plot_bgcolor=BG_CARD,
         paper_bgcolor=BG_MAIN,
+        height=480,
     )
     return fig
 
@@ -422,11 +428,15 @@ def fig_monthly_top10_table(months_data: dict) -> go.Figure:
         updatemenus=[dict(
             buttons=buttons,
             direction="down",
-            x=0.01, y=1.12, xanchor="left",
+            x=0.0, y=1.18, xanchor="left",
             showactive=True,
+            bgcolor="#f0f2f5",
+            bordercolor="#dee2e6",
+            font=dict(size=12),
         )],
+        margin=dict(t=80),
         paper_bgcolor=BG_MAIN,
-        height=420,
+        height=460,
     )
     return fig
 
@@ -476,11 +486,15 @@ def fig_monthly_bottom10_table(months_data: dict) -> go.Figure:
         updatemenus=[dict(
             buttons=buttons,
             direction="down",
-            x=0.01, y=1.12, xanchor="left",
+            x=0.0, y=1.18, xanchor="left",
             showactive=True,
+            bgcolor="#f0f2f5",
+            bordercolor="#dee2e6",
+            font=dict(size=12),
         )],
+        margin=dict(t=80),
         paper_bgcolor=BG_MAIN,
-        height=420,
+        height=460,
     )
     return fig
 
@@ -533,10 +547,15 @@ def fig_monthly_weekday_drill(months_data: dict) -> go.Figure:
         updatemenus=[dict(
             buttons=buttons,
             direction="down",
-            x=0.01, y=1.12, xanchor="left",
+            x=0.0, y=1.18, xanchor="left",
             showactive=True,
+            bgcolor="#f0f2f5",
+            bordercolor="#dee2e6",
+            font=dict(size=12),
         )],
-        legend=dict(orientation="h", y=1.02, x=1, xanchor="right"),
+        margin=dict(t=80, b=80),
+        height=480,
+        legend=dict(orientation="h", y=-0.2, x=0.5, xanchor="center"),
         plot_bgcolor=BG_CARD,
         paper_bgcolor=BG_MAIN,
     )
@@ -581,9 +600,14 @@ def fig_monthly_hourly_drill(months_data: dict) -> go.Figure:
         updatemenus=[dict(
             buttons=buttons,
             direction="down",
-            x=0.01, y=1.12, xanchor="left",
+            x=0.0, y=1.18, xanchor="left",
             showactive=True,
+            bgcolor="#f0f2f5",
+            bordercolor="#dee2e6",
+            font=dict(size=12),
         )],
+        margin=dict(t=80),
+        height=480,
         plot_bgcolor=BG_CARD,
         paper_bgcolor=BG_MAIN,
     )
@@ -613,9 +637,11 @@ def fig_floor_monthly_line(months_data: dict) -> go.Figure:
         title="Per-Floor Patron Trend Across Months",
         xaxis_title="Month",
         yaxis_title="Avg Patrons",
-        legend=dict(orientation="h", y=1.02, x=1, xanchor="right"),
+        legend=dict(orientation="h", y=-0.2, x=0.5, xanchor="center"),
+        margin=dict(b=80),
         plot_bgcolor=BG_CARD,
         paper_bgcolor=BG_MAIN,
+        height=480,
     )
     return fig
 
@@ -763,11 +789,12 @@ def build_dashboard(doc: dict, output_path: str) -> None:
     .main{{max-width:1280px;margin:0 auto;padding:24px 20px}}
     .chart-card{{background:#fff;border:1px solid #dee2e6;border-radius:8px;
                  padding:16px;margin-bottom:28px;
-                 box-shadow:0 2px 8px rgba(0,0,0,.08)}}
+                 box-shadow:0 2px 8px rgba(0,0,0,.08);
+                 overflow:visible;min-width:0}}
     .chart-card h2{{color:#0066cc;font-size:1.05em;margin:0 0 10px;
                     border-bottom:2px solid #0066cc;padding-bottom:6px}}
-    .grid-2{{display:grid;grid-template-columns:1fr 1fr;gap:20px}}
-    @media(max-width:800px){{.grid-2{{grid-template-columns:1fr}}}}
+    .grid-2{{display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start}}
+    @media(max-width:900px){{.grid-2{{grid-template-columns:1fr}}}}
     .section-label{{font-size:.75em;text-transform:uppercase;letter-spacing:.06em;
                     color:#6c757d;margin:32px 0 6px;font-weight:600}}
   </style>
