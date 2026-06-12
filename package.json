@@ -49,7 +49,9 @@
     "export:data": "node scripts/export_and_purge.js",
     "export:data:dry": "node scripts/export_and_purge.js --dry-run",
     "export:initial": "node scripts/initial_export.js",
-    "export:initial:dry": "node scripts/initial_export.js --dry-run"
+    "export:initial:dry": "node scripts/initial_export.js --dry-run",
+    "extract:summary": "python3 scripts/extract_summary.py",
+    "extract:summary:overwrite": "python3 scripts/extract_summary.py --overwrite"
   },
   "author": "Your Institution",
   "license": "ISC",
