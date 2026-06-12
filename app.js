@@ -14,6 +14,7 @@ const patronapiRouter = require("./routes/patronapi");
 const recapiRouter = require("./routes/recapi");
 const countByFloorRouter = require("./routes/count_by_floor");
 const healthRouter = require("./routes/health");
+const adminRouter = require("./routes/admin");
 const patronCache = require("./modules/patronCache");
 const { deviceDataService } = require("./modules/app_core");
 
@@ -27,6 +28,22 @@ app.use(cors());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json({ strict: false }));
 
+// Minimal cookie parser (no extra dependency — parses Cookie header into req.cookies)
+app.use((req, _res, next) => {
+  req.cookies = {};
+  const header = req.headers.cookie;
+  if (header) {
+    header.split(";").forEach(pair => {
+      const idx = pair.indexOf("=");
+      if (idx < 0) return;
+      const key = pair.slice(0, idx).trim();
+      const val = decodeURIComponent(pair.slice(idx + 1).trim());
+      req.cookies[key] = val;
+    });
+  }
+  next();
+});
+
 // Base path for all routes
 const basePath = "/crowdindex";
 
@@ -36,6 +53,7 @@ app.use(basePath + "/patronapi",    patronapiRouter);
 app.use(basePath + "/recapi",       recapiRouter);
 app.use(basePath + "/count_by_floor", countByFloorRouter);
 app.use(basePath + "/health",       healthRouter);
+app.use(basePath + "/admin",        adminRouter);
 
 // Start background services
 patronCache.startCacheUpdater();

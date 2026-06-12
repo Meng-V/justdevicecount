@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %> — King Library</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #f0f2f5 0%, #dce8f7 100%);
+    }
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 4px 24px rgba(0,0,0,.14);
+      padding: 44px 40px 36px;
+      width: 100%;
+      max-width: 400px;
+    }
+    .logo {
+      text-align: center;
+      margin-bottom: 28px;
+    }
+    .logo h1 {
+      margin: 0 0 4px;
+      font-size: 1.55em;
+      color: #0066cc;
+    }
+    .logo p {
+      margin: 0;
+      font-size: .85em;
+      color: #6c757d;
+    }
+    label {
+      display: block;
+      font-size: .85em;
+      font-weight: 600;
+      color: #444;
+      margin-bottom: 6px;
+    }
+    input[type="password"] {
+      width: 100%;
+      padding: 10px 13px;
+      border: 1px solid #ced4da;
+      border-radius: 6px;
+      font-size: 1em;
+      outline: none;
+      transition: border-color .15s, box-shadow .15s;
+    }
+    input[type="password"]:focus {
+      border-color: #0066cc;
+      box-shadow: 0 0 0 3px rgba(0,102,204,.15);
+    }
+    .error {
+      background: #fff0f0;
+      color: #c0392b;
+      border: 1px solid #f5c6cb;
+      border-radius: 6px;
+      padding: 9px 13px;
+      font-size: .86em;
+      margin-bottom: 16px;
+    }
+    button[type="submit"] {
+      width: 100%;
+      margin-top: 18px;
+      padding: 11px;
+      background: #0066cc;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      font-size: 1em;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background .15s;
+    }
+    button[type="submit"]:hover { background: #0055aa; }
+    .back-link {
+      display: block;
+      text-align: center;
+      margin-top: 18px;
+      font-size: .83em;
+      color: #6c757d;
+      text-decoration: none;
+    }
+    .back-link:hover { color: #0066cc; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="logo">
+      <h1>King Library</h1>
+      <p>Analytics Dashboard — Staff Access</p>
+    </div>
+
+    <% if (error) { %>
+      <div class="error"><%= error %></div>
+    <% } %>
+
+    <form method="POST" action="login">
+      <input type="hidden" name="next" value="<%= next %>">
+      <label for="password">Password</label>
+      <input type="password" id="password" name="password"
+             placeholder="Enter admin password" autofocus required>
+      <button type="submit">Sign In</button>
+    </form>
+
+    <a class="back-link" href="/crowdindex/">← Back to live dashboard</a>
+  </div>
+</body>
+</html>
