@@ -30,9 +30,33 @@ const ADMIN_TOKEN  = process.env.ADMIN_TOKEN;   // falsy = open access
 const COOKIE_NAME  = "admsess";
 const COOKIE_TTL   = 12 * 60 * 60 * 1000;       // 12 hours
 
-const SUMMARY_PATH = path.join(
-  __dirname, "..", "stored_data", "analysis", "big_summary.json"
-);
+// ---------------------------------------------------------------------------
+// Data file path
+// Reads from STORED_DATA_DIR env var (production: /home/qum/stored_data)
+// Falls back to <app_root>/stored_data for local development.
+// ---------------------------------------------------------------------------
+const STORED_DATA_DIR = process.env.STORED_DATA_DIR
+  ? path.resolve(process.env.STORED_DATA_DIR)
+  : path.resolve(__dirname, "..", "stored_data");
+
+const SUMMARY_PATH = path.join(STORED_DATA_DIR, "analysis", "big_summary.json");
+
+// ---------------------------------------------------------------------------
+// Date-range filter (for the presentation)
+// Set DASHBOARD_START_MONTH and DASHBOARD_END_MONTH in .env to restrict
+// which months are shown on the dashboard.  Both are inclusive.
+// Format: "YYYY-MM"  (e.g. "2025-10" or "2026-05")
+// Leave either unset to use the full range available in big_summary.json.
+//
+// Example — lock to exactly what the boss sees now (Oct 2025 – May 2026):
+//   DASHBOARD_START_MONTH=2025-10
+//   DASHBOARD_END_MONTH=2026-05
+//
+// To include June 2026 after the July 1 CRON runs new data:
+//   DASHBOARD_END_MONTH=2026-06
+// ---------------------------------------------------------------------------
+const DASHBOARD_START_MONTH = process.env.DASHBOARD_START_MONTH || null;
+const DASHBOARD_END_MONTH   = process.env.DASHBOARD_END_MONTH   || null;
 
 // ---------------------------------------------------------------------------
 // Auth middleware — token in URL query OR valid cookie
@@ -88,6 +112,53 @@ function loadSummary() {
 }
 
 // ---------------------------------------------------------------------------
+// Apply DASHBOARD_START_MONTH / DASHBOARD_END_MONTH filter.
+// Returns a deep-ish copy of the summary with only the requested months,
+// and recomputes the global overview arrays to match the filtered set.
+// The original cached object is never mutated.
+// ---------------------------------------------------------------------------
+function applyDateRangeFilter(doc) {
+  if (!DASHBOARD_START_MONTH && !DASHBOARD_END_MONTH) return doc;
+
+  const start = DASHBOARD_START_MONTH || "0000-00";
+  const end   = DASHBOARD_END_MONTH   || "9999-99";
+
+  // Filter the months map
+  const filteredMonths = {};
+  Object.entries(doc.months).forEach(([mk, val]) => {
+    if (mk >= start && mk <= end) filteredMonths[mk] = val;
+  });
+
+  const filteredKeys = Object.keys(filteredMonths).sort();
+
+  // Re-slice the global arrays that are month-indexed
+  const filteredMonthlyOverview = (doc.global.monthly_overview || [])
+    .filter(m => m.month >= start && m.month <= end);
+
+  // Recompute overall_stats fields that depend on the month range
+  const allPatrons = filteredKeys.flatMap(mk =>
+    (filteredMonths[mk].all_days || []).map(d => d.avg)
+  );
+  const totalRecords = filteredKeys.reduce(
+    (sum, mk) => sum + (filteredMonths[mk].total_records || 0), 0
+  );
+
+  return {
+    ...doc,
+    months: filteredMonths,
+    global: {
+      ...doc.global,
+      monthly_overview:  filteredMonthlyOverview,
+      overall_stats: {
+        ...doc.global.overall_stats,
+        months_covered:  filteredKeys,
+        total_records:   totalRecords,
+      },
+    },
+  };
+}
+
+// ---------------------------------------------------------------------------
 // Helper: month label  "2025-10" → "Oct 2025"
 // ---------------------------------------------------------------------------
 const MONTH_ABBR = ["Jan","Feb","Mar","Apr","May","Jun",
@@ -101,29 +172,35 @@ function monthLabel(mk) {
 // Routes
 // ---------------------------------------------------------------------------
 
-// GET /admin/data — raw JSON (protected)
+// GET /admin/data — raw JSON (protected, date-range filtered)
 router.get("/data", requireToken, (req, res) => {
-  const doc = loadSummary();
-  if (!doc) {
+  const raw = loadSummary();
+  if (!raw) {
     return res.status(503).json({
       error: "big_summary.json not found. Run: python3 scripts/big_summary.py",
     });
   }
-  res.json(doc);
+  res.json(applyDateRangeFilter(raw));
 });
 
 // GET /admin  — main dashboard
 router.get("/", requireToken, (req, res) => {
-  const doc = loadSummary();
-  if (!doc) {
+  const raw = loadSummary();
+  if (!raw) {
     return res.status(503).send(
       "<h2>Analytics data not found.</h2>" +
       "<p>Run <code>python3 scripts/big_summary.py</code> to generate it.</p>"
     );
   }
 
+  const doc = applyDateRangeFilter(raw);
+
   const monthLabels = {};
   Object.keys(doc.months).forEach(mk => { monthLabels[mk] = monthLabel(mk); });
+
+  // Pass active range info to the template for the header badge
+  const rangeStart = DASHBOARD_START_MONTH || Object.keys(doc.months).sort()[0];
+  const rangeEnd   = DASHBOARD_END_MONTH   || Object.keys(doc.months).sort().at(-1);
 
   res.render("admin", {
     title:           "Analytics Dashboard",
@@ -140,6 +217,10 @@ router.get("/", requireToken, (req, res) => {
     monthKeys:       Object.keys(doc.months).sort(),
     monthLabels,
     summaryJson:     JSON.stringify(doc),
+    // Date range currently displayed — shown in the topbar subtitle
+    rangeStart:      monthLabel(rangeStart),
+    rangeEnd:        monthLabel(rangeEnd),
+    rangeFiltered:   !!(DASHBOARD_START_MONTH || DASHBOARD_END_MONTH),
   });
 });
 

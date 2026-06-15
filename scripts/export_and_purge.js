@@ -26,6 +26,18 @@ const path = require("path");
 
 const prisma = new PrismaClient();
 
+// ---------------------------------------------------------------------------
+// Output directory resolution:
+//   1. STORED_DATA_DIR env var   → use it (production: /home/qum/stored_data)
+//   2. Fallback                  → <app_root>/stored_data  (local dev)
+//
+// On the server, set in .env:
+//   STORED_DATA_DIR=/home/qum/stored_data
+// ---------------------------------------------------------------------------
+const STORED_DATA_DIR = process.env.STORED_DATA_DIR
+  ? path.resolve(process.env.STORED_DATA_DIR)
+  : path.resolve(__dirname, "..", "stored_data");
+
 async function run() {
   const isDryRun = process.argv.includes("--dry-run");
 
@@ -48,9 +60,10 @@ async function run() {
 
   console.log(`[export_and_purge] Rows to export: ${totalCount}`);
 
-  // Output directory (no spaces in path)
-  const outDir = path.resolve(__dirname, "..", "stored_data");
+  // Output directory — use env-configured path (see top of file)
+  const outDir = STORED_DATA_DIR;
   fs.mkdirSync(outDir, { recursive: true });
+  console.log(`[export_and_purge] Output directory: ${outDir}`);
 
   // File name encodes the cutoff date so it is unambiguous.
   const cutoffStamp = cutoff.toISOString().replace(/[:]/g, "-");

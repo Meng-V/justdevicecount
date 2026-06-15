@@ -223,7 +223,11 @@
   <div class="topbar-brand">
     <div>
       <h1>King Library · Analytics Dashboard</h1>
-      <p>Generated: <%= generatedAt %> &nbsp;·&nbsp; Eastern Time (UTC<%= etOffset >= 0 ? '+' : '' %><%= etOffset %>h)</p>
+      <p>
+        Showing: <strong><%= rangeStart %> – <%= rangeEnd %></strong>
+        <% if (rangeFiltered) { %>&nbsp;<span style="background:#fff3cd;color:#856404;padding:1px 6px;border-radius:4px;font-size:.85em;">date range pinned</span><% } %>
+        &nbsp;·&nbsp; Generated: <%= generatedAt %> &nbsp;·&nbsp; Eastern Time (UTC<%= etOffset >= 0 ? '+' : '' %><%= etOffset %>h)
+      </p>
     </div>
   </div>
   <div class="topbar-links">

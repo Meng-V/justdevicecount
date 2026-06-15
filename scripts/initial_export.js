@@ -36,8 +36,17 @@ const isDryRun = process.argv.includes("--dry-run");
 // ---- Configuration --------------------------------------------------------
 // Export everything up to and including April 30, 2026 (UTC end-of-day).
 const EXPORT_UNTIL = new Date(Date.UTC(2026, 3, 30, 23, 59, 59, 999)); // 2026-04-30T23:59:59.999Z
-const OUT_DIR      = path.resolve(__dirname, "..", "stored_data");
 const BATCH_SIZE   = 1000;
+
+// Output directory resolution:
+//   1. STORED_DATA_DIR env var   → use it (production: /home/qum/stored_data)
+//   2. Fallback                  → <app_root>/stored_data  (local dev)
+//
+// On the server, set in .env:
+//   STORED_DATA_DIR=/home/qum/stored_data
+const OUT_DIR = process.env.STORED_DATA_DIR
+  ? path.resolve(process.env.STORED_DATA_DIR)
+  : path.resolve(__dirname, "..", "stored_data");
 // ---------------------------------------------------------------------------
 
 async function exportMonth(year, month) {

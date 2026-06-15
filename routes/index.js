@@ -6,10 +6,6 @@ const prisma  = require("../modules/prisma");
 const router  = express.Router();
 
 router.get("/", async (req, res) => {
-  // CAS auth not implemented in this build — use env vars for the user badge.
-  const casUid         = process.env.TEST_USER_ID   || "staff";
-  const cas_displayName = process.env.TEST_USER_NAME || "Staff";
-
   try {
     // Latest record for the live counters
     const latestData = await prisma.deviceData.findFirst({
@@ -32,8 +28,6 @@ router.get("/", async (req, res) => {
 
     res.render("index", {
       title:                "Crowd Index",
-      cas_uid:              casUid,
-      cas_displayName,
       currentPatrons:       latestData?.patrons        ?? 0,
       currentTimestamp:     latestData?.timeStamp      ?? null,
       currentCountByFloor:  latestData?.countByFloor   ?? [0, 0, 0, 0],
@@ -45,8 +39,6 @@ router.get("/", async (req, res) => {
     console.error("Error fetching data for dashboard:", error);
     res.render("index", {
       title:                "Crowd Index",
-      cas_uid:              casUid,
-      cas_displayName,
       currentPatrons:       0,
       currentTimestamp:     null,
       currentCountByFloor:  [0, 0, 0, 0],

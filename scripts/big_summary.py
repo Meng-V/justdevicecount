@@ -503,14 +503,20 @@ def main() -> None:
     parser = argparse.ArgumentParser(
         description="Comprehensive patron analytics from monthly summary files."
     )
+    # Honour STORED_DATA_DIR env var so the same script works on the server
+    # (where STORED_DATA_DIR=/home/qum/stored_data) and locally.
+    _stored_data_base = os.environ.get(
+        "STORED_DATA_DIR",
+        os.path.join(os.path.dirname(__file__), "..", "stored_data"),
+    )
     parser.add_argument(
         "--summaries-dir",
-        default=os.path.join(os.path.dirname(__file__), "..", "stored_data", "summaries"),
+        default=os.path.join(_stored_data_base, "summaries"),
         help="Directory containing YYYY-MM_summary.json files",
     )
     parser.add_argument(
         "--output-dir",
-        default=os.path.join(os.path.dirname(__file__), "..", "stored_data", "analysis"),
+        default=os.path.join(_stored_data_base, "analysis"),
         help="Directory to write big_summary.json (default: stored_data/analysis/)",
     )
     parser.add_argument(

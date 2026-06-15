@@ -6,8 +6,9 @@
 
 require('dotenv').config();
 
-// Set timezone to New York for all logging
-process.env.TZ = 'America/New_York';
+// TZ must be set before any Date calls. It comes from .env (TZ=America/New_York).
+// Fall back to America/New_York if somehow not set.
+if (!process.env.TZ) process.env.TZ = 'America/New_York';
 
 /**
  * Module dependencies.
