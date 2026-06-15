@@ -15,7 +15,7 @@ require("winston-daily-rotate-file");
 const path = require("path");
 
 const LOG_DIR = path.join(__dirname, "..", "logs");
-const TZ      = "America/New_York";
+const TZ      = process.env.TZ || "America/New_York";
 
 // Custom timestamp formatted in Eastern time
 const nyTimestamp = format((info) => {

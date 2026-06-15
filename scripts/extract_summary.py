@@ -201,14 +201,21 @@ def main() -> None:
         description="Extract timeStamp/patrons/countByFloor from stored_data/ files "
                     "and write one summary JSON per month."
     )
+    # Honour STORED_DATA_DIR env var so the same script works on the server
+    # (where STORED_DATA_DIR=/home/qum/stored_data) and locally (fallback to
+    # <repo_root>/stored_data).
+    _stored_data_base = os.environ.get(
+        "STORED_DATA_DIR",
+        os.path.join(os.path.dirname(__file__), "..", "stored_data"),
+    )
     parser.add_argument(
         "--input-dir",
-        default=os.path.join(os.path.dirname(__file__), "..", "stored_data"),
+        default=_stored_data_base,
         help="Directory containing raw *_device_data.json files (default: stored_data/)",
     )
     parser.add_argument(
         "--output-dir",
-        default=os.path.join(os.path.dirname(__file__), "..", "stored_data", "summaries"),
+        default=os.path.join(_stored_data_base, "summaries"),
         help="Directory to write YYYY-MM_summary.json files (default: stored_data/summaries/)",
     )
     parser.add_argument(

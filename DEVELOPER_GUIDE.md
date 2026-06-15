@@ -211,68 +211,72 @@ openssl req -x509 -newkey rsa:4096 -keyout cert.key -out cert.pem -days 365 -nod
 cd ..
 ```
 
-### Option 2: Let's Encrypt (Production)
+### Option 2: Institutional Certificate (Production)
 
-```bash
-# Install certbot
-sudo apt-get install certbot
+Your institution's IT team provides the certificate files. Set the paths in `.env`:
 
-# Obtain certificate
-sudo certbot certonly --standalone -d your-domain.example.edu
-
-# Copy certificates to project
-mkdir -p security
-sudo cp /etc/letsencrypt/live/your-domain.example.edu/fullchain.pem security/cert.pem
-sudo cp /etc/letsencrypt/live/your-domain.example.edu/privkey.pem security/cert.key
-sudo chmod 644 security/cert.pem
-sudo chmod 600 security/cert.key
+```
+PROD_CERT_PATH=/etc/pki/tls/certs/your-server.edu.crt
+PROD_KEY_PATH=./certs/your-server.edu.key
 ```
 
-### Option 3: Institutional Certificate
+The app reads these paths at startup. If either is missing, the process exits with an
+error message telling you exactly which path it could not find.
 
-Place your institution's SSL certificates in the `security/` directory:
+### Option 3: Let's Encrypt
 
 ```bash
-mkdir -p security
-cp /path/to/your/certificate.crt security/cert.pem
-cp /path/to/your/private.key security/cert.key
-chmod 644 security/cert.pem
-chmod 600 security/cert.key
+sudo certbot certonly --standalone -d your-domain.example.edu
+```
+
+Then set in `.env`:
+
+```
+PROD_CERT_PATH=/etc/letsencrypt/live/your-domain.example.edu/fullchain.pem
+PROD_KEY_PATH=/etc/letsencrypt/live/your-domain.example.edu/privkey.pem
 ```
 
 ### Verify SSL Setup
 
-The application expects:
-- `security/cert.pem` - SSL certificate
-- `security/cert.key` - Private key
+The app uses `PROD_CERT_PATH` and `PROD_KEY_PATH` from `.env` — not a fixed directory.
+For local development no SSL is needed; the app runs HTTP automatically when
+`NODE_ENV=development`.
 
 ## Environment Variables
 
-Complete `.env` file example:
+Complete `.env` file — copy `.env.example` and fill in real values:
 
-```bash
-# Database Connection
-DATABASE_URL="postgresql://username:password@hostname:5432/crowd_index?schema=public"
-
-# Application Settings
+```
+DATABASE_URL=postgresql://user:pass@host:5432/crowd_index?schema=public&sslmode=require
 NODE_ENV=production
 PORT=3012
-
-# Timezone (for consistent logging)
 TZ=America/New_York
-
-# Optional: SSL/TLS settings
-NODE_TLS_REJECT_UNAUTHORIZED=1
+PRODUCTION_HOSTNAME=your-server.edu
+PROD_CERT_PATH=/etc/pki/tls/certs/your-server.edu.crt
+PROD_KEY_PATH=./certs/your-server.edu.key
+CMX_AUTH=Basic <base64credentials>
+ADMIN_TOKEN=<random-token>
+STORED_DATA_DIR=/home/qum/stored_data
+DASHBOARD_START_MONTH=2025-10
+DASHBOARD_END_MONTH=2026-05
 ```
 
 **Environment Variables Explained**:
 
-| Variable | Purpose | Example |
-|----------|---------|---------|
-| `DATABASE_URL` | PostgreSQL connection string | `postgresql://user:pass@host:5432/dbname` |
-| `NODE_ENV` | Environment mode | `production` or `development` |
-| `PORT` | Application port | `3012` |
-| `TZ` | Timezone for logging | `America/New_York` |
+| Variable | Required | Purpose |
+|----------|----------|---------|
+| `DATABASE_URL` | yes | PostgreSQL connection string |
+| `NODE_ENV` | yes | `development` (HTTP) or `production` (HTTPS) |
+| `PORT` | yes | Server port (default `3012`) |
+| `TZ` | yes | Timezone for all logging (`America/New_York`) |
+| `PRODUCTION_HOSTNAME` | production | Public hostname; triggers HTTPS mode |
+| `PROD_CERT_PATH` | production | Path to SSL certificate file |
+| `PROD_KEY_PATH` | production | Path to SSL private key file |
+| `CMX_AUTH` | yes | Base64 `Basic` auth for Cisco CMX API |
+| `ADMIN_TOKEN` | recommended | Token protecting `/crowdindex/admin` |
+| `STORED_DATA_DIR` | production | Where monthly exports and analytics files live |
+| `DASHBOARD_START_MONTH` | optional | Oldest month shown on analytics dashboard (`YYYY-MM`) |
+| `DASHBOARD_END_MONTH` | optional | Newest month shown on analytics dashboard (`YYYY-MM`) |
 
 ## Deployment Options
 
@@ -629,31 +633,42 @@ pm2 monit
 ```
 justdevicecount/
 ├── bin/
-│   └── www                      # HTTPS server entry point
+│   └── www                         # Server entry point (HTTP dev / HTTPS prod)
 ├── modules/
-│   ├── app_core.js             # Data collection service
-│   ├── patronCache.js          # 15-minute caching layer
-│   ├── axiosApi.js             # CMX API client
-│   └── deviceUtils.js          # Floor mapping utilities
+│   ├── app_core.js                 # 15-min data collection scheduler
+│   ├── patronCache.js              # In-memory cache layer
+│   ├── axiosApi.js                 # Cisco CMX API client with retry
+│   ├── deviceUtils.js              # Floor bounds, RSSI, time validation
+│   ├── logger.js                   # Winston rotating logger
+│   └── prisma.js                   # Shared Prisma singleton
 ├── routes/
-│   ├── index.js                # Dashboard route
-│   ├── patronapi.js            # King Library API
-│   ├── recapi.js               # Recreation Center API
-│   └── count_by_floor.js       # Historical data API
-├── prisma/
-│   └── schema.prisma           # Database schema
+│   ├── index.js                    # Live dashboard
+│   ├── patronapi.js                # King Library patron counts (JSON)
+│   ├── recapi.js                   # Recreation Center counts (JSON)
+│   ├── count_by_floor.js           # Per-floor historical data (JSON)
+│   ├── health.js                   # Health check endpoint
+│   └── admin.js                    # Analytics dashboard (token-gated)
+├── scripts/
+│   ├── export_and_purge.js         # Monthly CRON: export + delete old data
+│   ├── initial_export.js           # One-time historical export
+│   ├── test_cron.js                # CRON readiness test (6 checks)
+│   ├── extract_summary.py          # Build per-month summary JSON files
+│   ├── big_summary.py              # Build big_summary.json from summaries
+│   └── visualize_summary.py        # Build analytics dashboard HTML
 ├── views/
-│   └── index.ejs               # Web dashboard template
+│   ├── index.ejs                   # Live dashboard template
+│   └── admin.ejs                   # Analytics dashboard template
+├── prisma/
+│   └── schema.prisma               # PostgreSQL schema (DeviceData model)
 ├── config/
-│   └── default.json            # CMX configuration
-├── security/                   # SSL certificates (gitignored)
-│   ├── cert.pem
-│   └── cert.key
-├── .env                        # Environment variables (gitignored)
-├── app.js                      # Express application
-├── ecosystem.config.js         # PM2 configuration (local dev)
-├── start.sh                    # Local development script
-└── test_comprehensive.js      # Test suite
+│   └── default.json                # CMX API URLs — DO NOT commit
+├── certs/                          # SSL private key — gitignored
+├── .env                            # All secrets and config — DO NOT commit
+├── .env.example                    # Template for .env
+├── app.js                          # Express app, routes, CRON schedule
+├── ecosystem.config.js             # PM2 config (local dev only)
+├── start.sh                        # Local dev helper script
+└── test_comprehensive.js           # Integration test suite
 ```
 
 ### Data Flow
@@ -711,6 +726,6 @@ Include in bug reports:
 
 ---
 
-**Last Updated**: 2025-10-02  
+**Last Updated**: 2026-06-15  
 **Version**: 1.0.0  
 **Maintainer**: Meng-V

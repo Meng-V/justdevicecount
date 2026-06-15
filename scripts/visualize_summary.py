@@ -923,16 +923,20 @@ def main() -> None:
     parser = argparse.ArgumentParser(
         description="Generate an interactive HTML analytics dashboard from big_summary.json"
     )
+    # Honour STORED_DATA_DIR env var so the same script works on the server
+    # (where STORED_DATA_DIR=/home/qum/stored_data) and locally.
+    _stored_data_base = os.environ.get(
+        "STORED_DATA_DIR",
+        os.path.join(os.path.dirname(__file__), "..", "stored_data"),
+    )
     parser.add_argument(
         "--analysis-file",
-        default=os.path.join(os.path.dirname(__file__), "..", "stored_data",
-                             "analysis", "big_summary.json"),
+        default=os.path.join(_stored_data_base, "analysis", "big_summary.json"),
         help="Path to big_summary.json (default: stored_data/analysis/big_summary.json)",
     )
     parser.add_argument(
         "--output-file",
-        default=os.path.join(os.path.dirname(__file__), "..", "stored_data",
-                             "analysis", "dashboard.html"),
+        default=os.path.join(_stored_data_base, "analysis", "dashboard.html"),
         help="Where to write dashboard.html (default: stored_data/analysis/dashboard.html)",
     )
     args = parser.parse_args()

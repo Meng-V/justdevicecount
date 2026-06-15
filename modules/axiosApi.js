@@ -9,8 +9,9 @@ const config = require("config");
 
 // Credentials: prefer environment variable, fall back to config file value.
 // Set CMX_AUTH in .env as: CMX_AUTH="Basic <base64credentials>"
-const auth = process.env.CMX_AUTH || config.get("app.auth");
-const host = config.get("address.host");
+const auth   = process.env.CMX_AUTH || config.get("app.auth");
+const host   = config.get("address.host");
+const APP_TZ = process.env.TZ || "America/New_York";
 
 // Attach retry behaviour to the shared axios instance used for all CMX calls.
 axiosRetry(axios, {
@@ -18,7 +19,7 @@ axiosRetry(axios, {
   retryDelay: (retryCount) => {
     const delay = axiosRetry.exponentialDelay(retryCount); // 2s, 4s, 8s
     console.log(
-      `[${new Date().toLocaleString("en-US", { timeZone: "America/New_York" })}]` +
+      `[${new Date().toLocaleString("en-US", { timeZone: APP_TZ })}]` +
       ` CMX API retry ${retryCount} in ${Math.round(delay / 1000)}s`
     );
     return delay;
@@ -72,7 +73,7 @@ async function makeFloorRequest(floorKey, cb) {
 
   if (!floorInfo) {
     console.log(
-      `[${new Date().toLocaleString("en-US", { timeZone: "America/New_York" })}]` +
+      `[${new Date().toLocaleString("en-US", { timeZone: APP_TZ })}]` +
       ` Error in makeFloorRequest: Invalid floor key: ${floorKey}`
     );
     return cb(null);
@@ -84,13 +85,13 @@ async function makeFloorRequest(floorKey, cb) {
     });
 
     console.log(
-      `[${new Date().toLocaleString("en-US", { timeZone: "America/New_York" })}]` +
+      `[${new Date().toLocaleString("en-US", { timeZone: APP_TZ })}]` +
       ` Devices connected in ${floorInfo.displayName}: ${response.data.length}`
     );
     cb(response.data);
   } catch (error) {
     console.log(
-      `[${new Date().toLocaleString("en-US", { timeZone: "America/New_York" })}]` +
+      `[${new Date().toLocaleString("en-US", { timeZone: APP_TZ })}]` +
       ` Error fetching ${floorKey} (all retries exhausted): ${error.message}`
     );
     // Invoke callback with null so callers can gracefully skip this floor.

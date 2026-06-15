@@ -6,6 +6,8 @@ const prisma  = require("../modules/prisma");
 const { dateTime } = require("../modules/deviceUtils");
 const router  = express.Router();
 
+const APP_TZ = process.env.TZ || "America/New_York";
+
 // Match the dashboard window: return at most 30 days of 15-minute intervals.
 const MAX_RECORDS = 30 * 24 * 4;
 
@@ -24,7 +26,7 @@ router.get("/", async (req, res) => {
       .slice()
       .reverse()
       .map((r) => ({
-        time:        r.timeStamp.toLocaleString("en-US", { timeZone: "America/New_York" }),
+        time:        r.timeStamp.toLocaleString("en-US", { timeZone: APP_TZ }),
         countByFloor: r.countByFloor,
       }));
 

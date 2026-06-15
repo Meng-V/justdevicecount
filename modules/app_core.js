@@ -1,6 +1,8 @@
-const prisma = require("./prisma");
+const prisma   = require("./prisma");
 const axiosApi = require("./axiosApi");
 const { dateTime, validRssi, validTime, isValidDevice, isWithinBounds } = require("./deviceUtils");
+
+const APP_TZ = process.env.TZ || "America/New_York";
 
 // ---------------------------------------------------------------------------
 // Generic floor processing function.
@@ -115,7 +117,7 @@ async function saveToDatabase({ uniqUserGround, uniqUserFirst, uniqUserSecond, u
     if (timeDiffMs > 60000) {
       // Skip silent hours (2 AM – 6 AM Eastern) to avoid noise in overnight data.
       const currentHour = new Date(
-        new Date().toLocaleString("en-US", { timeZone: "America/New_York" })
+        new Date().toLocaleString("en-US", { timeZone: APP_TZ })
       ).getHours();
 
       if (currentHour < 2 || currentHour > 6) {

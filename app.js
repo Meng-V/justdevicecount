@@ -1,6 +1,6 @@
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = 1;
-// Set timezone to New York for consistent logging
-process.env.TZ = 'America/New_York';
+// TZ is set in bin/www (the true entry point) before this module loads.
+const APP_TZ = process.env.TZ || "America/New_York";
 
 const path = require("path");
 const express = require("express");
@@ -69,7 +69,7 @@ cron.schedule(
   "0 0 1 * *",
   () => {
     console.log(
-      `[${new Date().toLocaleString("en-US", { timeZone: "America/New_York" })}]` +
+      `[${new Date().toLocaleString("en-US", { timeZone: APP_TZ })}]` +
       " Monthly export-and-purge job triggered"
     );
     // Fork a child process so the CRON job runs in isolation and cannot crash
@@ -82,19 +82,19 @@ cron.schedule(
     );
     child.on("exit", (code) => {
       console.log(
-        `[${new Date().toLocaleString("en-US", { timeZone: "America/New_York" })}]` +
+        `[${new Date().toLocaleString("en-US", { timeZone: APP_TZ })}]` +
         ` export_and_purge.js exited with code ${code}`
       );
     });
   },
-  { timezone: "America/New_York" }
+  { timezone: APP_TZ }
 );
 
 // ---------------------------------------------------------------------------
 // Graceful shutdown
 // ---------------------------------------------------------------------------
 function shutdown(signal) {
-  console.log(`[${new Date().toLocaleString("en-US", { timeZone: "America/New_York" })}] ${signal} received, shutting down gracefully`);
+  console.log(`[${new Date().toLocaleString("en-US", { timeZone: APP_TZ })}] ${signal} received, shutting down gracefully`);
   patronCache.stopCacheUpdater();
   deviceDataService.stop();
   process.exit(0);
@@ -106,7 +106,7 @@ process.on("SIGINT",  () => shutdown("SIGINT"));
 // 404 handler
 app.use((req, res, next) => {
   console.log(
-    `[${new Date().toLocaleString("en-US", { timeZone: "America/New_York" })}]` +
+    `[${new Date().toLocaleString("en-US", { timeZone: APP_TZ })}]` +
     ` 404 - Route not found: ${req.method} ${req.url}`
   );
   next(createError(404));

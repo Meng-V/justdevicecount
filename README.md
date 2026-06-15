@@ -1,134 +1,76 @@
 # JustDeviceCount
 
-A real-time patron counting system for academic libraries and recreational facilities, providing instant visibility into building occupancy across multiple floors.
+Real-time patron counting for King Library and the Recreation Center at Miami University,
+built on top of the existing Cisco CMX WiFi infrastructure.
 
-## 🎯 What Problem Does It Solve?
+## What It Does
 
-**Challenge**: Understanding real-time occupancy in multi-floor buildings is difficult without manual counting or expensive specialized hardware.
+Polls the Cisco CMX API every 15 minutes, counts unique WiFi devices per floor, and stores
+the results in a PostgreSQL database. A web dashboard and a set of JSON APIs make the data
+available to staff, digital signage, and analytics tools.
 
-**Solution**: JustDeviceCount leverages your existing WiFi infrastructure (Cisco CMX) to automatically track unique device counts as a proxy for patron occupancy. The system continuously monitors WiFi-connected devices and provides real-time and historical occupancy data through simple web interfaces.
+## Routes
 
-**Who Benefits**:
-- **Library staff**: Monitor patron traffic patterns and optimize staffing
-- **Facilities managers**: Track building usage and space utilization
-- **Students/visitors**: Check real-time occupancy before visiting
-- **Administrators**: Access historical data for planning and reporting
+All routes are prefixed with `/crowdindex/`.
 
-## 📊 Main Features
+| Route | Description |
+|-------|-------------|
+| `GET /` | Live occupancy dashboard |
+| `GET /patronapi` | King Library patron counts (JSON) |
+| `GET /recapi` | Recreation Center patron count (JSON) |
+| `GET /count_by_floor` | Per-floor breakdown for both buildings (JSON) |
+| `GET /health` | Service health check (JSON) |
+| `GET /admin` | Analytics dashboard (token-gated) |
+| `GET /admin/data` | Raw analytics JSON (token-gated) |
 
-### Real-Time Occupancy Tracking
-Automatically counts unique WiFi devices every 15 minutes across all building floors, providing a reliable estimate of patron counts without requiring manual intervention.
+## How It Works
 
-### Multi-Building Support
-Simultaneously monitors multiple buildings with different configurations:
-- **King Library** (4 floors): Full historical tracking with database storage
-- **Recreation Center** (2 floors): Real-time tracking with memory-only storage
+1. `DeviceDataService` fires at `:00`, `:15`, `:30`, `:45` each hour (Eastern Time)
+2. Fetches device lists from the CMX API for each floor
+3. Deduplicates device IDs within coordinate bounds for each floor
+4. Saves patron counts + per-floor arrays to PostgreSQL via Prisma
+5. A 15-minute in-memory cache keeps API responses fast
+6. On the 1st of every month at midnight ET, old data is exported to
+   `STORED_DATA_DIR` and purged from the database automatically
 
-### Web Dashboard & APIs
-- **Visual Dashboard** (`/crowdindex/`): Interactive web interface showing current occupancy
-- **JSON APIs**: Machine-readable endpoints for integration with digital signage, mobile apps, or institutional dashboards
+## Tech Stack
 
-### Historical Analytics
-Database storage enables:
-- Trend analysis over days, weeks, or months
-- Peak usage time identification
-- Capacity planning and resource allocation
-- Data-driven decision making
+- **Runtime**: Node.js + Express
+- **Database**: PostgreSQL via Prisma ORM
+- **Data source**: Cisco CMX WiFi Analytics API
+- **Process management**: systemd (production) / PM2 (local dev)
+- **Analytics**: Python scripts (`extract_summary.py`, `big_summary.py`, `visualize_summary.py`)
 
-## 🌐 Available Routes
+## Key Environment Variables
 
-All routes are prefixed with `/crowdindex/`
+| Variable | Description |
+|----------|-------------|
+| `DATABASE_URL` | PostgreSQL connection string |
+| `NODE_ENV` | `development` (HTTP) or `production` (HTTPS) |
+| `PORT` | Server port (default `3012`) |
+| `TZ` | Timezone for all logging (`America/New_York`) |
+| `PRODUCTION_HOSTNAME` | Public hostname for HTTPS server |
+| `PROD_CERT_PATH` | Path to SSL certificate (production) |
+| `PROD_KEY_PATH` | Path to SSL private key (production) |
+| `CMX_AUTH` | Base64-encoded Cisco CMX credentials |
+| `ADMIN_TOKEN` | Token for `/admin` dashboard access |
+| `STORED_DATA_DIR` | Where monthly exports and analytics files live |
+| `DASHBOARD_START_MONTH` | Oldest month shown in analytics dashboard (`YYYY-MM`) |
+| `DASHBOARD_END_MONTH` | Newest month shown in analytics dashboard (`YYYY-MM`) |
 
-### For End Users
+See `.env.example` for a complete template.
 
-**`GET /crowdindex/`**  
-Web dashboard with live occupancy visualization
+## Documentation
 
-**`GET /crowdindex/patronapi`**  
-King Library current and historical patron data (JSON)
+- **[DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md)** — local development setup
+- **[SERVER_DEPLOYMENT.md](SERVER_DEPLOYMENT.md)** — production deployment with systemd
 
-**`GET /crowdindex/recapi`**  
-Recreation Center current patron count (JSON)
+## Privacy
 
-**`GET /crowdindex/count_by_floor`**  
-Floor-by-floor breakdown for both buildings (JSON)
-
-### Example API Response
-
-```json
-{
-  "currentPatrons": 127,
-  "timestamp": "2025-09-30T14:30:00Z",
-  "byFloor": {
-    "ground": 45,
-    "first": 38,
-    "second": 28,
-    "third": 16
-  },
-  "historicalAverage": 98,
-  "trend": "increasing"
-}
-```
-
-## 🏗️ How It Works
-
-1. **Data Collection**: Connects to Cisco CMX API every 15 minutes
-2. **Device Processing**: Identifies unique WiFi devices and maps them to floor locations
-3. **Storage**: Saves historical data to PostgreSQL database (King Library) or keeps in memory (Recreation Center)
-4. **Caching**: Maintains 15-minute cache for fast API responses
-5. **Delivery**: Serves data via RESTful APIs and web dashboard
-
-## 🔒 Privacy & Security
-
-- **Device Anonymization**: Tracks only anonymized device IDs, never personal information
-- **HTTPS Encryption**: All data transmitted over secure SSL/TLS connections
-- **No Personal Data**: System cannot identify individuals, only counts unique devices
-- **Compliance**: Designed to respect patron privacy while providing occupancy insights
-
-## 💡 Use Cases
-
-### For Library Operations
-- Staff allocation based on predicted busy periods
-- Study room availability decisions
-- Event planning around occupancy patterns
-
-### For Students & Visitors
-- Check crowding levels before visiting
-- Find quieter study times
-- Plan group study sessions
-
-### For Facilities Planning
-- Justify space renovations with usage data
-- Optimize HVAC and lighting schedules
-- Demonstrate ROI for building improvements
-
-## 🛠️ Technical Overview
-
-Built with modern, reliable technology:
-- **Backend**: Node.js with Express framework
-- **Database**: PostgreSQL with Prisma ORM
-- **Process Management**: PM2 for 24/7 uptime
-- **Security**: HTTPS/SSL encryption
-- **Data Source**: Cisco CMX WiFi Analytics API
-
-## 📖 Documentation
-
-- **[DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md)**: Complete technical guide for local development setup
-- **[SERVER_DEPLOYMENT.md](SERVER_DEPLOYMENT.md)**: Production server deployment using systemd
-- **[TESTING_GUIDE.md](TESTING_GUIDE.md)**: Comprehensive testing procedures
-
-## 🤝 For Peer Institutions
-
-This system is designed to be easily replicated at other universities and institutions with Cisco CMX WiFi infrastructure. The [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md) provides step-by-step instructions for deploying at your institution.
-
-## 📞 Getting Support
-
-- **GitHub Issues**: Report bugs or request features
-- **Developer Guide**: Technical documentation for deployment
-- **Test Suite**: Built-in diagnostics (`npm test`)
+Only anonymized device IDs are tracked — no personal information, no names, no identities.
+The system counts devices, not people.
 
 ---
 
-**Author**: Meng-V  
-**License**: ISC  
-**Repository**: [GitHub](https://github.com/Meng-V/justdevicecount)
+**Author**: Meng Qu (Web Design Librarian, Miami University Libraries)
+**License**: ISC
