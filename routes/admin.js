@@ -58,6 +58,9 @@ const SUMMARY_PATH = path.join(STORED_DATA_DIR, "analysis", "big_summary.json");
 const DASHBOARD_START_MONTH = process.env.DASHBOARD_START_MONTH || null;
 const DASHBOARD_END_MONTH   = process.env.DASHBOARD_END_MONTH   || null;
 
+// Timezone used to map UTC timestamps to a calendar day for the day-detail view.
+const TZ = process.env.TZ || "America/New_York";
+
 // ---------------------------------------------------------------------------
 // Auth middleware — token in URL query OR valid cookie
 // ---------------------------------------------------------------------------
@@ -169,6 +172,67 @@ function monthLabel(mk) {
 }
 
 // ---------------------------------------------------------------------------
+// Day-detail support
+// Reads per-month summary files (STORED_DATA_DIR/summaries/YYYY-MM_summary.json)
+// which hold raw 15-minute records: { timeStamp(UTC), patrons, countByFloor }.
+// ---------------------------------------------------------------------------
+
+// Per-month file cache (auto-reloads when the file's mtime changes).
+const monthCache = {};   // "YYYY-MM" → { mtime, data }
+
+function loadMonthSummary(mk) {
+  const p = path.join(STORED_DATA_DIR, "summaries", `${mk}_summary.json`);
+  try {
+    const stat = fs.statSync(p);
+    if (!monthCache[mk] || monthCache[mk].mtime !== stat.mtimeMs) {
+      monthCache[mk] = { mtime: stat.mtimeMs, data: JSON.parse(fs.readFileSync(p, "utf8")) };
+    }
+    return monthCache[mk].data;
+  } catch {
+    return null;
+  }
+}
+
+// Convert a UTC ISO string to its Eastern-Time calendar date + clock time.
+function toEtParts(iso) {
+  const d = new Date(iso);
+  return {
+    etDate: d.toLocaleDateString("en-CA", { timeZone: TZ }),  // "YYYY-MM-DD"
+    etTime: d.toLocaleTimeString("en-GB", {
+      timeZone: TZ, hour12: false, hour: "2-digit", minute: "2-digit",
+    }),                                                        // "HH:MM"
+  };
+}
+
+// All 15-min records whose ET calendar day equals `dateStr` (YYYY-MM-DD).
+// ET is behind UTC, so an ET evening can land in the *next* UTC month file —
+// we therefore load the date's month and the following day's month.
+function getDayRecords(dateStr) {
+  const mks = new Set([dateStr.slice(0, 7)]);
+  const next = new Date(dateStr + "T12:00:00Z");
+  next.setUTCDate(next.getUTCDate() + 1);
+  mks.add(next.toISOString().slice(0, 7));
+
+  let recs = [];
+  for (const mk of mks) {
+    const data = loadMonthSummary(mk);
+    if (Array.isArray(data)) recs = recs.concat(data);
+  }
+
+  return recs
+    .map(r => ({ ...r, ...toEtParts(r.timeStamp) }))
+    .filter(r => r.etDate === dateStr)
+    .sort((a, b) => a.timeStamp.localeCompare(b.timeStamp));
+}
+
+// "YYYY-MM" → "YYYY-MM-DD" of the last day of that month.
+function lastDayOfMonth(mk) {
+  const [y, m] = mk.split("-").map(Number);
+  const last = new Date(Date.UTC(y, m, 0)).getUTCDate();
+  return `${mk}-${String(last).padStart(2, "0")}`;
+}
+
+// ---------------------------------------------------------------------------
 // Routes
 // ---------------------------------------------------------------------------
 
@@ -181,6 +245,81 @@ router.get("/data", requireToken, (req, res) => {
     });
   }
   res.json(applyDateRangeFilter(raw));
+});
+
+// Shared: validate ?date=YYYY-MM-DD, returns the string or null.
+function parseDateParam(req) {
+  const date = String(req.query.date || "");
+  return /^\d{4}-\d{2}-\d{2}$/.test(date) ? date : null;
+}
+
+// GET /admin/day — one day's 15-min records + summary stats (JSON, for the chart)
+router.get("/day", requireToken, (req, res) => {
+  const date = parseDateParam(req);
+  if (!date) return res.status(400).json({ error: "Invalid date. Use YYYY-MM-DD." });
+
+  const recs = getDayRecords(date);
+  const records = recs.map(r => ({
+    time:      r.etTime,
+    timeStamp: r.timeStamp,
+    patrons:   r.patrons,
+    ground:    r.countByFloor[0] ?? 0,
+    first:     r.countByFloor[1] ?? 0,
+    second:    r.countByFloor[2] ?? 0,
+    third:     r.countByFloor[3] ?? 0,
+  }));
+
+  let stats = { count: 0 };
+  if (records.length) {
+    const p       = records.map(r => r.patrons);
+    const peak    = Math.max(...p);
+    const low     = Math.min(...p);
+    const sum     = p.reduce((a, b) => a + b, 0);
+    stats = {
+      count:    records.length,
+      avg:      Math.round(sum / records.length),
+      peak,
+      peakTime: records[p.indexOf(peak)].time,
+      low,
+      lowTime:  records[p.indexOf(low)].time,
+    };
+  }
+
+  res.json({ date, tz: TZ, stats, records });
+});
+
+// GET /admin/day.csv — one day's records as a downloadable CSV
+router.get("/day.csv", requireToken, (req, res) => {
+  const date = parseDateParam(req);
+  if (!date) return res.status(400).send("Invalid date. Use YYYY-MM-DD.");
+
+  const recs = getDayRecords(date);
+  const header = "timeStamp_utc,time_et,patrons,ground,first,second,third\n";
+  const body = recs.map(r => [
+    r.timeStamp, r.etTime, r.patrons,
+    r.countByFloor[0] ?? 0, r.countByFloor[1] ?? 0,
+    r.countByFloor[2] ?? 0, r.countByFloor[3] ?? 0,
+  ].join(",")).join("\n");
+
+  res.setHeader("Content-Type", "text/csv; charset=utf-8");
+  res.setHeader("Content-Disposition", `attachment; filename="king_library_${date}.csv"`);
+  res.send(header + body + (body ? "\n" : ""));
+});
+
+// GET /admin/day.json — one day's records as a downloadable JSON file
+router.get("/day.json", requireToken, (req, res) => {
+  const date = parseDateParam(req);
+  if (!date) return res.status(400).json({ error: "Invalid date. Use YYYY-MM-DD." });
+
+  const recs = getDayRecords(date).map(r => ({
+    timeStamp:    r.timeStamp,
+    time_et:      r.etTime,
+    patrons:      r.patrons,
+    countByFloor: r.countByFloor,
+  }));
+
+  res.setHeader("Content-Disposition", `attachment; filename="king_library_${date}.json"`);
+  res.json(recs);
 });
 
 // GET /admin  — main dashboard
@@ -199,8 +338,13 @@ router.get("/", requireToken, (req, res) => {
   Object.keys(doc.months).forEach(mk => { monthLabels[mk] = monthLabel(mk); });
 
   // Pass active range info to the template for the header badge
-  const rangeStart = DASHBOARD_START_MONTH || Object.keys(doc.months).sort()[0];
-  const rangeEnd   = DASHBOARD_END_MONTH   || Object.keys(doc.months).sort().at(-1);
+  const sortedKeys = Object.keys(doc.months).sort();
+  const rangeStart = DASHBOARD_START_MONTH || sortedKeys[0];
+  const rangeEnd   = DASHBOARD_END_MONTH   || sortedKeys.at(-1);
+
+  // Date-picker bounds for the day-detail section (constrained to displayed range)
+  const dayMin = `${rangeStart}-01`;
+  const dayMax = lastDayOfMonth(rangeEnd);
 
   res.render("admin", {
     title:           "Analytics Dashboard",
@@ -221,6 +365,10 @@ router.get("/", requireToken, (req, res) => {
     rangeStart:      monthLabel(rangeStart),
     rangeEnd:        monthLabel(rangeEnd),
     rangeFiltered:   !!(DASHBOARD_START_MONTH || DASHBOARD_END_MONTH),
+    // Day-detail date picker bounds + default selection
+    dayMin,
+    dayMax,
+    dayDefault:      dayMax,
   });
 });
 
