@@ -165,7 +165,8 @@
       flex-wrap: wrap;
     }
     .month-select-row label { font-size: .83em; font-weight: 600; color: #555; }
-    .month-select-row select {
+    .month-select-row select,
+    .month-select-row input[type="date"] {
       padding: 5px 10px;
       border: 1px solid #ced4da;
       border-radius: 5px;
@@ -173,6 +174,34 @@
       color: #333;
       cursor: pointer;
     }
+
+    /* ---- buttons ---- */
+    .btn {
+      display: inline-block;
+      padding: 6px 14px;
+      border: 1px solid transparent;
+      border-radius: 5px;
+      font-size: .85em;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background .12s, opacity .12s;
+    }
+    .btn-primary { background: #0066cc; color: #fff; }
+    .btn-primary:hover { background: #004fa3; }
+    .btn-outline {
+      background: #fff; color: #0066cc; border-color: #0066cc;
+    }
+    .btn-outline:hover { background: #e9f2ff; }
+    .btn[aria-disabled="true"] { opacity: .45; pointer-events: none; }
+
+    .day-stats {
+      display: flex; gap: 22px; flex-wrap: wrap;
+      margin: 4px 0 16px; font-size: .9em;
+    }
+    .day-stats .ds-item { color: #555; }
+    .day-stats .ds-item b { color: #212529; font-size: 1.15em; }
+    .day-msg { font-size: .88em; color: #6c757d; margin: 8px 0; }
 
     /* ---- table ---- */
     .data-table {
@@ -241,6 +270,9 @@
 
   <!-- side nav -->
   <nav class="sidenav">
+    <div class="sidenav-section">Daily</div>
+    <a href="#day-detail">Day Detail</a>
+
     <div class="sidenav-section">Overview</div>
     <a href="#overview" class="active">Key Stats</a>
     <a href="#insights">Insights</a>
@@ -263,6 +295,36 @@
 
   <!-- main content -->
   <main class="main">
+
+    <!-- ===== DAY DETAIL ===== -->
+    <div class="section-label" id="day-detail">Day Detail</div>
+    <div class="chart-card">
+      <h2>Single-Day Breakdown</h2>
+      <div class="month-select-row">
+        <label for="day-picker">Pick a date:</label>
+        <input type="date" id="day-picker"
+               min="<%= dayMin %>" max="<%= dayMax %>" value="<%= dayDefault %>">
+        <button type="button" id="day-load" class="btn btn-primary">Load</button>
+        <a id="day-csv" class="btn btn-outline" href="#">Download CSV</a>
+        <a id="day-json" class="btn btn-outline" href="#">Download JSON</a>
+      </div>
+
+      <div id="day-stats" class="day-stats"></div>
+      <div id="day-msg" class="day-msg"></div>
+      <div id="chart-day" style="width:100%;height:380px;"></div>
+
+      <div id="day-table-wrap" style="margin-top:16px;overflow-x:auto;display:none;">
+        <table class="data-table" id="day-table">
+          <thead>
+            <tr>
+              <th>Time (ET)</th><th>Total</th>
+              <th>Ground</th><th>First</th><th>Second</th><th>Third</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
 
     <!-- ===== OVERVIEW CARDS ===== -->
     <div class="section-label" id="overview">Overview</div>
@@ -456,6 +518,101 @@ function monthLabel(mk) {
 
 const sortedMonthKeys = Object.keys(MS).sort();
 const sortedMonthLabels = sortedMonthKeys.map(monthLabel);
+
+// =========================================================
+// 0. DAY DETAIL — pick a date, view/download one day's data
+// =========================================================
+(function() {
+  const picker    = document.getElementById('day-picker');
+  const loadBtn   = document.getElementById('day-load');
+  const csvLink   = document.getElementById('day-csv');
+  const jsonLink  = document.getElementById('day-json');
+  const statsEl   = document.getElementById('day-stats');
+  const msgEl     = document.getElementById('day-msg');
+  const tableWrap = document.getElementById('day-table-wrap');
+  const tableBody = document.querySelector('#day-table tbody');
+
+  const FLOORS = [
+    { key: 'ground', name: 'Ground', color: PRIMARY },
+    { key: 'first',  name: 'First',  color: TEAL    },
+    { key: 'second', name: 'Second', color: GOLD    },
+    { key: 'third',  name: 'Third',  color: ACCENT  },
+  ];
+
+  function setDownloadLinks(date) {
+    csvLink.href  = 'day.csv?date='  + encodeURIComponent(date);
+    jsonLink.href = 'day.json?date=' + encodeURIComponent(date);
+  }
+
+  function disableDownloads(off) {
+    [csvLink, jsonLink].forEach(a => a.setAttribute('aria-disabled', off ? 'true' : 'false'));
+  }
+
+  async function loadDay(date) {
+    if (!date) return;
+    setDownloadLinks(date);
+    msgEl.textContent = 'Loading ' + date + ' …';
+
+    let payload;
+    try {
+      const resp = await fetch('day?date=' + encodeURIComponent(date));
+      payload = await resp.json();
+      if (!resp.ok) throw new Error(payload.error || 'Request failed');
+    } catch (e) {
+      msgEl.textContent = 'Error: ' + e.message;
+      return;
+    }
+
+    const { stats, records } = payload;
+
+    if (!records.length) {
+      statsEl.innerHTML = '';
+      tableWrap.style.display = 'none';
+      Plotly.purge('chart-day');
+      disableDownloads(true);
+      msgEl.textContent = 'No data found for ' + date + '.';
+      return;
+    }
+
+    msgEl.textContent = '';
+    disableDownloads(false);
+
+    statsEl.innerHTML =
+      `<span class="ds-item">Readings <b>${stats.count}</b></span>` +
+      `<span class="ds-item">Avg <b>${stats.avg}</b></span>` +
+      `<span class="ds-item">Peak <b>${stats.peak}</b> @ ${stats.peakTime}</span>` +
+      `<span class="ds-item">Low <b>${stats.low}</b> @ ${stats.lowTime}</span>`;
+
+    const x = records.map(r => r.time);
+    const traces = [
+      { name: 'Total', x, y: records.map(r => r.patrons),
+        type: 'scatter', mode: 'lines', line: { color: GREY, width: 3 } },
+    ];
+    FLOORS.forEach(f => traces.push({
+      name: f.name, x, y: records.map(r => r[f.key]),
+      type: 'scatter', mode: 'lines', line: { color: f.color, width: 1.5 },
+    }));
+
+    Plotly.newPlot('chart-day', traces, {
+      ...LAYOUT_BASE,
+      xaxis:  { title: 'Time (ET)' },
+      yaxis:  { title: 'Patrons' },
+      legend: { orientation: 'h', y: 1.08, x: 1, xanchor: 'right' },
+    }, PLOTLY_CFG);
+
+    tableBody.innerHTML = records.map(r =>
+      `<tr><td>${r.time}</td><td>${r.patrons}</td>` +
+      `<td>${r.ground}</td><td>${r.first}</td><td>${r.second}</td><td>${r.third}</td></tr>`
+    ).join('');
+    tableWrap.style.display = '';
+  }
+
+  loadBtn.addEventListener('click', () => loadDay(picker.value));
+  picker.addEventListener('change', () => loadDay(picker.value));
+
+  // Initial load for the default date
+  loadDay(picker.value);
+})();
 
 // =========================================================
 // 1. MONTHLY BARS — avg vs peak
