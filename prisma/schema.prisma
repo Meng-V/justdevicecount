@@ -10,6 +10,7 @@ generator client {
   provider = "prisma-client-js"
 }
 
+// King Library — full per-floor detail (4 floors + device position maps)
 model DeviceData {
   id                String   @id @default(cuid())
   timeStamp         DateTime @default(now())
@@ -22,6 +23,20 @@ model DeviceData {
   countByFloor      Int[]    // Array of counts [ground, first, second, third]
   
   @@map("device_data")
+  @@index([timeStamp])
+  @@index([patrons])
+}
+
+// Recreation Center — lightweight count only (2 floors).
+// patrons is the RAW deduplicated device count; the staff/baseline offset
+// (config: rec.staffOffset) is applied at read time, not stored here.
+model RecData {
+  id           String   @id @default(cuid())
+  timeStamp    DateTime @default(now())
+  patrons      Int      // Raw unique device count across both floors
+  countByFloor Int[]    // Per-floor counts [ground, first]
+
+  @@map("rec_data")
   @@index([timeStamp])
   @@index([patrons])
 }

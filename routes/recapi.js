@@ -1,5 +1,6 @@
 // RecAPI — returns live recreation-center patron count.
-// The count is kept in memory only (not persisted to the database).
+// The live count is served from an in-memory cache; the raw counts are also
+// persisted every collection cycle to the rec_data table (see app_core.js).
 // An offset of 15 (Wi-Fi baseline / staff devices) is subtracted, configured
 // in config/default.json under rec.staffOffset.
 
@@ -23,8 +24,9 @@ router.get("/", (req, res) => {
     res.json({
       success: true,
       data: {
-        timeStamp: data.timeStamp,
-        patrons:   adjustedPatrons,
+        timeStamp:    data.timeStamp,
+        patrons:      adjustedPatrons,
+        countByFloor: data.countByFloor ?? [0, 0],  // [ground, first], raw (no offset)
       },
       metadata: {
         cached:          true,
@@ -32,7 +34,7 @@ router.get("/", (req, res) => {
         source:          "Recreation Center Memory Cache",
         refreshInterval: "15 minutes",
         staffOffset:     STAFF_OFFSET,
-        note:            "This data is not stored in the database",
+        note:            "Live count served from memory; raw counts are also persisted to the rec_data table",
       },
     });
   } catch (error) {

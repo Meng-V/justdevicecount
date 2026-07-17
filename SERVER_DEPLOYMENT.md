@@ -48,10 +48,20 @@ npm install --production
 
 ### 3. Update database schema (only if prisma/schema.prisma changed)
 
+Use the **local** Prisma binary, NOT `npx prisma` — `npx` can silently resolve a
+newer major version (e.g. Prisma 7) and break the build:
+
 ```bash
-npx prisma generate
-npx prisma db push
+./node_modules/.bin/prisma generate
+./node_modules/.bin/prisma db push
 ```
+
+`db push` is **additive** for new models — it creates the `rec_data` table
+without touching the existing `device_data` table or its rows.
+
+> This applies to the deploy that introduces Recreation-Center persistence
+> (the `RecData` model / `rec_data` table). Until `db push` runs, the app logs
+> `saveRecToDatabase error` each cycle but King Library collection is unaffected.
 
 ### 4. Restart the service
 

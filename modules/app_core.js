@@ -169,9 +169,52 @@ async function rec_start() {
   const allRec = new Set([...groundSet.devices, ...firstSet.devices]);
 
   return {
-    timeStamp: new Date(),
-    patrons:   allRec.size,
+    timeStamp:    new Date(),
+    patrons:      allRec.size,   // deduped total (a device on both floors counts once)
+    countByFloor: [groundSet.devices.size, firstSet.devices.size],
   };
+}
+
+// ---------------------------------------------------------------------------
+// Save collected Recreation Center data to PostgreSQL (rec_data table).
+// Mirrors saveToDatabase(): 60-second dedup guard + silent-hours skip.
+// Stores the RAW patron count; the staff offset is applied at read time.
+// ---------------------------------------------------------------------------
+async function saveRecToDatabase({ patrons, countByFloor }) {
+  try {
+    const now = new Date();
+    const recDocument = { timeStamp: now, patrons, countByFloor };
+
+    const last = await prisma.recData.findFirst({
+      orderBy: { timeStamp: "desc" },
+      select:  { timeStamp: true },
+    });
+
+    if (!last) {
+      await prisma.recData.create({ data: recDocument });
+      console.log(`[${dateTime()}] Saved first Rec record to database (${patrons} patrons)`);
+      return;
+    }
+
+    const timeDiffMs = now.getTime() - last.timeStamp.getTime();
+
+    if (timeDiffMs > 60000) {
+      const currentHour = new Date(
+        new Date().toLocaleString("en-US", { timeZone: APP_TZ })
+      ).getHours();
+
+      if (currentHour < 2 || currentHour > 6) {
+        await prisma.recData.create({ data: recDocument });
+        console.log(`[${dateTime()}] Saved Rec to database (${patrons} patrons)`);
+      } else {
+        console.log(`[${dateTime()}] Skipping Rec DB write during silent hours (${currentHour}:xx)`);
+      }
+    } else {
+      console.log(`[${dateTime()}] Skipping duplicate Rec write (last write was ${Math.round(timeDiffMs / 1000)}s ago)`);
+    }
+  } catch (err) {
+    console.error(`[${dateTime()}] saveRecToDatabase error: ${err.stack}`);
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -293,9 +336,10 @@ class DeviceDataService {
 // Recreation center in-memory cache (not persisted to DB — intentional)
 // ---------------------------------------------------------------------------
 let recDataCache = {
-  timeStamp:   null,
-  patrons:     0,
-  lastUpdated: null,
+  timeStamp:    null,
+  patrons:      0,
+  countByFloor: [0, 0],
+  lastUpdated:  null,
 };
 
 async function rec_start_cached() {
@@ -304,6 +348,9 @@ async function rec_start_cached() {
     ...data,
     lastUpdated: new Date(),
   };
+  // Persist the raw counts to the rec_data table (fire-and-forget within the
+  // collection cycle; errors are caught inside saveRecToDatabase).
+  await saveRecToDatabase(data);
   return recDataCache;
 }
 
@@ -322,6 +369,7 @@ function restart() {
 module.exports = {
   rec_start,
   rec_start_cached,
+  saveRecToDatabase,
   getRecData,
   restart,
   deviceDataService,
