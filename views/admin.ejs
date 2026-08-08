@@ -272,6 +272,7 @@
   <nav class="sidenav">
     <div class="sidenav-section">Daily</div>
     <a href="#day-detail">Day Detail</a>
+    <a href="#rec-detail">Rec Center (15-min)</a>
 
     <div class="sidenav-section">Overview</div>
     <a href="#overview" class="active">Key Stats</a>
@@ -324,6 +325,47 @@
           <tbody></tbody>
         </table>
       </div>
+    </div>
+
+    <!-- ===== REC CENTER (15-MIN) ===== -->
+    <div class="section-label" id="rec-detail">Recreation Center</div>
+    <div class="chart-card">
+      <h2>Recreation Center — 15-Minute Readings</h2>
+      <% if (recAvailable) { %>
+        <div class="month-select-row">
+          <label for="rec-picker">Pick a date:</label>
+          <input type="date" id="rec-picker"
+                 min="<%= recDayMin %>" max="<%= recDayMax %>" value="<%= recDayMax %>">
+          <button type="button" id="rec-load" class="btn btn-primary">Load</button>
+          <a id="rec-csv" class="btn btn-outline" href="#">Download CSV</a>
+          <a id="rec-json" class="btn btn-outline" href="#">Download JSON</a>
+        </div>
+
+        <div id="rec-stats" class="day-stats"></div>
+        <div id="rec-msg" class="day-msg">
+          Data available <%= recDayMin %> → <%= recDayMax %> ·
+          staff/baseline offset of <%= recStaffOffset %> devices applied to the total.
+        </div>
+        <div id="chart-rec" style="width:100%;height:380px;"></div>
+
+        <div id="rec-table-wrap" style="margin-top:16px;overflow-x:auto;display:none;">
+          <table class="data-table" id="rec-table">
+            <thead>
+              <tr>
+                <th>Time (ET)</th><th>Total (adjusted)</th><th>Total (raw)</th>
+                <th>Ground</th><th>First</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      <% } else { %>
+        <div class="day-msg">
+          No Recreation Center summary files yet. Run
+          <code>node scripts/refresh_summaries.js</code> to build them from the
+          <code>rec_data</code> table.
+        </div>
+      <% } %>
     </div>
 
     <!-- ===== OVERVIEW CARDS ===== -->
@@ -612,6 +654,82 @@ const sortedMonthLabels = sortedMonthKeys.map(monthLabel);
 
   // Initial load for the default date
   loadDay(picker.value);
+})();
+
+// =========================================================
+// 0b. REC CENTER — 15-minute readings for a single day
+// =========================================================
+(function() {
+  const picker = document.getElementById('rec-picker');
+  if (!picker) return;   // no rec_summaries data on this server yet
+
+  const loadBtn   = document.getElementById('rec-load');
+  const csvLink   = document.getElementById('rec-csv');
+  const jsonLink  = document.getElementById('rec-json');
+  const statsEl   = document.getElementById('rec-stats');
+  const msgEl     = document.getElementById('rec-msg');
+  const tableWrap = document.getElementById('rec-table-wrap');
+  const tableBody = document.querySelector('#rec-table tbody');
+
+  async function loadRecDay(date) {
+    if (!date) return;
+    csvLink.href  = 'rec/day.csv?date='  + encodeURIComponent(date);
+    jsonLink.href = 'rec/day.json?date=' + encodeURIComponent(date);
+    msgEl.textContent = 'Loading ' + date + ' …';
+
+    let payload;
+    try {
+      const resp = await fetch('rec/day?date=' + encodeURIComponent(date));
+      payload = await resp.json();
+      if (!resp.ok) throw new Error(payload.error || 'Request failed');
+    } catch (e) {
+      msgEl.textContent = 'Error: ' + e.message;
+      return;
+    }
+
+    const { stats, records, staffOffset } = payload;
+
+    if (!records.length) {
+      statsEl.innerHTML = '';
+      tableWrap.style.display = 'none';
+      Plotly.purge('chart-rec');
+      msgEl.textContent = 'No Recreation Center data found for ' + date + '.';
+      return;
+    }
+
+    msgEl.textContent = 'Staff/baseline offset applied to the total: ' + staffOffset + ' devices.';
+
+    statsEl.innerHTML =
+      `<span class="ds-item">Readings <b>${stats.count}</b></span>` +
+      `<span class="ds-item">Avg <b>${stats.avg}</b></span>` +
+      `<span class="ds-item">Peak <b>${stats.peak}</b> @ ${stats.peakTime}</span>` +
+      `<span class="ds-item">Low <b>${stats.low}</b> @ ${stats.lowTime}</span>`;
+
+    const x = records.map(r => r.time);
+    Plotly.newPlot('chart-rec', [
+      { name: 'Total (adjusted)', x, y: records.map(r => r.patrons),
+        type: 'scatter', mode: 'lines', line: { color: GREY, width: 3 } },
+      { name: 'Ground', x, y: records.map(r => r.ground),
+        type: 'scatter', mode: 'lines', line: { color: PRIMARY, width: 1.5 } },
+      { name: 'First',  x, y: records.map(r => r.first),
+        type: 'scatter', mode: 'lines', line: { color: TEAL, width: 1.5 } },
+    ], {
+      ...LAYOUT_BASE,
+      xaxis:  { title: 'Time (ET)' },
+      yaxis:  { title: 'Devices' },
+      legend: { orientation: 'h', y: 1.08, x: 1, xanchor: 'right' },
+    }, PLOTLY_CFG);
+
+    tableBody.innerHTML = records.map(r =>
+      `<tr><td>${r.time}</td><td>${r.patrons}</td><td>${r.raw}</td>` +
+      `<td>${r.ground}</td><td>${r.first}</td></tr>`
+    ).join('');
+    tableWrap.style.display = '';
+  }
+
+  loadBtn.addEventListener('click', () => loadRecDay(picker.value));
+  picker.addEventListener('change', () => loadRecDay(picker.value));
+  loadRecDay(picker.value);
 })();
 
 // =========================================================

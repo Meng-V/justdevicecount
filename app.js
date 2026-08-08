@@ -60,32 +60,62 @@ patronCache.startCacheUpdater();
 deviceDataService.start();
 
 // ---------------------------------------------------------------------------
-// Monthly export-and-purge CRON job
-// Runs at 00:00 on the 1st of every month (Eastern Time).
-// Exports data older than 2 months to stored_data/ and deletes it from the DB.
-// See scripts/export_and_purge.js for full documentation of the date logic.
+// Background maintenance CRON jobs
+//
+//   1. Nightly  (03:15 ET)          — scripts/refresh_summaries.js
+//        Rebuilds stored_data/summaries + rec_summaries from the database and
+//        regenerates analysis/big_summary.json, so /crowdindex/admin always
+//        shows the most recent months instead of the last hand-built export.
+//
+//   2. Monthly  (00:00 on the 1st)  — refresh_summaries.js then export_and_purge.js
+//        The refresh MUST run first: export_and_purge deletes rows older than
+//        two months and the summary files are the only copy the dashboard reads.
+//
+// Each script is forked into its own process so a failure can never take the
+// Express server down.
 // ---------------------------------------------------------------------------
-cron.schedule(
-  "0 0 1 * *",
-  () => {
+const { fork } = require("child_process");
+
+function runScript(name, args = []) {
+  return new Promise((resolve) => {
     console.log(
-      `[${new Date().toLocaleString("en-US", { timeZone: APP_TZ })}]` +
-      " Monthly export-and-purge job triggered"
+      `[${new Date().toLocaleString("en-US", { timeZone: APP_TZ })}] Starting ${name}`
     );
-    // Fork a child process so the CRON job runs in isolation and cannot crash
-    // the main Express server even on unexpected errors.
-    const { fork } = require("child_process");
-    const child = fork(
-      require("path").join(__dirname, "scripts", "export_and_purge.js"),
-      [],
-      { env: { ...process.env } }
-    );
+    const child = fork(path.join(__dirname, "scripts", name), args, {
+      env: { ...process.env },
+    });
     child.on("exit", (code) => {
       console.log(
         `[${new Date().toLocaleString("en-US", { timeZone: APP_TZ })}]` +
-        ` export_and_purge.js exited with code ${code}`
+        ` ${name} exited with code ${code}`
       );
+      resolve(code);
     });
+  });
+}
+
+cron.schedule(
+  "15 3 * * *",
+  () => { runScript("refresh_summaries.js"); },
+  { timezone: APP_TZ }
+);
+
+cron.schedule(
+  "0 0 1 * *",
+  async () => {
+    console.log(
+      `[${new Date().toLocaleString("en-US", { timeZone: APP_TZ })}]` +
+      " Monthly maintenance job triggered"
+    );
+    const code = await runScript("refresh_summaries.js");
+    if (code !== 0) {
+      console.error(
+        "[cron] refresh_summaries.js failed — skipping export_and_purge.js to avoid" +
+        " deleting rows that have not been summarised yet."
+      );
+      return;
+    }
+    await runScript("export_and_purge.js");
   },
   { timezone: APP_TZ }
 );

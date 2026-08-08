@@ -38,27 +38,18 @@ const STORED_DATA_DIR = process.env.STORED_DATA_DIR
   ? path.resolve(process.env.STORED_DATA_DIR)
   : path.resolve(__dirname, "..", "stored_data");
 
-async function run() {
-  const isDryRun = process.argv.includes("--dry-run");
-
-  // Cutoff = first day of the month BEFORE last month (UTC midnight).
-  // Everything strictly before this date is eligible for deletion.
-  const now = new Date();
-  // "Two months ago" = first day of (current_month - 2)
-  const cutoff = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 2, 1));
-
-  console.log(`[export_and_purge] Cutoff date : ${cutoff.toISOString()}`);
-  console.log(`[export_and_purge] Dry run     : ${isDryRun}`);
-
+// Export + purge one table.  `model` is a Prisma delegate (prisma.deviceData /
+// prisma.recData) and `prefix` becomes the output file name prefix.
+async function exportAndPurge(model, prefix, cutoff, now, isDryRun) {
   const where = { timeStamp: { lt: cutoff } };
 
-  const totalCount = await prisma.deviceData.count({ where });
+  const totalCount = await model.count({ where });
   if (totalCount === 0) {
-    console.log("[export_and_purge] No rows eligible for export/purge. Nothing to do.");
+    console.log(`[export_and_purge] ${prefix}: no rows eligible for export/purge.`);
     return;
   }
 
-  console.log(`[export_and_purge] Rows to export: ${totalCount}`);
+  console.log(`[export_and_purge] ${prefix}: rows to export: ${totalCount}`);
 
   // Output directory — use env-configured path (see top of file)
   const outDir = STORED_DATA_DIR;
@@ -68,7 +59,7 @@ async function run() {
   // File name encodes the cutoff date so it is unambiguous.
   const cutoffStamp = cutoff.toISOString().replace(/[:]/g, "-");
   const runStamp    = now.toISOString().replace(/[:]/g, "-");
-  const filename    = `device_data_export_until_${cutoffStamp}_run_${runStamp}.json`;
+  const filename    = `${prefix}_export_until_${cutoffStamp}_run_${runStamp}.json`;
   const outPath     = path.join(outDir, filename);
   const stream      = fs.createWriteStream(outPath, { encoding: "utf8" });
 
@@ -80,7 +71,7 @@ async function run() {
   let exportedCount = 0;
 
   while (true) {
-    const batch = await prisma.deviceData.findMany({
+    const batch = await model.findMany({
       where,
       orderBy: { id: "asc" },
       take:    batchSize,
@@ -105,7 +96,7 @@ async function run() {
     stream.on("error", reject);
   });
 
-  console.log(`[export_and_purge] Exported ${exportedCount} rows → ${outPath}`);
+  console.log(`[export_and_purge] ${prefix}: exported ${exportedCount} rows → ${outPath}`);
 
   if (exportedCount !== totalCount) {
     throw new Error(
@@ -115,18 +106,36 @@ async function run() {
   }
 
   if (isDryRun) {
-    console.log("[export_and_purge] DRY RUN — skipping database delete.");
+    console.log(`[export_and_purge] ${prefix}: DRY RUN — skipping database delete.`);
     return;
   }
 
-  const deleteResult = await prisma.deviceData.deleteMany({ where });
+  const deleteResult = await model.deleteMany({ where });
   if (deleteResult.count !== totalCount) {
     throw new Error(
       `Delete mismatch: removed ${deleteResult.count} rows but expected ${totalCount}.`
     );
   }
 
-  console.log(`[export_and_purge] Deleted ${deleteResult.count} rows from database.`);
+  console.log(`[export_and_purge] ${prefix}: deleted ${deleteResult.count} rows from database.`);
+}
+
+async function run() {
+  const isDryRun = process.argv.includes("--dry-run");
+
+  // Cutoff = first day of the month BEFORE last month (UTC midnight).
+  // Everything strictly before this date is eligible for deletion.
+  const now = new Date();
+  // "Two months ago" = first day of (current_month - 2)
+  const cutoff = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 2, 1));
+
+  console.log(`[export_and_purge] Cutoff date : ${cutoff.toISOString()}`);
+  console.log(`[export_and_purge] Dry run     : ${isDryRun}`);
+
+  // King Library, then Recreation Center.  Both tables follow the same policy;
+  // the 15-minute history stays available through stored_data/*summaries/.
+  await exportAndPurge(prisma.deviceData, "device_data", cutoff, now, isDryRun);
+  await exportAndPurge(prisma.recData,    "rec_data",    cutoff, now, isDryRun);
 }
 
 run()

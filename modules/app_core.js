@@ -9,9 +9,12 @@ const APP_TZ = process.env.TZ || "America/New_York";
 // All Maps/Sets are created locally inside each king_start() call (fixes the
 // module-level race condition — issue 1.2).
 // ---------------------------------------------------------------------------
+// Returns true when the CMX API actually answered for this floor, false when
+// the request failed.  Callers use that to tell "building is empty" apart from
+// "we could not reach CMX" — writing the latter as 0 patrons corrupts history.
 function processFloorData(body, userMap, bounds) {
   // If the CMX API returned null (all retries failed) skip this floor safely.
-  if (!body || !Array.isArray(body)) return;
+  if (!body || !Array.isArray(body)) return false;
 
   for (let i = 0; i < body.length; i++) {
     const device = body[i];
@@ -28,6 +31,8 @@ function processFloorData(body, userMap, bounds) {
       }
     }
   }
+
+  return true;
 }
 
 // ---------------------------------------------------------------------------
@@ -50,26 +55,35 @@ async function king_start() {
   const uniqUserSecond = new Map();
   const uniqUserThird  = new Map();
   const uniqKingAll    = new Set();
+  let anyFloorOk       = false;
 
   await axiosApi.getGroundRequest((body) => {
-    processFloorData(body, uniqUserGround, KING_FLOOR_BOUNDS.ground);
+    if (processFloorData(body, uniqUserGround, KING_FLOOR_BOUNDS.ground)) anyFloorOk = true;
     uniqUserGround.forEach((_, key) => uniqKingAll.add(key));
   });
 
   await axiosApi.getFirstRequest((body) => {
-    processFloorData(body, uniqUserFirst, KING_FLOOR_BOUNDS.first);
+    if (processFloorData(body, uniqUserFirst, KING_FLOOR_BOUNDS.first)) anyFloorOk = true;
     uniqUserFirst.forEach((_, key) => uniqKingAll.add(key));
   });
 
   await axiosApi.getSecondRequest((body) => {
-    processFloorData(body, uniqUserSecond, KING_FLOOR_BOUNDS.second);
+    if (processFloorData(body, uniqUserSecond, KING_FLOOR_BOUNDS.second)) anyFloorOk = true;
     uniqUserSecond.forEach((_, key) => uniqKingAll.add(key));
   });
 
   await axiosApi.getThirdRequest((body) => {
-    processFloorData(body, uniqUserThird, KING_FLOOR_BOUNDS.third);
+    if (processFloorData(body, uniqUserThird, KING_FLOOR_BOUNDS.third)) anyFloorOk = true;
     uniqUserThird.forEach((_, key) => uniqKingAll.add(key));
   });
+
+  if (!anyFloorOk) {
+    console.error(
+      `[${dateTime()}] All King CMX requests failed — skipping DB write ` +
+      "(refusing to store a fake 0-patron reading)"
+    );
+    return;
+  }
 
   await saveToDatabase({ uniqUserGround, uniqUserFirst, uniqUserSecond, uniqUserThird, uniqKingAll });
 }
@@ -143,9 +157,10 @@ const REC_FLOOR_BOUNDS = {
   first:  { minX: 190, maxX: 425, minY: 25,  maxY: 270 },
 };
 
+// Returns true when CMX answered for this floor (see processFloorData above).
 function processRecData(body, recSet) {
   // If the CMX API returned null skip this floor safely.
-  if (!body || !Array.isArray(body)) return;
+  if (!body || !Array.isArray(body)) return false;
 
   for (let i = 0; i < body.length; i++) {
     const device = body[i];
@@ -156,14 +171,21 @@ function processRecData(body, recSet) {
       recSet.devices.add(device.deviceId);
     }
   }
+
+  return true;
 }
 
 async function rec_start() {
   const groundSet = { bounds: REC_FLOOR_BOUNDS.ground, devices: new Set() };
   const firstSet  = { bounds: REC_FLOOR_BOUNDS.first,  devices: new Set() };
 
-  await axiosApi.getRecGroundRequest((body) => processRecData(body, groundSet));
-  await axiosApi.getRecFirstRequest((body)  => processRecData(body, firstSet));
+  let anyFloorOk = false;
+  await axiosApi.getRecGroundRequest((body) => {
+    if (processRecData(body, groundSet)) anyFloorOk = true;
+  });
+  await axiosApi.getRecFirstRequest((body) => {
+    if (processRecData(body, firstSet)) anyFloorOk = true;
+  });
 
   // Merge unique device IDs across both floors
   const allRec = new Set([...groundSet.devices, ...firstSet.devices]);
@@ -172,6 +194,7 @@ async function rec_start() {
     timeStamp:    new Date(),
     patrons:      allRec.size,   // deduped total (a device on both floors counts once)
     countByFloor: [groundSet.devices.size, firstSet.devices.size],
+    ok:           anyFloorOk,    // false = CMX unreachable, do not persist
   };
 }
 
@@ -344,6 +367,16 @@ let recDataCache = {
 
 async function rec_start_cached() {
   const data = await rec_start();
+
+  // CMX unreachable (e.g. expired certificate): keep the last known value and
+  // do NOT persist, otherwise the table fills up with fake 0-patron readings.
+  if (!data.ok) {
+    console.error(
+      `[${dateTime()}] All Rec CMX requests failed — skipping cache update and DB write`
+    );
+    return recDataCache;
+  }
+
   recDataCache = {
     ...data,
     lastUpdated: new Date(),
