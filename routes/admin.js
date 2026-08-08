@@ -20,6 +20,7 @@ const express = require("express");
 const path    = require("path");
 const fs      = require("fs");
 const crypto  = require("crypto");
+const config  = require("config");
 
 const router  = express.Router();
 
@@ -40,6 +41,13 @@ const STORED_DATA_DIR = process.env.STORED_DATA_DIR
   : path.resolve(__dirname, "..", "stored_data");
 
 const SUMMARY_PATH = path.join(STORED_DATA_DIR, "analysis", "big_summary.json");
+
+// Per-building 15-minute summary directories, written by scripts/refresh_summaries.js
+const KING_SUMMARY_DIR = path.join(STORED_DATA_DIR, "summaries");
+const REC_SUMMARY_DIR  = path.join(STORED_DATA_DIR, "rec_summaries");
+
+// Recreation Center staff / baseline offset (same value routes/recapi.js applies)
+const REC_STAFF_OFFSET = config.has("rec.staffOffset") ? config.get("rec.staffOffset") : 15;
 
 // ---------------------------------------------------------------------------
 // Date-range filter (for the presentation)
@@ -178,18 +186,31 @@ function monthLabel(mk) {
 // ---------------------------------------------------------------------------
 
 // Per-month file cache (auto-reloads when the file's mtime changes).
-const monthCache = {};   // "YYYY-MM" → { mtime, data }
+const monthCache = {};   // "<dir>|YYYY-MM" → { mtime, data }
 
-function loadMonthSummary(mk) {
-  const p = path.join(STORED_DATA_DIR, "summaries", `${mk}_summary.json`);
+function loadMonthSummary(mk, dir = KING_SUMMARY_DIR) {
+  const p   = path.join(dir, `${mk}_summary.json`);
+  const key = `${dir}|${mk}`;
   try {
     const stat = fs.statSync(p);
-    if (!monthCache[mk] || monthCache[mk].mtime !== stat.mtimeMs) {
-      monthCache[mk] = { mtime: stat.mtimeMs, data: JSON.parse(fs.readFileSync(p, "utf8")) };
+    if (!monthCache[key] || monthCache[key].mtime !== stat.mtimeMs) {
+      monthCache[key] = { mtime: stat.mtimeMs, data: JSON.parse(fs.readFileSync(p, "utf8")) };
     }
-    return monthCache[mk].data;
+    return monthCache[key].data;
   } catch {
     return null;
+  }
+}
+
+// Sorted list of "YYYY-MM" keys that have a summary file in `dir`.
+function availableMonths(dir) {
+  try {
+    return fs.readdirSync(dir)
+      .filter(f => /^\d{4}-\d{2}_summary\.json$/.test(f))
+      .map(f => f.slice(0, 7))
+      .sort();
+  } catch {
+    return [];
   }
 }
 
@@ -207,7 +228,7 @@ function toEtParts(iso) {
 // All 15-min records whose ET calendar day equals `dateStr` (YYYY-MM-DD).
 // ET is behind UTC, so an ET evening can land in the *next* UTC month file —
 // we therefore load the date's month and the following day's month.
-function getDayRecords(dateStr) {
+function getDayRecords(dateStr, dir = KING_SUMMARY_DIR) {
   const mks = new Set([dateStr.slice(0, 7)]);
   const next = new Date(dateStr + "T12:00:00Z");
   next.setUTCDate(next.getUTCDate() + 1);
@@ -215,7 +236,7 @@ function getDayRecords(dateStr) {
 
   let recs = [];
   for (const mk of mks) {
-    const data = loadMonthSummary(mk);
+    const data = loadMonthSummary(mk, dir);
     if (Array.isArray(data)) recs = recs.concat(data);
   }
 
@@ -322,6 +343,108 @@ router.get("/day.json", requireToken, (req, res) => {
   res.json(recs);
 });
 
+// ---------------------------------------------------------------------------
+// Recreation Center — 15-minute day view
+// Data source: STORED_DATA_DIR/rec_summaries/YYYY-MM_summary.json
+//   { timeStamp(UTC), patrons (RAW), countByFloor: [ground, first] }
+// `patrons` is the raw device count; `adjusted` applies the staff/baseline
+// offset the same way routes/recapi.js does for the live widget.
+// ---------------------------------------------------------------------------
+function recAdjusted(raw) {
+  return Math.max(0, raw - REC_STAFF_OFFSET);
+}
+
+function getRecDay(date) {
+  const recs = getDayRecords(date, REC_SUMMARY_DIR);
+  return recs.map(r => ({
+    time:      r.etTime,
+    timeStamp: r.timeStamp,
+    raw:       r.patrons,
+    patrons:   recAdjusted(r.patrons),
+    ground:    r.countByFloor?.[0] ?? 0,
+    first:     r.countByFloor?.[1] ?? 0,
+  }));
+}
+
+// Date-picker bounds for the Rec tab: first/last ET day that actually has data.
+function recViewData() {
+  const months = availableMonths(REC_SUMMARY_DIR);
+  if (!months.length) {
+    return { recAvailable: false, recStaffOffset: REC_STAFF_OFFSET };
+  }
+
+  const firstRecs = loadMonthSummary(months[0], REC_SUMMARY_DIR) || [];
+  const lastRecs  = loadMonthSummary(months.at(-1), REC_SUMMARY_DIR) || [];
+  if (!firstRecs.length || !lastRecs.length) {
+    return { recAvailable: false, recStaffOffset: REC_STAFF_OFFSET };
+  }
+
+  return {
+    recAvailable:   true,
+    recStaffOffset: REC_STAFF_OFFSET,
+    recDayMin:      toEtParts(firstRecs[0].timeStamp).etDate,
+    recDayMax:      toEtParts(lastRecs[lastRecs.length - 1].timeStamp).etDate,
+    recMonths:      months,
+  };
+}
+
+// GET /admin/rec/day — one day's 15-min Rec records + summary stats
+router.get("/rec/day", requireToken, (req, res) => {
+  const date = parseDateParam(req);
+  if (!date) return res.status(400).json({ error: "Invalid date. Use YYYY-MM-DD." });
+
+  const records = getRecDay(date);
+
+  let stats = { count: 0 };
+  if (records.length) {
+    const p    = records.map(r => r.patrons);
+    const peak = Math.max(...p);
+    const low  = Math.min(...p);
+    const sum  = p.reduce((a, b) => a + b, 0);
+    stats = {
+      count:    records.length,
+      avg:      Math.round(sum / records.length),
+      peak,
+      peakTime: records[p.indexOf(peak)].time,
+      low,
+      lowTime:  records[p.indexOf(low)].time,
+    };
+  }
+
+  res.json({ date, tz: TZ, staffOffset: REC_STAFF_OFFSET, stats, records });
+});
+
+// GET /admin/rec/day.csv — downloadable CSV
+router.get("/rec/day.csv", requireToken, (req, res) => {
+  const date = parseDateParam(req);
+  if (!date) return res.status(400).send("Invalid date. Use YYYY-MM-DD.");
+
+  const records = getRecDay(date);
+  const header = "timeStamp_utc,time_et,patrons_raw,patrons_adjusted,ground,first\n";
+  const body = records.map(r =>
+    [r.timeStamp, r.time, r.raw, r.patrons, r.ground, r.first].join(",")
+  ).join("\n");
+
+  res.setHeader("Content-Type", "text/csv; charset=utf-8");
+  res.setHeader("Content-Disposition", `attachment; filename="rec_center_${date}.csv"`);
+  res.send(header + body + (body ? "\n" : ""));
+});
+
+// GET /admin/rec/day.json — downloadable JSON
+router.get("/rec/day.json", requireToken, (req, res) => {
+  const date = parseDateParam(req);
+  if (!date) return res.status(400).json({ error: "Invalid date. Use YYYY-MM-DD." });
+
+  res.setHeader("Content-Disposition", `attachment; filename="rec_center_${date}.json"`);
+  res.json(getRecDay(date).map(r => ({
+    timeStamp:        r.timeStamp,
+    time_et:          r.time,
+    patrons_raw:      r.raw,
+    patrons_adjusted: r.patrons,
+    countByFloor:     [r.ground, r.first],
+  })));
+});
+
 // GET /admin  — main dashboard
 router.get("/", requireToken, (req, res) => {
   const raw = loadSummary();
@@ -369,6 +492,9 @@ router.get("/", requireToken, (req, res) => {
     dayMin,
     dayMax,
     dayDefault:      dayMax,
+    // Recreation Center tab — bounds come from the rec_summaries files, not the
+    // King Library month filter (rec collection started later).
+    ...recViewData(),
   });
 });
 
