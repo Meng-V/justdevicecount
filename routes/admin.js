@@ -246,6 +246,68 @@ function getDayRecords(dateStr, dir = KING_SUMMARY_DIR) {
     .sort((a, b) => a.timeStamp.localeCompare(b.timeStamp));
 }
 
+// ---------------------------------------------------------------------------
+// Date-range export support
+// Loads every month file the range touches once, then filters by ET date —
+// much cheaper than calling getDayRecords() for each day of a long range.
+// ---------------------------------------------------------------------------
+
+// Every "YYYY-MM" between two dates, plus the month after `to` because an ET
+// evening is stored in the next UTC month (same reason as getDayRecords).
+function monthsBetween(from, to) {
+  const out = [];
+  const cur = new Date(from + "T12:00:00Z");
+  const end = new Date(to + "T12:00:00Z");
+  end.setUTCMonth(end.getUTCMonth() + 1);
+
+  cur.setUTCDate(1);
+  while (cur <= end) {
+    out.push(cur.toISOString().slice(0, 7));
+    cur.setUTCMonth(cur.getUTCMonth() + 1);
+  }
+  return out;
+}
+
+function getRangeRecords(from, to, dir = KING_SUMMARY_DIR) {
+  let recs = [];
+  for (const mk of monthsBetween(from, to)) {
+    const data = loadMonthSummary(mk, dir);
+    if (Array.isArray(data)) recs = recs.concat(data);
+  }
+
+  const seen = new Set();
+  return recs
+    .map(r => ({ ...r, ...toEtParts(r.timeStamp) }))
+    .filter(r => r.etDate >= from && r.etDate <= to)
+    .filter(r => (seen.has(r.timeStamp) ? false : seen.add(r.timeStamp)))
+    .sort((a, b) => a.timeStamp.localeCompare(b.timeStamp));
+}
+
+// Validate ?from=&to= (YYYY-MM-DD, inclusive).  Returns { from, to } or an
+// { error } describing what is wrong.
+const MAX_RANGE_DAYS = 800;
+
+function parseRangeParams(req) {
+  const from = String(req.query.from || "");
+  const to   = String(req.query.to   || "");
+  const ok   = (s) => /^\d{4}-\d{2}-\d{2}$/.test(s);
+
+  if (!ok(from) || !ok(to)) {
+    return { error: "Invalid range. Use from=YYYY-MM-DD&to=YYYY-MM-DD." };
+  }
+  if (from > to) {
+    return { error: "The start date must not be after the end date." };
+  }
+
+  const days =
+    (new Date(to + "T00:00:00Z") - new Date(from + "T00:00:00Z")) / 86400000 + 1;
+  if (days > MAX_RANGE_DAYS) {
+    return { error: `Range too large (${days} days, maximum ${MAX_RANGE_DAYS}).` };
+  }
+
+  return { from, to };
+}
+
 // "YYYY-MM" → "YYYY-MM-DD" of the last day of that month.
 function lastDayOfMonth(mk) {
   const [y, m] = mk.split("-").map(Number);
@@ -341,6 +403,56 @@ router.get("/day.json", requireToken, (req, res) => {
 
   res.setHeader("Content-Disposition", `attachment; filename="king_library_${date}.json"`);
   res.json(recs);
+});
+
+// GET /admin/range.csv — every 15-min record between two dates (King Library)
+router.get("/range.csv", requireToken, (req, res) => {
+  const { from, to, error } = parseRangeParams(req);
+  if (error) return res.status(400).send(error);
+
+  const recs = getRangeRecords(from, to);
+  const header = "timeStamp_utc,date_et,time_et,patrons,ground,first,second,third\n";
+  const body = recs.map(r => [
+    r.timeStamp, r.etDate, r.etTime, r.patrons,
+    r.countByFloor[0] ?? 0, r.countByFloor[1] ?? 0,
+    r.countByFloor[2] ?? 0, r.countByFloor[3] ?? 0,
+  ].join(",")).join("\n");
+
+  res.setHeader("Content-Type", "text/csv; charset=utf-8");
+  res.setHeader("Content-Disposition",
+    `attachment; filename="king_library_${from}_to_${to}.csv"`);
+  res.send(header + body + (body ? "\n" : ""));
+});
+
+// GET /admin/range.json — same range as a downloadable JSON file
+router.get("/range.json", requireToken, (req, res) => {
+  const { from, to, error } = parseRangeParams(req);
+  if (error) return res.status(400).json({ error });
+
+  const recs = getRangeRecords(from, to).map(r => ({
+    timeStamp:    r.timeStamp,
+    date_et:      r.etDate,
+    time_et:      r.etTime,
+    patrons:      r.patrons,
+    countByFloor: r.countByFloor,
+  }));
+
+  res.setHeader("Content-Disposition",
+    `attachment; filename="king_library_${from}_to_${to}.json"`);
+  res.json(recs);
+});
+
+// GET /admin/range/info — record count for a range, so the UI can preview it
+router.get("/range/info", requireToken, (req, res) => {
+  const { from, to, error } = parseRangeParams(req);
+  if (error) return res.status(400).json({ error });
+
+  const recs = getRangeRecords(from, to);
+  res.json({
+    from, to,
+    count: recs.length,
+    days:  new Set(recs.map(r => r.etDate)).size,
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -445,6 +557,58 @@ router.get("/rec/day.json", requireToken, (req, res) => {
   })));
 });
 
+// GET /admin/rec/range.csv — every 15-min Rec record between two dates
+router.get("/rec/range.csv", requireToken, (req, res) => {
+  const { from, to, error } = parseRangeParams(req);
+  if (error) return res.status(400).send(error);
+
+  const recs = getRangeRecords(from, to, REC_SUMMARY_DIR);
+  const header =
+    "timeStamp_utc,date_et,time_et,patrons_raw,patrons_adjusted,ground,first\n";
+  const body = recs.map(r => [
+    r.timeStamp, r.etDate, r.etTime,
+    r.patrons, recAdjusted(r.patrons),
+    r.countByFloor[0] ?? 0, r.countByFloor[1] ?? 0,
+  ].join(",")).join("\n");
+
+  res.setHeader("Content-Type", "text/csv; charset=utf-8");
+  res.setHeader("Content-Disposition",
+    `attachment; filename="rec_center_${from}_to_${to}.csv"`);
+  res.send(header + body + (body ? "\n" : ""));
+});
+
+// GET /admin/rec/range.json — same range as a downloadable JSON file
+router.get("/rec/range.json", requireToken, (req, res) => {
+  const { from, to, error } = parseRangeParams(req);
+  if (error) return res.status(400).json({ error });
+
+  const recs = getRangeRecords(from, to, REC_SUMMARY_DIR).map(r => ({
+    timeStamp:        r.timeStamp,
+    date_et:          r.etDate,
+    time_et:          r.etTime,
+    patrons_raw:      r.patrons,
+    patrons_adjusted: recAdjusted(r.patrons),
+    countByFloor:     [r.countByFloor[0] ?? 0, r.countByFloor[1] ?? 0],
+  }));
+
+  res.setHeader("Content-Disposition",
+    `attachment; filename="rec_center_${from}_to_${to}.json"`);
+  res.json(recs);
+});
+
+// GET /admin/rec/range/info — record count for a range, for the UI preview
+router.get("/rec/range/info", requireToken, (req, res) => {
+  const { from, to, error } = parseRangeParams(req);
+  if (error) return res.status(400).json({ error });
+
+  const recs = getRangeRecords(from, to, REC_SUMMARY_DIR);
+  res.json({
+    from, to,
+    count: recs.length,
+    days:  new Set(recs.map(r => r.etDate)).size,
+  });
+});
+
 // GET /admin  — main dashboard
 router.get("/", requireToken, (req, res) => {
   const raw = loadSummary();
@@ -492,6 +656,10 @@ router.get("/", requireToken, (req, res) => {
     dayMin,
     dayMax,
     dayDefault:      dayMax,
+    // Export bounds cover every month that has a summary file, even when
+    // DASHBOARD_*_MONTH freezes the charts to a narrower window.
+    exportMin:       `${availableMonths(KING_SUMMARY_DIR)[0] || rangeStart}-01`,
+    exportMax:       lastDayOfMonth(availableMonths(KING_SUMMARY_DIR).at(-1) || rangeEnd),
     // Recreation Center tab — bounds come from the rec_summaries files, not the
     // King Library month filter (rec collection started later).
     ...recViewData(),

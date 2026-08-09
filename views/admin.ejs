@@ -203,6 +203,24 @@
     .day-stats .ds-item b { color: #212529; font-size: 1.15em; }
     .day-msg { font-size: .88em; color: #6c757d; margin: 8px 0; }
 
+    /* Date-range export block */
+    .export-row {
+      display: flex; flex-wrap: wrap; align-items: center; gap: 10px;
+      margin-top: 14px; padding-top: 14px; border-top: 1px dashed #d9e2ec;
+    }
+    .export-row label { font-size: .83em; font-weight: 600; color: #555; }
+    .export-row input[type="date"] {
+      padding: 5px 8px; border: 1px solid #ccd4dc; border-radius: 5px;
+      font-size: .88em; font-family: inherit;
+    }
+    .export-title {
+      font-size: .83em; font-weight: 700; color: #444;
+      text-transform: uppercase; letter-spacing: .04em; width: 100%;
+    }
+    .export-count { font-size: .85em; color: #6c757d; }
+    .export-count.warn { color: #b8860b; }
+    .export-count.err  { color: #c0392b; }
+
     /* ---- table ---- */
     .data-table {
       width: 100%;
@@ -325,6 +343,21 @@
           <tbody></tbody>
         </table>
       </div>
+
+      <div class="export-row" id="king-export"
+           data-base="range" data-name="king_library"
+           data-min="<%= exportMin %>" data-max="<%= exportMax %>">
+        <div class="export-title">Export a date range</div>
+        <label>From</label>
+        <input type="date" class="xp-from"
+               min="<%= exportMin %>" max="<%= exportMax %>" value="<%= exportMin %>">
+        <label>To</label>
+        <input type="date" class="xp-to"
+               min="<%= exportMin %>" max="<%= exportMax %>" value="<%= exportMax %>">
+        <a class="btn btn-primary xp-csv" href="#">Export CSV</a>
+        <a class="btn btn-outline xp-json" href="#">Export JSON</a>
+        <span class="export-count"></span>
+      </div>
     </div>
 
     <!-- ===== REC CENTER (15-MIN) ===== -->
@@ -358,6 +391,21 @@
             </thead>
             <tbody></tbody>
           </table>
+        </div>
+
+        <div class="export-row" id="rec-export"
+             data-base="rec/range" data-name="rec_center"
+             data-min="<%= recDayMin %>" data-max="<%= recDayMax %>">
+          <div class="export-title">Export a date range</div>
+          <label>From</label>
+          <input type="date" class="xp-from"
+                 min="<%= recDayMin %>" max="<%= recDayMax %>" value="<%= recDayMin %>">
+          <label>To</label>
+          <input type="date" class="xp-to"
+                 min="<%= recDayMin %>" max="<%= recDayMax %>" value="<%= recDayMax %>">
+          <a class="btn btn-primary xp-csv" href="#">Export CSV</a>
+          <a class="btn btn-outline xp-json" href="#">Export JSON</a>
+          <span class="export-count"></span>
         </div>
       <% } else { %>
         <div class="day-msg">
@@ -730,6 +778,73 @@ const sortedMonthLabels = sortedMonthKeys.map(monthLabel);
   loadBtn.addEventListener('click', () => loadRecDay(picker.value));
   picker.addEventListener('change', () => loadRecDay(picker.value));
   loadRecDay(picker.value);
+})();
+
+// =========================================================
+// 0c. DATE-RANGE EXPORT — drives both the King and the Rec block
+// =========================================================
+(function() {
+  document.querySelectorAll('.export-row').forEach(function(row) {
+    const base     = row.dataset.base;          // 'range' or 'rec/range'
+    const fromEl   = row.querySelector('.xp-from');
+    const toEl     = row.querySelector('.xp-to');
+    const csvLink  = row.querySelector('.xp-csv');
+    const jsonLink = row.querySelector('.xp-json');
+    const countEl  = row.querySelector('.export-count');
+
+    let debounce;
+
+    function setEnabled(on) {
+      [csvLink, jsonLink].forEach(a => a.setAttribute('aria-disabled', on ? 'false' : 'true'));
+    }
+
+    async function refresh() {
+      const from = fromEl.value, to = toEl.value;
+      if (!from || !to) return;
+
+      if (from > to) {
+        countEl.textContent = 'Start date is after the end date.';
+        countEl.className   = 'export-count err';
+        setEnabled(false);
+        return;
+      }
+
+      const qs = 'from=' + encodeURIComponent(from) + '&to=' + encodeURIComponent(to);
+      csvLink.href  = base + '.csv?'  + qs;
+      jsonLink.href = base + '.json?' + qs;
+
+      countEl.textContent = 'Counting…';
+      countEl.className   = 'export-count';
+
+      try {
+        const resp = await fetch(base + '/info?' + qs);
+        const info = await resp.json();
+        if (!resp.ok) throw new Error(info.error || 'Request failed');
+
+        if (info.count === 0) {
+          countEl.textContent = 'No records in this range.';
+          countEl.className   = 'export-count warn';
+          setEnabled(false);
+        } else {
+          countEl.textContent =
+            info.count.toLocaleString() + ' records across ' + info.days + ' day(s)';
+          countEl.className = 'export-count';
+          setEnabled(true);
+        }
+      } catch (e) {
+        countEl.textContent = e.message;
+        countEl.className   = 'export-count err';
+        setEnabled(false);
+      }
+    }
+
+    [fromEl, toEl].forEach(el => el.addEventListener('change', function() {
+      clearTimeout(debounce);
+      debounce = setTimeout(refresh, 150);
+    }));
+
+    refresh();
+  });
 })();
 
 // =========================================================
