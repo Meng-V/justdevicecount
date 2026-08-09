@@ -187,3 +187,4 @@ certs/
 
 .DS_Store
 /stored_data/raw_data/
+/rec_model
