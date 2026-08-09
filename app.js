@@ -70,6 +70,13 @@ deviceDataService.start();
 //   2. Monthly  (00:00 on the 1st)  — refresh_summaries.js then export_and_purge.js
 //        The refresh MUST run first: export_and_purge deletes rows older than
 //        two months and the summary files are the only copy the dashboard reads.
+//        Two months stay in the database on purpose, so the last ~30 days are
+//        always queryable without hitting the archive.
+//
+//   3. Daily    (07:00 ET)          — scripts/data_health_check.js
+//        E-mails ALERT_EMAIL if collection stopped, stalled, or is returning
+//        nothing but zeros.  Added after a three-week CMX certificate outage
+//        went unnoticed.
 //
 // Each script is forked into its own process so a failure can never take the
 // Express server down.
@@ -97,6 +104,12 @@ function runScript(name, args = []) {
 cron.schedule(
   "15 3 * * *",
   () => { runScript("refresh_summaries.js"); },
+  { timezone: APP_TZ }
+);
+
+cron.schedule(
+  "0 7 * * *",
+  () => { runScript("data_health_check.js"); },
   { timezone: APP_TZ }
 );
 
