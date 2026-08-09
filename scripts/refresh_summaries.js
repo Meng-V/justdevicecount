@@ -24,6 +24,12 @@
  *   node scripts/refresh_summaries.js
  *   node scripts/refresh_summaries.js --include-exports   # also parse export JSON
  *   node scripts/refresh_summaries.js --no-analysis       # skip big_summary.py
+ *   node scripts/refresh_summaries.js --rebuild           # see below
+ *
+ * --rebuild replaces (instead of merges) the summary file of every month that
+ * is still present in the database.  Use it after deleting bad rows, so the
+ * deletion propagates to the dashboard.  Months that no longer exist in the
+ * database are never touched, with or without the flag.
  */
 
 require("dotenv").config();
@@ -43,6 +49,7 @@ const REC_DIR  = path.join(STORED_DATA_DIR, "rec_summaries");
 
 const INCLUDE_EXPORTS = process.argv.includes("--include-exports");
 const SKIP_ANALYSIS   = process.argv.includes("--no-analysis");
+const REBUILD         = process.argv.includes("--rebuild");
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -77,10 +84,14 @@ function readSummaryFile(dir, mk) {
 }
 
 // Merge new records into the file for that month, de-duplicated by timeStamp.
+// With --rebuild the existing file is discarded first, so records that were
+// deleted from the database also disappear from the summary.
 function writeMonth(dir, mk, records) {
   fs.mkdirSync(dir, { recursive: true });
   const byTs = new Map();
-  for (const r of readSummaryFile(dir, mk)) byTs.set(r.timeStamp, r);
+  if (!REBUILD) {
+    for (const r of readSummaryFile(dir, mk)) byTs.set(r.timeStamp, r);
+  }
   for (const r of records) byTs.set(r.timeStamp, r);
 
   const merged = [...byTs.values()].sort((a, b) => a.timeStamp.localeCompare(b.timeStamp));
@@ -168,6 +179,7 @@ function addExportFiles(buckets, pattern, floors, label) {
 async function run() {
   console.log(`[refresh_summaries] Stored data dir : ${STORED_DATA_DIR}`);
   console.log(`[refresh_summaries] Include exports : ${INCLUDE_EXPORTS}`);
+  console.log(`[refresh_summaries] Rebuild months  : ${REBUILD}`);
 
   // --- King Library (4 floors) ---------------------------------------------
   const kingBuckets = await bucketsFromDb(prisma.deviceData, 4, "device_data");
