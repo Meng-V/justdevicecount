@@ -17,9 +17,10 @@ router.get("/", (req, res) => {
   try {
     const data = getRecData();
 
-    // Subtract the baseline offset; Math.abs prevents negative counts from
-    // surfacing when the building is nearly empty.
-    const adjustedPatrons = Math.abs(data.patrons - STAFF_OFFSET);
+    const BASELINE = config.has("rec.baselineDevices") ? config.get("rec.baselineDevices") : 11;
+    const SCALE = config.has("rec.devicesToPatrons") ? config.get("rec.devicesToPatrons") : 1.5; 
+    // hourlyMean = mean of the last four 15-minute patrons_raw samples
+    const adjustedPatrons = Math.max(0, Math.round(SCALE * (hourlyMean - BASELINE)));
 
     res.json({
       success: true,

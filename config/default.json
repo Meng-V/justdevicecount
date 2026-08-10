@@ -15,6 +15,7 @@
     "auth": "Basic YOUR_BASE64_ENCODED_CREDENTIALS_HERE"
   },
   "rec": {
-    "staffOffset": 15
+    "baselineDevices": 11,
+    "devicesToPatrons": 1.5
   }
 }
