@@ -15,7 +15,8 @@
     "auth": "Basic YOUR_BASE64_ENCODED_CREDENTIALS_HERE"
   },
   "rec": {
-    "baselineDevices": 11,
-    "devicesToPatrons": 1.5
+    "baselineDevices": 10,
+    "devicesToPatrons": 1.2,
+    "groundFirstGate": 1.0
   }
 }
