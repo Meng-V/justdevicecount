@@ -7,17 +7,15 @@
 // three knobs live in config/default.json under "rec".
 
 const express = require("express");
-const config  = require("config");
 const router  = express.Router();
 const { getRecData } = require("../modules/app_core");
+const recFormula = require("../modules/recFormula");
 
 router.get("/", (req, res) => {
   try {
     const data = getRecData();
 
-    const BASELINE = config.has("rec.baselineDevices") ? config.get("rec.baselineDevices") : 10;
-    const SCALE = config.has("rec.devicesToPatrons") ? config.get("rec.devicesToPatrons") : 1.2;
-    const GF_GATE  = config.has("rec.groundFirstGate") ? config.get("rec.groundFirstGate") : 1.0;  // 1.0  — ground/first sanity limit
+    const { baseline: BASELINE, scale: SCALE, gate: GF_GATE } = recFormula.params();
 
     // hourlyMean = mean of the last four 15-minute patrons_raw samples,
     // computed by the collector (modules/app_core.js).  Before the first
@@ -25,14 +23,14 @@ router.get("/", (req, res) => {
     // live sample rather than publishing 0.
     const hourlyMean = Number.isFinite(data.hourlyMean) ? data.hourlyMean : data.patrons;
 
-    const adjustedPatrons = Math.max(0, Math.round(SCALE * (hourlyMean - BASELINE)));
+    const adjustedPatrons = recFormula.patronsFromHourlyMean(hourlyMean);
 
     const [ground, first] = data.countByFloor ?? [0, 0];
 
     // Quality gate: on 4 of 5 observed days ground/first is 0.58-0.73; on 2026-08-10 it was
     // 1.71 and the formula over-counted by +9 on average.  Do not silently serve those hours.
-    const groundFirstRatio = ground / Math.max(first, 1);
-    const degraded = groundFirstRatio > GF_GATE;
+    const groundFirstRatio = recFormula.groundFirstRatio(ground, first);
+    const degraded = recFormula.isDegraded(ground, first);
 
     res.json({
       success: true,
