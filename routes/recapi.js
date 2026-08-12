@@ -17,10 +17,17 @@ router.get("/", (req, res) => {
   try {
     const data = getRecData();
 
-    const BASELINE = config.has("rec.baselineDevices") ? config.get("rec.baselineDevices") : 11;
-    const SCALE = config.has("rec.devicesToPatrons") ? config.get("rec.devicesToPatrons") : 1.5; 
+    const BASELINE = config.has("rec.baselineDevices") ? config.get("rec.baselineDevices") : 10;
+    const SCALE = config.has("rec.devicesToPatrons") ? config.get("rec.devicesToPatrons") : 1.2; 
+    const GF_GATE  = config.has("rec.groundFirstGate") ? config.get("rec.groundFirstGate") : 1.0;  // 1.0  — ground/first sanity limit
+    
     // hourlyMean = mean of the last four 15-minute patrons_raw samples
     const adjustedPatrons = Math.max(0, Math.round(SCALE * (hourlyMean - BASELINE)));
+
+    // Quality gate: on 4 of 5 observed days ground/first is 0.58-0.73; on 2026-08-10 it was
+    // 1.71 and the formula over-counted by +9 on average.  Do not silently serve those hours.
+    const groundFirstRatio = ground / Math.max(first, 1);
+    const degraded = groundFirstRatio > GF_GATE;
 
     res.json({
       success: true,
