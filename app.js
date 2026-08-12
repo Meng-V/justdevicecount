@@ -62,18 +62,27 @@ deviceDataService.start();
 // ---------------------------------------------------------------------------
 // Background maintenance CRON jobs
 //
-//   1. Nightly  (03:15 ET)          — scripts/refresh_summaries.js
-//        Rebuilds stored_data/summaries + rec_summaries from the database and
-//        regenerates analysis/big_summary.json, so /crowdindex/admin always
-//        shows the most recent months instead of the last hand-built export.
+//   1. Hourly   (:05)               — refresh_summaries.js --no-analysis
+//        The dashboard never queries the database; it reads the summary files.
+//        Rebuilding them only overnight left the current day almost empty —
+//        the 03:15 run could only see rows written before it, which during the
+//        silent window meant the eight readings between midnight and 01:45.
+//        This keeps the day view at most an hour behind.
+//        --no-analysis skips big_summary.py: the day/range views read the
+//        summary files this refreshes, while big_summary.json only feeds the
+//        monthly overview, which does not change hour to hour.  Runs at :05 so
+//        it never lands on a :00/:15/:30/:45 collection cycle.
 //
-//   2. Monthly  (00:00 on the 1st)  — refresh_summaries.js then export_and_purge.js
+//   2. Nightly  (03:15 ET)          — scripts/refresh_summaries.js
+//        The full rebuild, including analysis/big_summary.json.
+//
+//   3. Monthly  (00:00 on the 1st)  — refresh_summaries.js then export_and_purge.js
 //        The refresh MUST run first: export_and_purge deletes rows older than
 //        two months and the summary files are the only copy the dashboard reads.
 //        Two months stay in the database on purpose, so the last ~30 days are
 //        always queryable without hitting the archive.
 //
-//   3. Daily    (07:00 ET)          — scripts/data_health_check.js
+//   4. Daily    (07:00 ET)          — scripts/data_health_check.js
 //        E-mails ALERT_EMAIL if collection stopped, stalled, or is returning
 //        nothing but zeros.  Added after a three-week CMX certificate outage
 //        went unnoticed.
@@ -106,6 +115,27 @@ function runScript(name, args = []) {
   });
 }
 
+// Hourly, lightweight: refresh the summary files the day/range views read.
+// Skipped while the monthly export-and-purge is in flight — that job rewrites
+// the same files and then deletes the rows behind them, so the two must not
+// interleave.
+let monthlyJobRunning = false;
+
+cron.schedule(
+  "5 * * * *",
+  () => {
+    if (monthlyJobRunning) {
+      console.log(
+        `[${new Date().toLocaleString("en-US", { timeZone: APP_TZ })}]` +
+        " Skipping hourly refresh — monthly export/purge is running"
+      );
+      return;
+    }
+    runScript("refresh_summaries.js", ["--no-analysis"]);
+  },
+  { timezone: APP_TZ }
+);
+
 cron.schedule(
   "15 3 * * *",
   () => { runScript("refresh_summaries.js"); },
@@ -125,15 +155,20 @@ cron.schedule(
       `[${new Date().toLocaleString("en-US", { timeZone: APP_TZ })}]` +
       " Monthly maintenance job triggered"
     );
-    const code = await runScript("refresh_summaries.js");
-    if (code !== 0) {
-      console.error(
-        "[cron] refresh_summaries.js failed — skipping export_and_purge.js to avoid" +
-        " deleting rows that have not been summarised yet."
-      );
-      return;
+    monthlyJobRunning = true;
+    try {
+      const code = await runScript("refresh_summaries.js");
+      if (code !== 0) {
+        console.error(
+          "[cron] refresh_summaries.js failed — skipping export_and_purge.js to avoid" +
+          " deleting rows that have not been summarised yet."
+        );
+        return;
+      }
+      await runScript("export_and_purge.js");
+    } finally {
+      monthlyJobRunning = false;
     }
-    await runScript("export_and_purge.js");
   },
   { timezone: APP_TZ }
 );
