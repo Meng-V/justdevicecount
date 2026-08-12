@@ -46,8 +46,9 @@ const SUMMARY_PATH = path.join(STORED_DATA_DIR, "analysis", "big_summary.json");
 const KING_SUMMARY_DIR = path.join(STORED_DATA_DIR, "summaries");
 const REC_SUMMARY_DIR  = path.join(STORED_DATA_DIR, "rec_summaries");
 
-// Recreation Center staff / baseline offset (same value routes/recapi.js applies)
-const REC_STAFF_OFFSET = config.has("rec.staffOffset") ? config.get("rec.staffOffset") : 15;
+// Recreation Center patron maths — shared with routes/recapi.js so the admin
+// tables and the live widget can never report different numbers.
+const recFormula = require("../modules/recFormula");
 
 // ---------------------------------------------------------------------------
 // Date-range filter (for the presentation)
@@ -459,44 +460,58 @@ router.get("/range/info", requireToken, (req, res) => {
 // Recreation Center — 15-minute day view
 // Data source: STORED_DATA_DIR/rec_summaries/YYYY-MM_summary.json
 //   { timeStamp(UTC), patrons (RAW), countByFloor: [ground, first] }
-// `patrons` is the raw device count; `adjusted` applies the staff/baseline
-// offset the same way routes/recapi.js does for the live widget.
+// `patrons` is the raw device count; the published figure is
+// devicesToPatrons * (hourlyMean - baselineDevices), exactly what the live
+// widget serves — see modules/recFormula.js.
 // ---------------------------------------------------------------------------
-function recAdjusted(raw) {
-  return Math.max(0, raw - REC_STAFF_OFFSET);
+
+// Attach hourlyMean + the published patron count to a time-ordered record set.
+function recWithFormula(recs) {
+  const applied = recFormula.applyToSeries(recs);
+
+  return recs.map((r, i) => {
+    const ground = r.countByFloor?.[0] ?? 0;
+    const first  = r.countByFloor?.[1] ?? 0;
+
+    return {
+      time:       r.etTime,
+      etDate:     r.etDate,
+      timeStamp:  r.timeStamp,
+      raw:        r.patrons,
+      hourlyMean: applied[i].hourlyMean,
+      patrons:    applied[i].patrons,
+      ground,
+      first,
+      degraded:   recFormula.isDegraded(ground, first),
+    };
+  });
 }
 
 function getRecDay(date) {
-  const recs = getDayRecords(date, REC_SUMMARY_DIR);
-  return recs.map(r => ({
-    time:      r.etTime,
-    timeStamp: r.timeStamp,
-    raw:       r.patrons,
-    patrons:   recAdjusted(r.patrons),
-    ground:    r.countByFloor?.[0] ?? 0,
-    first:     r.countByFloor?.[1] ?? 0,
-  }));
+  return recWithFormula(getDayRecords(date, REC_SUMMARY_DIR));
 }
 
 // Date-picker bounds for the Rec tab: first/last ET day that actually has data.
 function recViewData() {
+  const { baseline, scale } = recFormula.params();
   const months = availableMonths(REC_SUMMARY_DIR);
   if (!months.length) {
-    return { recAvailable: false, recStaffOffset: REC_STAFF_OFFSET };
+    return { recAvailable: false, recBaseline: baseline, recScale: scale };
   }
 
   const firstRecs = loadMonthSummary(months[0], REC_SUMMARY_DIR) || [];
   const lastRecs  = loadMonthSummary(months.at(-1), REC_SUMMARY_DIR) || [];
   if (!firstRecs.length || !lastRecs.length) {
-    return { recAvailable: false, recStaffOffset: REC_STAFF_OFFSET };
+    return { recAvailable: false, recBaseline: baseline, recScale: scale };
   }
 
   return {
-    recAvailable:   true,
-    recStaffOffset: REC_STAFF_OFFSET,
-    recDayMin:      toEtParts(firstRecs[0].timeStamp).etDate,
-    recDayMax:      toEtParts(lastRecs[lastRecs.length - 1].timeStamp).etDate,
-    recMonths:      months,
+    recAvailable: true,
+    recBaseline:  baseline,
+    recScale:     scale,
+    recDayMin:    toEtParts(firstRecs[0].timeStamp).etDate,
+    recDayMax:    toEtParts(lastRecs[lastRecs.length - 1].timeStamp).etDate,
+    recMonths:    months,
   };
 }
 
@@ -523,7 +538,8 @@ router.get("/rec/day", requireToken, (req, res) => {
     };
   }
 
-  res.json({ date, tz: TZ, staffOffset: REC_STAFF_OFFSET, stats, records });
+  const { baseline, scale } = recFormula.params();
+  res.json({ date, tz: TZ, baseline, scale, stats, records });
 });
 
 // GET /admin/rec/day.csv — downloadable CSV
@@ -532,9 +548,10 @@ router.get("/rec/day.csv", requireToken, (req, res) => {
   if (!date) return res.status(400).send("Invalid date. Use YYYY-MM-DD.");
 
   const records = getRecDay(date);
-  const header = "timeStamp_utc,time_et,patrons_raw,patrons_adjusted,ground,first\n";
+  const header =
+    "timeStamp_utc,time_et,patrons_raw,hourly_mean,patrons_adjusted,ground,first,degraded\n";
   const body = records.map(r =>
-    [r.timeStamp, r.time, r.raw, r.patrons, r.ground, r.first].join(",")
+    [r.timeStamp, r.time, r.raw, r.hourlyMean, r.patrons, r.ground, r.first, r.degraded].join(",")
   ).join("\n");
 
   res.setHeader("Content-Type", "text/csv; charset=utf-8");
@@ -552,8 +569,10 @@ router.get("/rec/day.json", requireToken, (req, res) => {
     timeStamp:        r.timeStamp,
     time_et:          r.time,
     patrons_raw:      r.raw,
+    hourly_mean:      r.hourlyMean,
     patrons_adjusted: r.patrons,
     countByFloor:     [r.ground, r.first],
+    degraded:         r.degraded,
   })));
 });
 
@@ -562,13 +581,13 @@ router.get("/rec/range.csv", requireToken, (req, res) => {
   const { from, to, error } = parseRangeParams(req);
   if (error) return res.status(400).send(error);
 
-  const recs = getRangeRecords(from, to, REC_SUMMARY_DIR);
+  const recs = recWithFormula(getRangeRecords(from, to, REC_SUMMARY_DIR));
   const header =
-    "timeStamp_utc,date_et,time_et,patrons_raw,patrons_adjusted,ground,first\n";
+    "timeStamp_utc,date_et,time_et,patrons_raw,hourly_mean,patrons_adjusted,ground,first,degraded\n";
   const body = recs.map(r => [
-    r.timeStamp, r.etDate, r.etTime,
-    r.patrons, recAdjusted(r.patrons),
-    r.countByFloor[0] ?? 0, r.countByFloor[1] ?? 0,
+    r.timeStamp, r.etDate, r.time,
+    r.raw, r.hourlyMean, r.patrons,
+    r.ground, r.first, r.degraded,
   ].join(",")).join("\n");
 
   res.setHeader("Content-Type", "text/csv; charset=utf-8");
@@ -582,13 +601,15 @@ router.get("/rec/range.json", requireToken, (req, res) => {
   const { from, to, error } = parseRangeParams(req);
   if (error) return res.status(400).json({ error });
 
-  const recs = getRangeRecords(from, to, REC_SUMMARY_DIR).map(r => ({
+  const recs = recWithFormula(getRangeRecords(from, to, REC_SUMMARY_DIR)).map(r => ({
     timeStamp:        r.timeStamp,
     date_et:          r.etDate,
-    time_et:          r.etTime,
-    patrons_raw:      r.patrons,
-    patrons_adjusted: recAdjusted(r.patrons),
-    countByFloor:     [r.countByFloor[0] ?? 0, r.countByFloor[1] ?? 0],
+    time_et:          r.time,
+    patrons_raw:      r.raw,
+    hourly_mean:      r.hourlyMean,
+    patrons_adjusted: r.patrons,
+    countByFloor:     [r.ground, r.first],
+    degraded:         r.degraded,
   }));
 
   res.setHeader("Content-Disposition",

@@ -377,7 +377,8 @@
         <div id="rec-stats" class="day-stats"></div>
         <div id="rec-msg" class="day-msg">
           Data available <%= recDayMin %> → <%= recDayMax %> ·
-          staff/baseline offset of <%= recStaffOffset %> devices applied to the total.
+          total = <%= recScale %> × (hourly mean − <%= recBaseline %> baseline devices),
+          the same formula the live widget uses.
         </div>
         <div id="chart-rec" style="width:100%;height:380px;"></div>
 
@@ -735,7 +736,7 @@ const sortedMonthLabels = sortedMonthKeys.map(monthLabel);
       return;
     }
 
-    const { stats, records, staffOffset } = payload;
+    const { stats, records, baseline, scale } = payload;
 
     if (!records.length) {
       statsEl.innerHTML = '';
@@ -745,7 +746,13 @@ const sortedMonthLabels = sortedMonthKeys.map(monthLabel);
       return;
     }
 
-    msgEl.textContent = 'Staff/baseline offset applied to the total: ' + staffOffset + ' devices.';
+    const degradedCount = records.filter(r => r.degraded).length;
+    msgEl.textContent =
+      'Total = ' + scale + ' × (hourly mean − ' + baseline + ' baseline devices).' +
+      (degradedCount
+        ? '  ' + degradedCount + ' of ' + records.length +
+          ' readings failed the ground/first sanity check and are likely over-stated.'
+        : '');
 
     statsEl.innerHTML =
       `<span class="ds-item">Readings <b>${stats.count}</b></span>` +
