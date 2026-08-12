@@ -13,5 +13,17 @@
   "app": {
     "port": 3000,
     "auth": "Basic YOUR_BASE64_ENCODED_CREDENTIALS_HERE"
+  },
+  "rec": {
+    "baselineDevices": 10,
+    "devicesToPatrons": 1.2,
+    "groundFirstGate": 1.0
+  },
+  "collection": {
+    "comment": "Silent window [start, end) in local hours: DB writes are skipped while start <= hour < end.",
+    "silentHours": {
+      "king": { "start": 2, "end": 7 },
+      "rec":  { "start": 2, "end": 5 }
+    }
   }
 }

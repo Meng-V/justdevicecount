@@ -1,6 +1,7 @@
 const prisma   = require("./prisma");
 const axiosApi = require("./axiosApi");
 const { dateTime, validRssi, validTime, isValidDevice, isWithinBounds } = require("./deviceUtils");
+const { isSilentHour, describeWindow, localParts } = require("./collectionWindow");
 
 const APP_TZ = process.env.TZ || "America/New_York";
 
@@ -129,16 +130,15 @@ async function saveToDatabase({ uniqUserGround, uniqUserFirst, uniqUserSecond, u
     console.log(`[${dateTime()}] Time since last DB write: ${Math.round(timeDiffMs / 1000)}s`);
 
     if (timeDiffMs > 60000) {
-      // Skip silent hours (2 AM – 6 AM Eastern) to avoid noise in overnight data.
-      const currentHour = new Date(
-        new Date().toLocaleString("en-US", { timeZone: APP_TZ })
-      ).getHours();
-
-      if (currentHour < 2 || currentHour > 6) {
+      // Skip the overnight silent window (modules/collectionWindow.js).
+      if (!isSilentHour("king")) {
         await prisma.deviceData.create({ data: floorDocument });
         console.log(`[${dateTime()}] Saved to database (${uniqKingAll.size} patrons)`);
       } else {
-        console.log(`[${dateTime()}] Skipping DB write during silent hours (${currentHour}:xx)`);
+        console.log(
+          `[${dateTime()}] Skipping King DB write during silent hours ` +
+          `(${localParts().hour}:xx, window ${describeWindow("king")})`
+        );
       }
     } else {
       console.log(`[${dateTime()}] Skipping duplicate write (last write was ${Math.round(timeDiffMs / 1000)}s ago)`);
@@ -222,21 +222,53 @@ async function saveRecToDatabase({ patrons, countByFloor }) {
     const timeDiffMs = now.getTime() - last.timeStamp.getTime();
 
     if (timeDiffMs > 60000) {
-      const currentHour = new Date(
-        new Date().toLocaleString("en-US", { timeZone: APP_TZ })
-      ).getHours();
-
-      if (currentHour < 2 || currentHour > 6) {
+      // The Rec opens earlier than King, so its silent window ends at 05:00.
+      if (!isSilentHour("rec")) {
         await prisma.recData.create({ data: recDocument });
         console.log(`[${dateTime()}] Saved Rec to database (${patrons} patrons)`);
       } else {
-        console.log(`[${dateTime()}] Skipping Rec DB write during silent hours (${currentHour}:xx)`);
+        console.log(
+          `[${dateTime()}] Skipping Rec DB write during silent hours ` +
+          `(${localParts().hour}:xx, window ${describeWindow("rec")})`
+        );
       }
     } else {
       console.log(`[${dateTime()}] Skipping duplicate Rec write (last write was ${Math.round(timeDiffMs / 1000)}s ago)`);
     }
   } catch (err) {
     console.error(`[${dateTime()}] saveRecToDatabase error: ${err.stack}`);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// hourlyMean — the mean of the last four 15-minute RAW rec samples (one hour).
+// routes/recapi.js turns this into the published figure; smoothing over an hour
+// stops one noisy 15-minute sample from swinging the number the dashboard shows.
+//
+// Computed here, once per collection cycle, rather than in the route: rec_data
+// is authoritative and survives restarts, and doing it here keeps /recapi a
+// synchronous memory read instead of a database query on every page view.
+//
+// Averages over whatever the last hour actually holds (1-4 rows).  Falls back to
+// the live sample when there is nothing recent — a fresh database, or the first
+// cycle after the silent window, where the previous row is hours old and would
+// drag the mean down.
+// ---------------------------------------------------------------------------
+async function recHourlyMean(fallbackRaw) {
+  try {
+    const rows = await prisma.recData.findMany({
+      where:   { timeStamp: { gte: new Date(Date.now() - 60 * 60 * 1000) } },
+      orderBy: { timeStamp: "desc" },
+      take:    4,
+      select:  { patrons: true },
+    });
+
+    if (rows.length === 0) return fallbackRaw;
+
+    return rows.reduce((sum, r) => sum + r.patrons, 0) / rows.length;
+  } catch (err) {
+    console.error(`[${dateTime()}] recHourlyMean error: ${err.stack}`);
+    return fallbackRaw;
   }
 }
 
@@ -362,6 +394,7 @@ let recDataCache = {
   timeStamp:    null,
   patrons:      0,
   countByFloor: [0, 0],
+  hourlyMean:   0,
   lastUpdated:  null,
 };
 
@@ -377,13 +410,16 @@ async function rec_start_cached() {
     return recDataCache;
   }
 
+  // Persist the raw counts to the rec_data table (errors are caught inside
+  // saveRecToDatabase).  This runs BEFORE the mean is computed so the sample
+  // just taken is part of the hour it averages over.
+  await saveRecToDatabase(data);
+
   recDataCache = {
     ...data,
+    hourlyMean:  await recHourlyMean(data.patrons),
     lastUpdated: new Date(),
   };
-  // Persist the raw counts to the rec_data table (fire-and-forget within the
-  // collection cycle; errors are caught inside saveRecToDatabase).
-  await saveRecToDatabase(data);
   return recDataCache;
 }
 
@@ -402,6 +438,7 @@ function restart() {
 module.exports = {
   rec_start,
   rec_start_cached,
+  recHourlyMean,
   saveRecToDatabase,
   getRecData,
   restart,
