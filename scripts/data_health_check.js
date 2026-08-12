@@ -10,11 +10,16 @@
  *   this script actively looks for one and shouts.
  *
  * WHAT IT CHECKS (per table: device_data, rec_data)
- *   1. Row count over the last 24 h.  A healthy day is ~76 rows: 96 quarter-hour
- *      slots minus the 02:00–06:59 ET silent window the collector skips.
- *   2. Staleness — how long ago the newest row was written.
+ *   1. Row count over the last 24 h, against what that building's own collection
+ *      window should produce — King ~76 rows, Rec ~84 (the Rec starts at 05:00).
+ *   2. Staleness — how long ago the newest row was written, measured from the
+ *      moment collection resumed rather than from the row itself, so the
+ *      overnight silent window is never reported as a fault.
  *   3. All-zero readings, in case a future change reintroduces the old bug.
  *   Plus: freshness of analysis/big_summary.json, the file the dashboard reads.
+ *
+ *   Collection windows are defined once in modules/collectionWindow.js and
+ *   shared with the collector, so the two can never disagree.
  *
  * OUTPUT
  *   Healthy  → one log line, exit 0.
@@ -25,7 +30,7 @@
  * CONFIG (all optional, read from .env)
  *   ALERT_EMAIL          recipient            default qum@miamioh.edu
  *   ALERT_FROM           envelope sender      default crowdindex@<hostname>
- *   ALERT_MIN_ROWS_24H   row-count floor      default 60
+ *   ALERT_MIN_ROWS_24H   row-count floor      default: 80% of each building's own expected rows
  *   ALERT_MAX_STALE_MIN  staleness limit      default 45
  *
  * USAGE
@@ -39,6 +44,12 @@ const fs      = require("fs");
 const path    = require("path");
 const os      = require("os");
 const { spawnSync } = require("child_process");
+const {
+  isSilentHour,
+  expectedRowsPer24h,
+  minutesSinceResume,
+  describeWindow,
+} = require("../modules/collectionWindow");
 
 const prisma = new PrismaClient();
 
@@ -46,7 +57,10 @@ const APP_TZ = process.env.TZ || "America/New_York";
 
 const ALERT_EMAIL         = process.env.ALERT_EMAIL         || "qum@miamioh.edu";
 const ALERT_FROM          = process.env.ALERT_FROM          || `crowdindex@${os.hostname()}`;
-const MIN_ROWS_24H        = Number(process.env.ALERT_MIN_ROWS_24H)  || 60;
+// Unset = derive the floor from each building's own collection window (80% of
+// the rows a healthy day should hold).  Set it to pin both buildings to a
+// fixed number instead.
+const MIN_ROWS_OVERRIDE   = Number(process.env.ALERT_MIN_ROWS_24H)  || null;
 const MAX_STALE_MINUTES   = Number(process.env.ALERT_MAX_STALE_MIN) || 45;
 
 const STORED_DATA_DIR = process.env.STORED_DATA_DIR
@@ -62,7 +76,7 @@ const fmt = (d) =>
 // Checks
 // ---------------------------------------------------------------------------
 
-async function checkTable(model, label) {
+async function checkTable(model, label, kind) {
   const since = new Date(Date.now() - 24 * 60 * 60 * 1000);
 
   const rows24h = await model.count({ where: { timeStamp: { gte: since } } });
@@ -81,20 +95,34 @@ async function checkTable(model, label) {
     ? Math.round((Date.now() - newest.timeStamp.getTime()) / 60000)
     : Infinity;
 
+  // The collector does not write during this building's silent window, so the
+  // newest row being hours old overnight is by design, not a fault.  Measure
+  // staleness from whichever is later: the last row, or the moment collection
+  // resumed.  Without this the 07:00 health check flagged King every single
+  // morning, because its window had only just ended and the newest row was
+  // still the 01:45 one.
+  const inSilentWindow = isSilentHour(kind);
+  const effectiveStale = inSilentWindow
+    ? 0
+    : Math.min(staleMin, minutesSinceResume(kind));
+
+  const expectedRows = expectedRowsPer24h(kind);
+  const minRows      = MIN_ROWS_OVERRIDE ?? Math.floor(expectedRows * 0.8);
+
   const problems = [];
   if (!newest) {
     problems.push(`${label}: the table is EMPTY.`);
   } else {
-    if (staleMin > MAX_STALE_MINUTES) {
+    if (effectiveStale > MAX_STALE_MINUTES) {
       problems.push(
         `${label}: no new rows for ${staleMin} minutes ` +
         `(limit ${MAX_STALE_MINUTES}). Newest row: ${fmt(newest.timeStamp)} ET.`
       );
     }
-    if (rows24h < MIN_ROWS_24H) {
+    if (rows24h < minRows) {
       problems.push(
-        `${label}: only ${rows24h} rows in the last 24h (expected ~76, ` +
-        `alert below ${MIN_ROWS_24H}). Collection is failing or intermittent.`
+        `${label}: only ${rows24h} rows in the last 24h (expected ~${expectedRows}, ` +
+        `alert below ${minRows}). Collection is failing or intermittent.`
       );
     }
     if (rows24h > 0 && peak24h === 0) {
@@ -106,7 +134,9 @@ async function checkTable(model, label) {
   }
 
   return {
-    label, rows24h, peak24h, staleMin,
+    label, rows24h, peak24h, staleMin, expectedRows, minRows,
+    silentWindow: describeWindow(kind),
+    inSilentWindow,
     newest: newest ? newest.timeStamp : null,
     problems,
   };
@@ -165,17 +195,18 @@ function sendMail(subject, body) {
 // ---------------------------------------------------------------------------
 
 async function run() {
-  const king    = await checkTable(prisma.deviceData, "King Library (device_data)");
-  const rec     = await checkTable(prisma.recData,    "Recreation Center (rec_data)");
+  const king    = await checkTable(prisma.deviceData, "King Library (device_data)", "king");
+  const rec     = await checkTable(prisma.recData,    "Recreation Center (rec_data)", "rec");
   const summary = checkSummaryFreshness();
 
   const problems = [...king.problems, ...rec.problems, ...summary.problems];
 
   const status = (t) =>
     `  ${t.label}\n` +
-    `    rows in last 24h : ${t.rows24h}   (healthy ~76)\n` +
+    `    rows in last 24h : ${t.rows24h}   (healthy ~${t.expectedRows}, alert below ${t.minRows})\n` +
     `    peak patrons 24h : ${t.peak24h}\n` +
-    `    newest row       : ${fmt(t.newest)} ET  (${t.staleMin === Infinity ? "n/a" : t.staleMin + " min ago"})\n`;
+    `    newest row       : ${fmt(t.newest)} ET  (${t.staleMin === Infinity ? "n/a" : t.staleMin + " min ago"})\n` +
+    `    silent window    : ${t.silentWindow}${t.inSilentWindow ? "  <- in it now, staleness not checked" : ""}\n`;
 
   const report =
     `Crowd Index data health report\n` +
@@ -206,8 +237,9 @@ async function run() {
       "     A repeated 'certificate has expired' or 'all retries exhausted'\n" +
       "     means the CMX API side is broken, not this app.\n" +
       "  2. systemctl status crowdindex.service\n" +
-      "  3. The collector deliberately skips writes between 02:00 and 06:59 ET,\n" +
-      "     so a low count checked early in the morning can be a false alarm.\n"
+      `  3. The collector deliberately skips writes overnight — King ${describeWindow("king")},\n` +
+      `     Rec ${describeWindow("rec")}.  Staleness is measured from the moment collection\n` +
+      "     resumes, so those gaps are not reported as faults.\n"
     : "This is a test message, no problems were detected.\n\n" + report;
 
   console.log(`[health_check] ${problems.length} problem(s) detected`);

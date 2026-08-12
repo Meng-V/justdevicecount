@@ -77,6 +77,11 @@ deviceDataService.start();
 //        E-mails ALERT_EMAIL if collection stopped, stalled, or is returning
 //        nothing but zeros.  Added after a three-week CMX certificate outage
 //        went unnoticed.
+//        It runs as King's silent window ends, so King has not had a chance to
+//        write yet and its staleness is deliberately not reported at this hour
+//        (that was the daily false alarm).  A genuine King outage still shows up
+//        through the 24 h row count; the Rec, whose window ended at 05:00, is
+//        fully checked here.
 //
 // Each script is forked into its own process so a failure can never take the
 // Express server down.

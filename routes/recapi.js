@@ -1,28 +1,33 @@
 // RecAPI — returns live recreation-center patron count.
 // The live count is served from an in-memory cache; the raw counts are also
 // persisted every collection cycle to the rec_data table (see app_core.js).
-// An offset of 15 (Wi-Fi baseline / staff devices) is subtracted, configured
-// in config/default.json under rec.staffOffset.
+//
+// Published figure = devicesToPatrons * (hourlyMean - baselineDevices), where
+// hourlyMean is the mean of the last four 15-minute raw device counts.  All
+// three knobs live in config/default.json under "rec".
 
 const express = require("express");
 const config  = require("config");
 const router  = express.Router();
 const { getRecData } = require("../modules/app_core");
 
-// Staff / baseline offset — devices that are always connected and should not
-// be counted as patrons.  Configured in config/default.json: rec.staffOffset
-const STAFF_OFFSET = config.has("rec.staffOffset") ? config.get("rec.staffOffset") : 15;
-
 router.get("/", (req, res) => {
   try {
     const data = getRecData();
 
     const BASELINE = config.has("rec.baselineDevices") ? config.get("rec.baselineDevices") : 10;
-    const SCALE = config.has("rec.devicesToPatrons") ? config.get("rec.devicesToPatrons") : 1.2; 
+    const SCALE = config.has("rec.devicesToPatrons") ? config.get("rec.devicesToPatrons") : 1.2;
     const GF_GATE  = config.has("rec.groundFirstGate") ? config.get("rec.groundFirstGate") : 1.0;  // 1.0  — ground/first sanity limit
-    
-    // hourlyMean = mean of the last four 15-minute patrons_raw samples
+
+    // hourlyMean = mean of the last four 15-minute patrons_raw samples,
+    // computed by the collector (modules/app_core.js).  Before the first
+    // collection cycle completes the cache has no mean yet, so fall back to the
+    // live sample rather than publishing 0.
+    const hourlyMean = Number.isFinite(data.hourlyMean) ? data.hourlyMean : data.patrons;
+
     const adjustedPatrons = Math.max(0, Math.round(SCALE * (hourlyMean - BASELINE)));
+
+    const [ground, first] = data.countByFloor ?? [0, 0];
 
     // Quality gate: on 4 of 5 observed days ground/first is 0.58-0.73; on 2026-08-10 it was
     // 1.71 and the formula over-counted by +9 on average.  Do not silently serve those hours.
@@ -35,14 +40,22 @@ router.get("/", (req, res) => {
         timeStamp:    data.timeStamp,
         patrons:      adjustedPatrons,
         countByFloor: data.countByFloor ?? [0, 0],  // [ground, first], raw (no offset)
+        degraded,                                   // true = ratio outside the sane band, treat with suspicion
       },
       metadata: {
-        cached:          true,
-        lastUpdated:     data.lastUpdated,
-        source:          "Recreation Center Memory Cache",
-        refreshInterval: "15 minutes",
-        staffOffset:     STAFF_OFFSET,
-        note:            "Live count served from memory; raw counts are also persisted to the rec_data table",
+        cached:           true,
+        lastUpdated:      data.lastUpdated,
+        source:           "Recreation Center Memory Cache",
+        refreshInterval:  "15 minutes",
+        hourlyMean:       Math.round(hourlyMean * 100) / 100,
+        baselineDevices:  BASELINE,
+        devicesToPatrons: SCALE,
+        groundFirstRatio: Math.round(groundFirstRatio * 100) / 100,
+        degradedReason:   degraded
+          ? `ground/first ratio ${groundFirstRatio.toFixed(2)} exceeds the ${GF_GATE} sanity limit; ` +
+            "the count is likely over-stated for this period"
+          : null,
+        note: "Live count served from memory; raw counts are also persisted to the rec_data table",
       },
     });
   } catch (error) {
