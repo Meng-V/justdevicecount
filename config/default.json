@@ -16,7 +16,7 @@
   },
   "rec": {
     "baselineDevices": 10,
-    "devicesToPatrons": 1.2,
+    "devicesPerPatron": 1.2,
     "groundFirstGate": 1.0
   },
   "collection": {
