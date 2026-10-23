@@ -4,7 +4,7 @@
 # Manages PM2 process for local development with PostgreSQL database
 #
 # FOR SERVER DEPLOYMENT: See SERVER_DEPLOYMENT.md
-# Server uses systemd service, not PM2: sudo service crowd-index restart
+# Server uses systemd service, not PM2: sudo service crowdindex restart
 
 APP_NAME="justdevicecount"
 ECOSYSTEM_FILE="ecosystem.config.js"
