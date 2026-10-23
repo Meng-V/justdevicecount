@@ -2,7 +2,7 @@
 // ⚠️  LOCAL DEVELOPMENT ONLY - NOT FOR SERVER DEPLOYMENT
 // 
 // For production server deployment, see SERVER_DEPLOYMENT.md
-// Server uses systemd service (crowd-index), NOT PM2
+// Server uses systemd service (crowdindex), NOT PM2
 
 module.exports = {
   apps: [{

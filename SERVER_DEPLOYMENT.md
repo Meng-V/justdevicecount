@@ -16,7 +16,7 @@ The server uses systemd to manage the process — not PM2, not dist builds.
 - **App path**: `/opt/devicecount/current`
 - **Data path**: `/home/qum/stored_data` (persists across deployments)
 - **Service user**: `devicecount`
-- **Service name**: `crowd-index`
+- **Service name**: `crowdindex`
 - **Port**: 3012
 - **Process manager**: systemd
 
@@ -26,7 +26,7 @@ The server uses systemd to manage the process — not PM2, not dist builds.
 
 1. SSH access to the server
 2. Access to the `devicecount` user account
-3. Sudo access to run `sudo service crowd-index restart`
+3. Sudo access to run `sudo service crowdindex restart`
 
 ---
 
@@ -69,14 +69,14 @@ Exit back to your own user first, then restart:
 
 ```bash
 exit
-sudo service crowd-index restart
+sudo service crowdindex restart
 ```
 
 ### 5. Verify
 
 ```bash
-sudo service crowd-index status
-sudo journalctl -u crowd-index -n 30
+sudo service crowdindex status
+sudo journalctl -u crowdindex -n 30
 ```
 
 ---
@@ -85,12 +85,12 @@ sudo journalctl -u crowd-index -n 30
 
 | Command | Description |
 |---------|-------------|
-| `sudo service crowd-index start` | Start the service |
-| `sudo service crowd-index stop` | Stop the service |
-| `sudo service crowd-index restart` | Restart the service |
-| `sudo service crowd-index status` | Check service status |
-| `sudo journalctl -u crowd-index -f` | Stream live logs |
-| `sudo journalctl -u crowd-index -n 50` | Last 50 log lines |
+| `sudo service crowdindex start` | Start the service |
+| `sudo service crowdindex stop` | Stop the service |
+| `sudo service crowdindex restart` | Restart the service |
+| `sudo service crowdindex status` | Check service status |
+| `sudo journalctl -u crowdindex -f` | Stream live logs |
+| `sudo journalctl -u crowdindex -n 50` | Last 50 log lines |
 
 ---
 
@@ -98,7 +98,7 @@ sudo journalctl -u crowd-index -n 30
 
 The systemd service runs `node bin/www` directly inside `/opt/devicecount/current`:
 
-1. **Service file**: `/etc/systemd/system/crowd-index.service` (managed by IT)
+1. **Service file**: `/etc/systemd/system/crowdindex.service` (managed by IT)
 2. **Startup**: `node bin/www`
 3. **User**: `devicecount`
 4. **Auto-restart**: systemd restarts on crash
@@ -174,7 +174,7 @@ Environment="STORED_DATA_DIR=/home/qum/stored_data"
 
 This drop-in is **not in git and not managed by Puppet** — recreate it on a fresh
 server with `sudo systemctl edit crowdindex.service`, then
-`sudo systemctl daemon-reload && sudo service crowd-index restart`.
+`sudo systemctl daemon-reload && sudo service crowdindex restart`.
 
 ---
 
@@ -220,7 +220,7 @@ folder is recreated. Re-check with `getfacl /home/qum/stored_data`.
 Run through this after every deployment:
 
 1. **Service is up**
-   `sudo service crowd-index status` → `active (running)`
+   `sudo service crowdindex status` → `active (running)`
 2. **Process has STORED_DATA_DIR**
    `sudo cat /proc/$(pgrep -f "node.*bin/www")/environ | tr '\0' '\n' | grep STORED`
 3. **devicecount can read the data**
@@ -239,7 +239,7 @@ Run through this after every deployment:
 ### Service will not start
 
 ```bash
-sudo journalctl -u crowd-index -n 50
+sudo journalctl -u crowdindex -n 50
 ```
 
 Common causes:
@@ -279,8 +279,8 @@ https://app.lib.miamioh.edu/crowdindex/health
 | Run as | your user | `devicecount` |
 | Process manager | PM2 | systemd |
 | Protocol | HTTP | HTTPS |
-| Start | `./start.sh start` | `sudo service crowd-index restart` |
-| Logs | `pm2 logs` | `sudo journalctl -u crowd-index -f` |
+| Start | `./start.sh start` | `sudo service crowdindex restart` |
+| Logs | `pm2 logs` | `sudo journalctl -u crowdindex -f` |
 
 ---
 
@@ -301,9 +301,9 @@ sudo su - devicecount
 cd /opt/devicecount/current
 git pull
 exit
-sudo service crowd-index restart
-sudo service crowd-index status
-sudo journalctl -u crowd-index -f
+sudo service crowdindex restart
+sudo service crowdindex status
+sudo journalctl -u crowdindex -f
 ```
 
 ---
@@ -312,7 +312,7 @@ sudo journalctl -u crowd-index -f
 
 The CRON job is built into the app via **node-cron** — no OS crontab needed.
 It fires automatically at **00:00 ET on the 1st of every month** while the
-`crowd-index` service is running.
+`crowdindex` service is running.
 
 ### What it does
 
@@ -377,7 +377,7 @@ rm -rf /tmp/cron_test_dc
 ### Check CRON logs
 
 ```bash
-sudo journalctl -u crowd-index -n 100
+sudo journalctl -u crowdindex -n 100
 ```
 
 Look for:
@@ -408,7 +408,7 @@ STORED_DATA_DIR=/home/qum/stored_data python3 scripts/big_summary.py
 #    e.g. DASHBOARD_END_MONTH=2026-06
 
 # 4. Restart
-sudo service crowd-index restart
+sudo service crowdindex restart
 ```
 
 ---
@@ -416,7 +416,7 @@ sudo service crowd-index restart
 ## Getting Help
 
 - **Service issues**: Contact IT support for systemd configuration
-- **App issues**: Check `sudo journalctl -u crowd-index -n 100`
+- **App issues**: Check `sudo journalctl -u crowdindex -n 100`
 - **DB issues**: Verify `DATABASE_URL` in `.env`
 - **CRON issues**: Confirm `STORED_DATA_DIR` is set and writable; run `node scripts/test_cron.js`
 
