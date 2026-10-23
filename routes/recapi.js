@@ -2,10 +2,15 @@
 // The live count is served from an in-memory cache; the raw counts are also
 // persisted every collection cycle to the rec_data table (see app_core.js).
 //
-// Published figure = (hourlyMean - baselineDevices) / devicesPerPatron, where
-// hourlyMean is the mean of the last four 15-minute raw device counts.  The
-// maths lives in modules/recFormula.js; the knobs in config/default.json under
-// "rec".
+// Estimated patrons = (hourlyMean - baselineDevices) / devicesPerPatron, where
+// hourlyMean is the mean of the last four 15-minute raw device counts.
+//
+// data.patrons is NOT that estimate: it is rescaled to the public Rec widget,
+// which hard-codes a maximum of 200 while the building holds ~350, so that the
+// widget's patrons / 200 shows the true occupancy.  Consumers that want a head
+// count should read metadata.estimatedPatrons, or metadata.occupancyPercent
+// for the percentage.  See widgetPatrons() in modules/recFormula.js; the knobs
+// live in config/default.json under "rec".
 
 const express = require("express");
 const router  = express.Router();
@@ -16,7 +21,10 @@ router.get("/", (req, res) => {
   try {
     const data = getRecData();
 
-    const { baseline: BASELINE, devicesPerPatron: DEVICES_PER_PATRON, gate: GF_GATE } = recFormula.params();
+    const {
+      baseline: BASELINE, devicesPerPatron: DEVICES_PER_PATRON, gate: GF_GATE,
+      capacity: CAPACITY, widgetMax: WIDGET_MAX,
+    } = recFormula.params();
 
     // hourlyMean = mean of the last four 15-minute patrons_raw samples,
     // computed by the collector (modules/app_core.js).  Before the first
@@ -24,7 +32,8 @@ router.get("/", (req, res) => {
     // live sample rather than publishing 0.
     const hourlyMean = Number.isFinite(data.hourlyMean) ? data.hourlyMean : data.patrons;
 
-    const adjustedPatrons = recFormula.patronsFromHourlyMean(hourlyMean);
+    const estimatedPatrons = recFormula.patronsFromHourlyMean(hourlyMean);
+    const widgetPatrons    = recFormula.widgetPatrons(estimatedPatrons);
 
     const [ground, first] = data.countByFloor ?? [0, 0];
 
@@ -37,7 +46,7 @@ router.get("/", (req, res) => {
       success: true,
       data: {
         timeStamp:    data.timeStamp,
-        patrons:      adjustedPatrons,
+        patrons:      widgetPatrons,                // scaled to the widget's max — see header
         countByFloor: data.countByFloor ?? [0, 0],  // [ground, first], raw (no offset)
         degraded,                                   // true = ratio outside the sane band, treat with suspicion
       },
@@ -47,6 +56,10 @@ router.get("/", (req, res) => {
         source:           "Recreation Center Memory Cache",
         refreshInterval:  "15 minutes",
         hourlyMean:       Math.round(hourlyMean * 100) / 100,
+        estimatedPatrons,
+        capacity:         CAPACITY,
+        occupancyPercent: Math.round(estimatedPatrons / CAPACITY * 100),
+        widgetMax:        WIDGET_MAX,
         baselineDevices:  BASELINE,
         devicesPerPatron: DEVICES_PER_PATRON,
         groundFirstRatio: Math.round(groundFirstRatio * 100) / 100,

@@ -30,6 +30,8 @@ function params() {
     baseline:         config.has("rec.baselineDevices")  ? config.get("rec.baselineDevices")  : 10,
     devicesPerPatron: config.has("rec.devicesPerPatron") ? config.get("rec.devicesPerPatron") : 1.2,
     gate:             config.has("rec.groundFirstGate")  ? config.get("rec.groundFirstGate")  : 1.0,
+    capacity:         config.has("rec.capacity")         ? config.get("rec.capacity")         : 350,
+    widgetMax:        config.has("rec.widgetMax")        ? config.get("rec.widgetMax")        : 200,
   };
 }
 
@@ -37,6 +39,24 @@ function params() {
 function patronsFromHourlyMean(hourlyMean) {
   const { baseline, devicesPerPatron } = params();
   return Math.max(0, Math.round((hourlyMean - baseline) / devicesPerPatron));
+}
+
+// The figure /recapi publishes as data.patrons, rescaled to the public widget.
+//
+// The Rec page's widget (a copy of the gist, maintained on the university
+// site, not by us) hard-codes MAX_CAPACITY = 200 and shows patrons / 200 as
+// the occupancy.  The building's real capacity is closer to 350, so a true
+// head count overflowed it — 320 patrons at the Oct 2026 peak read as 160%.
+// Rather than ask for the widget to be edited, the API scales the estimate so
+// the widget's arithmetic lands on the right percentage:
+//
+//   widgetPatrons / widgetMax == estimatedPatrons / capacity
+//
+// Only the public endpoint does this.  The admin views, exports, and
+// metadata.estimatedPatrons keep the real estimate.
+function widgetPatrons(estimatedPatrons) {
+  const { capacity, widgetMax } = params();
+  return Math.max(0, Math.round(estimatedPatrons * widgetMax / capacity));
 }
 
 // Ground/first sanity check.  A ratio above the gate means the reading is
@@ -85,6 +105,7 @@ function applyToSeries(samples) {
 module.exports = {
   params,
   patronsFromHourlyMean,
+  widgetPatrons,
   rollingHourlyMeans,
   applyToSeries,
   isDegraded,
