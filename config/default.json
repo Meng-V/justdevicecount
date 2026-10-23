@@ -17,7 +17,10 @@
   "rec": {
     "baselineDevices": 10,
     "devicesPerPatron": 1.2,
-    "groundFirstGate": 1.0
+    "groundFirstGate": 1.0,
+    "capacity": 350,
+    "widgetMax": 200,
+    "capacityComment": "capacity = real head-count capacity of the building. widgetMax = MAX_CAPACITY hard-coded in the public Rec widget (gist copy on the university site). /recapi scales data.patrons by widgetMax/capacity so the widget shows the right percentage without editing it."
   },
   "collection": {
     "comment": "Silent window [start, end) in Eastern hours: DB writes are skipped while start <= hour < end. The Rec opens earlier than King, so it resumes collecting at 05:00.",
