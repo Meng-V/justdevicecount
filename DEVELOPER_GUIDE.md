@@ -319,7 +319,7 @@ module.exports = {
 The production server uses systemd service management (not PM2):
 - Service name: `crowdindex`
 - Restart: `sudo service crowdindex restart`
-- Logs: `sudo journalctl -u crowdindex -f`
+- Logs: `sudo tail -f /var/log/crowdindex/crowdindex.log`
 - Runs: `bin/www` directly
 
 The SERVER_DEPLOYMENT.md guide covers:
@@ -698,7 +698,7 @@ CMX API → axiosApi.js → deviceUtils.js → app_core.js → Database (Postgre
    pm2 logs justdevicecount --lines 100
    
    # Production server
-   sudo journalctl -u crowdindex -n 100
+   sudo tail -n 100 /var/log/crowdindex/crowdindex.log
    ```
 
 2. **Run diagnostics**
