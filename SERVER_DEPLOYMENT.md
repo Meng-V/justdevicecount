@@ -76,7 +76,7 @@ sudo service crowdindex restart
 
 ```bash
 sudo service crowdindex status
-sudo journalctl -u crowdindex -n 30
+sudo tail -n 30 /var/log/crowdindex/crowdindex.log
 ```
 
 ---
@@ -89,8 +89,28 @@ sudo journalctl -u crowdindex -n 30
 | `sudo service crowdindex stop` | Stop the service |
 | `sudo service crowdindex restart` | Restart the service |
 | `sudo service crowdindex status` | Check service status |
-| `sudo journalctl -u crowdindex -f` | Stream live logs |
-| `sudo journalctl -u crowdindex -n 50` | Last 50 log lines |
+| `sudo tail -f /var/log/crowdindex/crowdindex.log` | Stream live logs |
+| `sudo tail -n 50 /var/log/crowdindex/crowdindex.log` | Last 50 log lines |
+
+### Where the logs actually are
+
+The unit sends stdout/stderr to files, **not** to journald, so
+`journalctl -u crowdindex` returns nothing at all:
+
+```
+StandardOutput=append:/var/log/crowdindex/crowdindex.log
+StandardError=append:/var/log/crowdindex/crowdindex.error.log
+```
+
+- The files rotate daily around 03:xx. Older days are `crowdindex.log.1`,
+  then `crowdindex.log.2.gz`, `.3.gz`, … — read those with `sudo zgrep` / `sudo zcat`.
+- Two timestamp formats appear in the same file. The collector writes
+  `[Thu Oct 15 2026 12:45:00 GMT-0400 ...]`; CMX request lines and cron jobs write
+  `[10/15/2026, 12:45:03 PM]`. Grep for both when you are looking for a time window.
+- A healthy collection cycle logs `Collecting device data...`, then
+  `Devices connected in ...` per floor, then `Saved to database` and
+  `Device data collection completed`. A cycle that logs only the first line and
+  nothing else means the CMX requests are hanging.
 
 ---
 
@@ -239,7 +259,7 @@ Run through this after every deployment:
 ### Service will not start
 
 ```bash
-sudo journalctl -u crowdindex -n 50
+sudo tail -n 50 /var/log/crowdindex/crowdindex.log
 ```
 
 Common causes:
@@ -280,7 +300,7 @@ https://app.lib.miamioh.edu/crowdindex/health
 | Process manager | PM2 | systemd |
 | Protocol | HTTP | HTTPS |
 | Start | `./start.sh start` | `sudo service crowdindex restart` |
-| Logs | `pm2 logs` | `sudo journalctl -u crowdindex -f` |
+| Logs | `pm2 logs` | `sudo tail -f /var/log/crowdindex/crowdindex.log` |
 
 ---
 
@@ -303,7 +323,7 @@ git pull
 exit
 sudo service crowdindex restart
 sudo service crowdindex status
-sudo journalctl -u crowdindex -f
+sudo tail -f /var/log/crowdindex/crowdindex.log
 ```
 
 ---
@@ -377,7 +397,7 @@ rm -rf /tmp/cron_test_dc
 ### Check CRON logs
 
 ```bash
-sudo journalctl -u crowdindex -n 100
+sudo tail -n 100 /var/log/crowdindex/crowdindex.log
 ```
 
 Look for:
@@ -416,7 +436,7 @@ sudo service crowdindex restart
 ## Getting Help
 
 - **Service issues**: Contact IT support for systemd configuration
-- **App issues**: Check `sudo journalctl -u crowdindex -n 100`
+- **App issues**: Check `sudo tail -n 100 /var/log/crowdindex/crowdindex.log`
 - **DB issues**: Verify `DATABASE_URL` in `.env`
 - **CRON issues**: Confirm `STORED_DATA_DIR` is set and writable; run `node scripts/test_cron.js`
 
