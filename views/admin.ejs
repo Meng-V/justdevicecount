@@ -377,7 +377,7 @@
         <div id="rec-stats" class="day-stats"></div>
         <div id="rec-msg" class="day-msg">
           Data available <%= recDayMin %> → <%= recDayMax %> ·
-          total = <%= recScale %> × (hourly mean − <%= recBaseline %> baseline devices),
+          total = (hourly mean − <%= recBaseline %> baseline devices) ÷ <%= recDevicesPerPatron %> devices per patron,
           the same formula the live widget uses.
         </div>
         <div id="chart-rec" style="width:100%;height:380px;"></div>
@@ -736,7 +736,7 @@ const sortedMonthLabels = sortedMonthKeys.map(monthLabel);
       return;
     }
 
-    const { stats, records, baseline, scale } = payload;
+    const { stats, records, baseline, devicesPerPatron } = payload;
 
     if (!records.length) {
       statsEl.innerHTML = '';
@@ -748,7 +748,7 @@ const sortedMonthLabels = sortedMonthKeys.map(monthLabel);
 
     const degradedCount = records.filter(r => r.degraded).length;
     msgEl.textContent =
-      'Total = ' + scale + ' × (hourly mean − ' + baseline + ' baseline devices).' +
+      'Total = (hourly mean − ' + baseline + ' baseline devices) ÷ ' + devicesPerPatron + ' devices per patron.' +
       (degradedCount
         ? '  ' + degradedCount + ' of ' + records.length +
           ' readings failed the ground/first sanity check and are likely over-stated.'

@@ -461,7 +461,7 @@ router.get("/range/info", requireToken, (req, res) => {
 // Data source: STORED_DATA_DIR/rec_summaries/YYYY-MM_summary.json
 //   { timeStamp(UTC), patrons (RAW), countByFloor: [ground, first] }
 // `patrons` is the raw device count; the published figure is
-// devicesToPatrons * (hourlyMean - baselineDevices), exactly what the live
+// (hourlyMean - baselineDevices) / devicesPerPatron, exactly what the live
 // widget serves — see modules/recFormula.js.
 // ---------------------------------------------------------------------------
 
@@ -493,22 +493,22 @@ function getRecDay(date) {
 
 // Date-picker bounds for the Rec tab: first/last ET day that actually has data.
 function recViewData() {
-  const { baseline, scale } = recFormula.params();
+  const { baseline, devicesPerPatron } = recFormula.params();
   const months = availableMonths(REC_SUMMARY_DIR);
   if (!months.length) {
-    return { recAvailable: false, recBaseline: baseline, recScale: scale };
+    return { recAvailable: false, recBaseline: baseline, recDevicesPerPatron: devicesPerPatron };
   }
 
   const firstRecs = loadMonthSummary(months[0], REC_SUMMARY_DIR) || [];
   const lastRecs  = loadMonthSummary(months.at(-1), REC_SUMMARY_DIR) || [];
   if (!firstRecs.length || !lastRecs.length) {
-    return { recAvailable: false, recBaseline: baseline, recScale: scale };
+    return { recAvailable: false, recBaseline: baseline, recDevicesPerPatron: devicesPerPatron };
   }
 
   return {
     recAvailable: true,
     recBaseline:  baseline,
-    recScale:     scale,
+    recDevicesPerPatron: devicesPerPatron,
     recDayMin:    toEtParts(firstRecs[0].timeStamp).etDate,
     recDayMax:    toEtParts(lastRecs[lastRecs.length - 1].timeStamp).etDate,
     recMonths:    months,
@@ -538,8 +538,8 @@ router.get("/rec/day", requireToken, (req, res) => {
     };
   }
 
-  const { baseline, scale } = recFormula.params();
-  res.json({ date, tz: TZ, baseline, scale, stats, records });
+  const { baseline, devicesPerPatron } = recFormula.params();
+  res.json({ date, tz: TZ, baseline, devicesPerPatron, stats, records });
 });
 
 // GET /admin/rec/day.csv — downloadable CSV

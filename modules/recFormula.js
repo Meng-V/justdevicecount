@@ -3,10 +3,20 @@
 // exports (routes/admin.js).
 //
 // Those two used to each carry their own arithmetic: the live widget moved to
-// devicesToPatrons * (hourlyMean - baselineDevices) while admin was still
-// subtracting a flat rec.staffOffset, so the same 15-minute reading showed two
-// different numbers depending on the page.  Keep the maths here so that cannot
-// happen again.
+// a device baseline and scaling factor while admin was still subtracting a
+// flat rec.staffOffset, so the same 15-minute reading showed two different
+// numbers depending on the page.  Keep the maths here so that cannot happen
+// again.
+//
+//   patrons = (hourlyMean - baselineDevices) / devicesPerPatron
+//
+// baselineDevices are the always-on devices (access points, staff kit) that
+// are not patrons.  devicesPerPatron is how many devices the average patron
+// carries — above 1, because a phone plus a watch is common in a gym.
+//
+// Until October 2026 the factor MULTIPLIED (1.2 x devices), which assumed
+// there were more people than devices; at a semester peak of ~400 devices
+// that published ~470 patrons.  Dividing gives ~325.
 //
 // Tunables live in config/default.json under "rec".
 
@@ -17,16 +27,16 @@ const WINDOW_SIZE  = 4;              // four 15-minute samples = one hour
 
 function params() {
   return {
-    baseline: config.has("rec.baselineDevices")  ? config.get("rec.baselineDevices")  : 10,
-    scale:    config.has("rec.devicesToPatrons") ? config.get("rec.devicesToPatrons") : 1.2,
-    gate:     config.has("rec.groundFirstGate")  ? config.get("rec.groundFirstGate")  : 1.0,
+    baseline:         config.has("rec.baselineDevices")  ? config.get("rec.baselineDevices")  : 10,
+    devicesPerPatron: config.has("rec.devicesPerPatron") ? config.get("rec.devicesPerPatron") : 1.2,
+    gate:             config.has("rec.groundFirstGate")  ? config.get("rec.groundFirstGate")  : 1.0,
   };
 }
 
 // The published patron figure for a given hourly mean of raw device counts.
 function patronsFromHourlyMean(hourlyMean) {
-  const { baseline, scale } = params();
-  return Math.max(0, Math.round(scale * (hourlyMean - baseline)));
+  const { baseline, devicesPerPatron } = params();
+  return Math.max(0, Math.round((hourlyMean - baseline) / devicesPerPatron));
 }
 
 // Ground/first sanity check.  A ratio above the gate means the reading is

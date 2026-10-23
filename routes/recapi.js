@@ -2,9 +2,10 @@
 // The live count is served from an in-memory cache; the raw counts are also
 // persisted every collection cycle to the rec_data table (see app_core.js).
 //
-// Published figure = devicesToPatrons * (hourlyMean - baselineDevices), where
-// hourlyMean is the mean of the last four 15-minute raw device counts.  All
-// three knobs live in config/default.json under "rec".
+// Published figure = (hourlyMean - baselineDevices) / devicesPerPatron, where
+// hourlyMean is the mean of the last four 15-minute raw device counts.  The
+// maths lives in modules/recFormula.js; the knobs in config/default.json under
+// "rec".
 
 const express = require("express");
 const router  = express.Router();
@@ -15,7 +16,7 @@ router.get("/", (req, res) => {
   try {
     const data = getRecData();
 
-    const { baseline: BASELINE, scale: SCALE, gate: GF_GATE } = recFormula.params();
+    const { baseline: BASELINE, devicesPerPatron: DEVICES_PER_PATRON, gate: GF_GATE } = recFormula.params();
 
     // hourlyMean = mean of the last four 15-minute patrons_raw samples,
     // computed by the collector (modules/app_core.js).  Before the first
@@ -47,7 +48,7 @@ router.get("/", (req, res) => {
         refreshInterval:  "15 minutes",
         hourlyMean:       Math.round(hourlyMean * 100) / 100,
         baselineDevices:  BASELINE,
-        devicesToPatrons: SCALE,
+        devicesPerPatron: DEVICES_PER_PATRON,
         groundFirstRatio: Math.round(groundFirstRatio * 100) / 100,
         degradedReason:   degraded
           ? `ground/first ratio ${groundFirstRatio.toFixed(2)} exceeds the ${GF_GATE} sanity limit; ` +
