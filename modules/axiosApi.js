@@ -13,6 +13,16 @@ const auth   = process.env.CMX_AUTH || config.get("app.auth");
 const host   = config.get("address.host");
 const APP_TZ = process.env.TZ || "America/New_York";
 
+// Hard ceiling on a single floor request, retries included (axios-retry runs
+// with shouldResetTimeout: false, and does not retry a timeout).  axios's own
+// default is 0 — wait forever — and that is what turned the October 2026 CMX
+// outage into a silent one: CMX accepted the TCP connection but never finished
+// the TLS handshake, so every request hung with no error, no log line, and no
+// end, and four days of hung sockets piled up.  A normal request answers in a
+// second or two; 30 s is generous.  Worst case per cycle is King's four
+// sequential floors, 2 minutes, well inside the 15-minute interval.
+const REQUEST_TIMEOUT_MS = Number(process.env.CMX_TIMEOUT_MS) || 30000;
+
 // Attach retry behaviour to the shared axios instance used for all CMX calls.
 axiosRetry(axios, {
   retries: 3,
@@ -82,6 +92,7 @@ async function makeFloorRequest(floorKey, cb) {
   try {
     const response = await axios.get(floorInfo.url, {
       headers: { Authorization: auth },
+      timeout: REQUEST_TIMEOUT_MS,
     });
 
     console.log(
@@ -90,9 +101,15 @@ async function makeFloorRequest(floorKey, cb) {
     );
     cb(response.data);
   } catch (error) {
+    // A timeout is never retried, so "all retries exhausted" would mislead —
+    // name it for what it is, since it points at a different fix (CMX hung)
+    // than a 503 or an expired certificate does.
+    const reason = error.code === "ECONNABORTED"
+      ? `no response within ${REQUEST_TIMEOUT_MS / 1000}s — CMX is not answering`
+      : `all retries exhausted: ${error.message}`;
     console.log(
       `[${new Date().toLocaleString("en-US", { timeZone: APP_TZ })}]` +
-      ` Error fetching ${floorKey} (all retries exhausted): ${error.message}`
+      ` Error fetching ${floorKey} (${reason})`
     );
     // Invoke callback with null so callers can gracefully skip this floor.
     cb(null);
