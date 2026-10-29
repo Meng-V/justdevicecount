@@ -2,9 +2,14 @@ const prisma   = require("./prisma");
 const axiosApi = require("./axiosApi");
 const { dateTime, validRssi, validTime, isValidDevice, isWithinBounds } = require("./deviceUtils");
 const { isSilentHour, describeWindow, localParts } = require("./collectionWindow");
-const recFormula = require("./recFormula");
+const { StaleClientFilter } = require("./staleClientFilter");
 
 const APP_TZ = process.env.TZ || "America/New_York";
+
+// One per building: each remembers when its devices went INACTIVE, across
+// collection cycles.  See modules/staleClientFilter.js.
+const kingStale = new StaleClientFilter();
+const recStale  = new StaleClientFilter();
 
 // ---------------------------------------------------------------------------
 // Generic floor processing function.
@@ -14,7 +19,8 @@ const APP_TZ = process.env.TZ || "America/New_York";
 // Returns true when the CMX API actually answered for this floor, false when
 // the request failed.  Callers use that to tell "building is empty" apart from
 // "we could not reach CMX" — writing the latter as 0 patrons corrupts history.
-function processFloorData(body, userMap, bounds) {
+// `stale` (optional) drops clients CMX keeps listing after they have left.
+function processFloorData(body, userMap, bounds, stale) {
   // If the CMX API returned null (all retries failed) skip this floor safely.
   if (!body || !Array.isArray(body)) return false;
 
@@ -25,6 +31,7 @@ function processFloorData(body, userMap, bounds) {
     if (!isValidDevice(device)) continue;
 
     if (isWithinBounds(device.locationCoordinate.x, device.locationCoordinate.y, bounds)) {
+      if (stale && !stale.keep(device)) continue;
       if (!userMap.has(deviceId)) {
         userMap.set(deviceId, [
           device.locationCoordinate.x,
@@ -60,22 +67,22 @@ async function king_start() {
   let anyFloorOk       = false;
 
   await axiosApi.getGroundRequest((body) => {
-    if (processFloorData(body, uniqUserGround, KING_FLOOR_BOUNDS.ground)) anyFloorOk = true;
+    if (processFloorData(body, uniqUserGround, KING_FLOOR_BOUNDS.ground, kingStale)) anyFloorOk = true;
     uniqUserGround.forEach((_, key) => uniqKingAll.add(key));
   });
 
   await axiosApi.getFirstRequest((body) => {
-    if (processFloorData(body, uniqUserFirst, KING_FLOOR_BOUNDS.first)) anyFloorOk = true;
+    if (processFloorData(body, uniqUserFirst, KING_FLOOR_BOUNDS.first, kingStale)) anyFloorOk = true;
     uniqUserFirst.forEach((_, key) => uniqKingAll.add(key));
   });
 
   await axiosApi.getSecondRequest((body) => {
-    if (processFloorData(body, uniqUserSecond, KING_FLOOR_BOUNDS.second)) anyFloorOk = true;
+    if (processFloorData(body, uniqUserSecond, KING_FLOOR_BOUNDS.second, kingStale)) anyFloorOk = true;
     uniqUserSecond.forEach((_, key) => uniqKingAll.add(key));
   });
 
   await axiosApi.getThirdRequest((body) => {
-    if (processFloorData(body, uniqUserThird, KING_FLOOR_BOUNDS.third)) anyFloorOk = true;
+    if (processFloorData(body, uniqUserThird, KING_FLOOR_BOUNDS.third, kingStale)) anyFloorOk = true;
     uniqUserThird.forEach((_, key) => uniqKingAll.add(key));
   });
 
@@ -86,6 +93,9 @@ async function king_start() {
     );
     return;
   }
+
+  const dropped = kingStale.endCycle();
+  if (dropped) console.log(`[${dateTime()}] King: left out ${dropped} stale devices (CMX INACTIVE > 30 min)`);
 
   await saveToDatabase({ uniqUserGround, uniqUserFirst, uniqUserSecond, uniqUserThird, uniqKingAll });
 }
@@ -159,7 +169,8 @@ const REC_FLOOR_BOUNDS = {
 };
 
 // Returns true when CMX answered for this floor (see processFloorData above).
-function processRecData(body, recSet) {
+// `stale` (optional) drops clients CMX keeps listing after they have left.
+function processRecData(body, recSet, stale) {
   // If the CMX API returned null skip this floor safely.
   if (!body || !Array.isArray(body)) return false;
 
@@ -167,7 +178,8 @@ function processRecData(body, recSet) {
     const device = body[i];
     if (
       isValidDevice(device) &&
-      isWithinBounds(device.locationCoordinate.x, device.locationCoordinate.y, recSet.bounds)
+      isWithinBounds(device.locationCoordinate.x, device.locationCoordinate.y, recSet.bounds) &&
+      (!stale || stale.keep(device))
     ) {
       recSet.devices.add(device.deviceId);
     }
@@ -182,11 +194,16 @@ async function rec_start() {
 
   let anyFloorOk = false;
   await axiosApi.getRecGroundRequest((body) => {
-    if (processRecData(body, groundSet)) anyFloorOk = true;
+    if (processRecData(body, groundSet, recStale)) anyFloorOk = true;
   });
   await axiosApi.getRecFirstRequest((body) => {
-    if (processRecData(body, firstSet)) anyFloorOk = true;
+    if (processRecData(body, firstSet, recStale)) anyFloorOk = true;
   });
+
+  if (anyFloorOk) {
+    const dropped = recStale.endCycle();
+    if (dropped) console.log(`[${dateTime()}] Rec: left out ${dropped} stale devices (CMX INACTIVE > 30 min)`);
+  }
 
   // Merge unique device IDs across both floors
   const allRec = new Set([...groundSet.devices, ...firstSet.devices]);
@@ -270,26 +287,6 @@ async function recHourlyMean(fallbackRaw) {
   } catch (err) {
     console.error(`[${dateTime()}] recHourlyMean error: ${err.stack}`);
     return fallbackRaw;
-  }
-}
-
-// ---------------------------------------------------------------------------
-// Rec baseline — the devices CMX reports that are not patrons, measured as the
-// median raw count during last night's closed hours (see modules/recFormula.js).
-// Computed once per collection cycle for the same reason as recHourlyMean.
-// Loads a few days so a night lost to an outage can fall back to the one before.
-// ---------------------------------------------------------------------------
-async function recBaseline(at) {
-  try {
-    const rows = await prisma.recData.findMany({
-      where:   { timeStamp: { gte: new Date(at.getTime() - (recFormula.LOOKBACK_NIGHTS + 1) * 24 * 60 * 60 * 1000) } },
-      orderBy: { timeStamp: "asc" },
-      select:  { timeStamp: true, patrons: true },
-    });
-    return recFormula.baselineFromSamples(rows, at);
-  } catch (err) {
-    console.error(`[${dateTime()}] recBaseline error: ${err.stack}`);
-    return recFormula.baselineFromSamples([], at);
   }
 }
 
@@ -416,7 +413,6 @@ let recDataCache = {
   patrons:      0,
   countByFloor: [0, 0],
   hourlyMean:   0,
-  baseline:     null,   // { baseline, source, night } — see recBaseline()
   lastUpdated:  null,
 };
 
@@ -440,7 +436,6 @@ async function rec_start_cached() {
   recDataCache = {
     ...data,
     hourlyMean:  await recHourlyMean(data.patrons),
-    baseline:    await recBaseline(data.timeStamp),
     lastUpdated: new Date(),
   };
   return recDataCache;
@@ -462,7 +457,6 @@ module.exports = {
   rec_start,
   rec_start_cached,
   recHourlyMean,
-  recBaseline,
   saveRecToDatabase,
   getRecData,
   restart,

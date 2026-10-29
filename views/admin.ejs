@@ -377,8 +377,8 @@
         <div id="rec-stats" class="day-stats"></div>
         <div id="rec-msg" class="day-msg">
           Data available <%= recDayMin %> → <%= recDayMax %> ·
-          total = (hourly mean − last night's closed-hours device count) ÷ <%= recDevicesPerPatron %> devices per patron
-          while open, 0 while closed — the live widget's estimate before it is rescaled to the widget's maximum.
+          total = (hourly mean − <%= recBaseline %> baseline devices) ÷ <%= recDevicesPerPatron %> devices per patron,
+          the live widget's estimate before it is rescaled to the widget's maximum.
         </div>
         <div id="chart-rec" style="width:100%;height:380px;"></div>
 
@@ -387,7 +387,7 @@
             <thead>
               <tr>
                 <th>Time (ET)</th><th>Total (adjusted)</th><th>Total (raw)</th>
-                <th>Baseline</th><th>Ground</th><th>First</th>
+                <th>Ground</th><th>First</th>
               </tr>
             </thead>
             <tbody></tbody>
@@ -747,13 +747,8 @@ const sortedMonthLabels = sortedMonthKeys.map(monthLabel);
     }
 
     const degradedCount = records.filter(r => r.degraded).length;
-    const baselineText = !baseline ? 'no opening-hours readings'
-      : baseline.source === 'night'
-        ? baseline.devices + ' devices, measured during last night\'s closed hours'
-        : baseline.devices + ' devices (configured default — no closed-hours readings available)';
     msgEl.textContent =
-      'Total = (hourly mean − baseline) ÷ ' + devicesPerPatron + ' devices per patron while open, 0 while closed.' +
-      ' Baseline: ' + baselineText + '.' +
+      'Total = (hourly mean − ' + baseline + ' baseline devices) ÷ ' + devicesPerPatron + ' devices per patron.' +
       (degradedCount
         ? '  ' + degradedCount + ' of ' + records.length +
           ' readings failed the ground/first sanity check and are likely over-stated.'
@@ -781,8 +776,8 @@ const sortedMonthLabels = sortedMonthKeys.map(monthLabel);
     }, PLOTLY_CFG);
 
     tableBody.innerHTML = records.map(r =>
-      `<tr><td>${r.time}</td><td>${r.open ? r.patrons : 'closed'}</td><td>${r.raw}</td>` +
-      `<td>${r.baseline}</td><td>${r.ground}</td><td>${r.first}</td></tr>`
+      `<tr><td>${r.time}</td><td>${r.patrons}</td><td>${r.raw}</td>` +
+      `<td>${r.ground}</td><td>${r.first}</td></tr>`
     ).join('');
     tableWrap.style.display = '';
   }

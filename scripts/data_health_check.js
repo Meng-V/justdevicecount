@@ -142,6 +142,42 @@ async function checkTable(model, label, kind) {
   };
 }
 
+// CMX keeps listing clients after they leave (see modules/staleClientFilter.js).
+// The collector drops them while CMX still marks them INACTIVE; if that ever
+// stops working — CMX changes how it flags them — every count is inflated and
+// nothing else here notices.  The tell is devices counted while the building
+// is empty.  00:30-01:45 ET is closed under every Rec schedule and the
+// collector still writes then; a healthy night reads about 10 devices.
+const REC_CLOSED_FROM  = "00:30";
+const REC_CLOSED_TO    = "01:45";
+const REC_CLOSED_LIMIT = Number(process.env.ALERT_REC_CLOSED_MAX) || 40;
+
+async function checkRecClosedHours(model = prisma.recData) {
+  const hhmm = (d) => d.toLocaleTimeString("en-GB", { timeZone: APP_TZ, hour: "2-digit", minute: "2-digit", hour12: false });
+  const rows = await model.findMany({
+    where:  { timeStamp: { gte: new Date(Date.now() - 24 * 60 * 60 * 1000) } },
+    select: { timeStamp: true, patrons: true },
+  });
+  const night = rows
+    .filter((r) => { const t = hhmm(r.timeStamp); return t >= REC_CLOSED_FROM && t <= REC_CLOSED_TO; })
+    .map((r) => r.patrons)
+    .sort((a, b) => a - b);
+
+  if (night.length === 0) return { median: null, problems: [] };   // the row-count checks cover a dead collector
+
+  const median = night[Math.floor(night.length / 2)];
+  const problems = median > REC_CLOSED_LIMIT
+    ? [
+        `Recreation Center: ${median} devices counted while the building was closed ` +
+        `(${REC_CLOSED_FROM}-${REC_CLOSED_TO} ET median; normal is about 10, alert above ${REC_CLOSED_LIMIT}). ` +
+        "CMX is reporting clients that have left and the stale-client filter is not catching them, " +
+        "so every count is inflated. Check what CMX now sends for those clients " +
+        "(networkStatus, currentlyTracked) against modules/staleClientFilter.js.",
+      ]
+    : [];
+  return { median, problems };
+}
+
 function checkSummaryFreshness() {
   const p = path.join(STORED_DATA_DIR, "analysis", "big_summary.json");
   try {
@@ -197,9 +233,10 @@ function sendMail(subject, body) {
 async function run() {
   const king    = await checkTable(prisma.deviceData, "King Library (device_data)", "king");
   const rec     = await checkTable(prisma.recData,    "Recreation Center (rec_data)", "rec");
+  const recNight = await checkRecClosedHours();
   const summary = checkSummaryFreshness();
 
-  const problems = [...king.problems, ...rec.problems, ...summary.problems];
+  const problems = [...king.problems, ...rec.problems, ...recNight.problems, ...summary.problems];
 
   const status = (t) =>
     `  ${t.label}\n` +
@@ -216,6 +253,8 @@ async function run() {
     status(king) +
     "\n" +
     status(rec) +
+    `    counted while closed: ${recNight.median === null ? "n/a" : recNight.median + " devices"} ` +
+    `(${REC_CLOSED_FROM}-${REC_CLOSED_TO} ET, normal ~10)\n` +
     "\n" +
     `  Dashboard analysis file: ${summary.ageH === null ? "MISSING" : summary.ageH + "h old"}\n`;
 
@@ -247,7 +286,10 @@ async function run() {
   sendMail(subject, body);
 }
 
-run()
+if (require.main !== module) {
+  // Required (e.g. by a test) rather than run: expose the checks, do nothing.
+  module.exports = { checkRecClosedHours, REC_CLOSED_LIMIT };
+} else run()
   .catch((e) => {
     console.error("[health_check] FATAL:", e);
     sendMail(
