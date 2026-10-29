@@ -2,15 +2,16 @@
 // The live count is served from an in-memory cache; the raw counts are also
 // persisted every collection cycle to the rec_data table (see app_core.js).
 //
-// Estimated patrons = (hourlyMean - baselineDevices) / devicesPerPatron, where
-// hourlyMean is the mean of the last four 15-minute raw device counts.
+// Estimated patrons = (hourlyMean - baseline) / devicesPerPatron while the Rec
+// is open, 0 while it is closed.  hourlyMean is the mean of the last four
+// 15-minute raw device counts; baseline is last night's closed-hours device
+// count, which removes the devices CMX reports that are not patrons.  See
+// modules/recFormula.js; the knobs live in config/default.json under "rec".
 //
-// data.patrons is NOT that estimate: it is rescaled to the public Rec widget,
-// which hard-codes a maximum of 200 while the building holds ~350, so that the
-// widget's patrons / 200 shows the true occupancy.  Consumers that want a head
-// count should read metadata.estimatedPatrons, or metadata.occupancyPercent
-// for the percentage.  See widgetPatrons() in modules/recFormula.js; the knobs
-// live in config/default.json under "rec".
+// data.patrons is that estimate rescaled to the public Rec widget, which
+// hard-codes a maximum of 200 (identical while rec.capacity is also 200).
+// Consumers that want a head count should read metadata.estimatedPatrons, or
+// metadata.occupancyPercent for the percentage.
 
 const express = require("express");
 const router  = express.Router();
@@ -22,9 +23,14 @@ router.get("/", (req, res) => {
     const data = getRecData();
 
     const {
-      baseline: BASELINE, devicesPerPatron: DEVICES_PER_PATRON, gate: GF_GATE,
+      defaultBaseline, devicesPerPatron: DEVICES_PER_PATRON, gate: GF_GATE,
       capacity: CAPACITY, widgetMax: WIDGET_MAX,
     } = recFormula.params();
+
+    // Measured by the collector each cycle; before its first cycle there is
+    // none yet, so fall back to the configured default.
+    const baseline = data.baseline ?? { baseline: defaultBaseline, source: "default", night: null };
+    const open     = recFormula.isOpen(new Date());
 
     // hourlyMean = mean of the last four 15-minute patrons_raw samples,
     // computed by the collector (modules/app_core.js).  Before the first
@@ -32,7 +38,7 @@ router.get("/", (req, res) => {
     // live sample rather than publishing 0.
     const hourlyMean = Number.isFinite(data.hourlyMean) ? data.hourlyMean : data.patrons;
 
-    const estimatedPatrons = recFormula.patronsFromHourlyMean(hourlyMean);
+    const estimatedPatrons = open ? recFormula.patronsFromHourlyMean(hourlyMean, baseline.baseline) : 0;
     const widgetPatrons    = recFormula.widgetPatrons(estimatedPatrons);
 
     const [ground, first] = data.countByFloor ?? [0, 0];
@@ -60,7 +66,11 @@ router.get("/", (req, res) => {
         capacity:         CAPACITY,
         occupancyPercent: Math.round(estimatedPatrons / CAPACITY * 100),
         widgetMax:        WIDGET_MAX,
-        baselineDevices:  BASELINE,
+        open,
+        baselineDevices:  Math.round(baseline.baseline),
+        baselineSource:   baseline.source === "night"
+          ? `median closed-hours reading, night of ${baseline.night}`
+          : "configured default (no recent closed-hours readings)",
         devicesPerPatron: DEVICES_PER_PATRON,
         groundFirstRatio: Math.round(groundFirstRatio * 100) / 100,
         degradedReason:   degraded

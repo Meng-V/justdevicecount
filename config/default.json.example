@@ -18,9 +18,18 @@
     "baselineDevices": 10,
     "devicesPerPatron": 1.2,
     "groundFirstGate": 1.0,
-    "capacity": 350,
+    "capacity": 200,
     "widgetMax": 200,
-    "capacityComment": "capacity = real head-count capacity of the building. widgetMax = MAX_CAPACITY hard-coded in the public Rec widget (gist copy on the university site). /recapi scales data.patrons by widgetMax/capacity so the widget shows the right percentage without editing it."
+    "hours": {
+      "mon": ["06:00", "23:00"],
+      "tue": ["06:00", "23:00"],
+      "wed": ["06:00", "23:00"],
+      "thu": ["06:00", "23:00"],
+      "fri": ["06:00", "22:00"],
+      "sat": ["08:00", "22:00"],
+      "sun": ["10:00", "22:00"]
+    },
+    "comment": "hours = Rec opening hours (ET), Fall 2026 (Aug 21 - Dec 9) from miamioh.edu/athletics-recreation/recreation/about/hours.html. UPDATE EACH TERM: the baseline is measured during closed hours, and patrons read 0 outside these hours. baselineDevices = fallback baseline used only when no closed-hours readings exist (e.g. after an outage). capacity = real head-count capacity; widgetMax = MAX_CAPACITY hard-coded in the public Rec widget. /recapi scales data.patrons by widgetMax/capacity; they are equal until the Rec gives us a real capacity."
   },
   "collection": {
     "comment": "Silent window [start, end) in local hours: DB writes are skipped while start <= hour < end.",

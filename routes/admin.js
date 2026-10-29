@@ -461,11 +461,13 @@ router.get("/range/info", requireToken, (req, res) => {
 // Data source: STORED_DATA_DIR/rec_summaries/YYYY-MM_summary.json
 //   { timeStamp(UTC), patrons (RAW), countByFloor: [ground, first] }
 // `patrons` is the raw device count; the published figure is
-// (hourlyMean - baselineDevices) / devicesPerPatron, exactly what the live
-// widget serves — see modules/recFormula.js.
+// (hourlyMean - last night's closed-hours baseline) / devicesPerPatron while
+// the Rec is open and 0 while it is closed, exactly what the live widget serves
+// — see modules/recFormula.js.
 // ---------------------------------------------------------------------------
 
-// Attach hourlyMean + the published patron count to a time-ordered record set.
+// Attach hourlyMean, baseline and the published patron count to a
+// time-ordered record set.
 function recWithFormula(recs) {
   const applied = recFormula.applyToSeries(recs);
 
@@ -479,6 +481,9 @@ function recWithFormula(recs) {
       timeStamp:  r.timeStamp,
       raw:        r.patrons,
       hourlyMean: applied[i].hourlyMean,
+      baseline:   applied[i].baseline,
+      baselineSource: applied[i].baselineSource,
+      open:       applied[i].open,
       patrons:    applied[i].patrons,
       ground,
       first,
@@ -487,27 +492,36 @@ function recWithFormula(recs) {
   });
 }
 
+// Rec records for [from, to] with the formula applied.  A few days before
+// `from` are loaded too: the morning's readings take their baseline from the
+// night before, which starts on the previous day, and an outage night falls
+// back to the one before that.
+function getRecRange(from, to) {
+  const start = recFormula.shiftDate(from, -recFormula.LOOKBACK_NIGHTS);
+  return recWithFormula(getRangeRecords(start, to, REC_SUMMARY_DIR))
+    .filter(r => r.etDate >= from);
+}
+
 function getRecDay(date) {
-  return recWithFormula(getDayRecords(date, REC_SUMMARY_DIR));
+  return getRecRange(date, date);
 }
 
 // Date-picker bounds for the Rec tab: first/last ET day that actually has data.
 function recViewData() {
-  const { baseline, devicesPerPatron } = recFormula.params();
+  const { devicesPerPatron } = recFormula.params();
   const months = availableMonths(REC_SUMMARY_DIR);
   if (!months.length) {
-    return { recAvailable: false, recBaseline: baseline, recDevicesPerPatron: devicesPerPatron };
+    return { recAvailable: false, recDevicesPerPatron: devicesPerPatron };
   }
 
   const firstRecs = loadMonthSummary(months[0], REC_SUMMARY_DIR) || [];
   const lastRecs  = loadMonthSummary(months.at(-1), REC_SUMMARY_DIR) || [];
   if (!firstRecs.length || !lastRecs.length) {
-    return { recAvailable: false, recBaseline: baseline, recDevicesPerPatron: devicesPerPatron };
+    return { recAvailable: false, recDevicesPerPatron: devicesPerPatron };
   }
 
   return {
     recAvailable: true,
-    recBaseline:  baseline,
     recDevicesPerPatron: devicesPerPatron,
     recDayMin:    toEtParts(firstRecs[0].timeStamp).etDate,
     recDayMax:    toEtParts(lastRecs[lastRecs.length - 1].timeStamp).etDate,
@@ -522,23 +536,32 @@ router.get("/rec/day", requireToken, (req, res) => {
 
   const records = getRecDay(date);
 
+  // Stats cover opening hours only: closed readings are 0 by definition and
+  // would drag the average and the low down to nothing.
+  const openRecs = records.filter(r => r.open);
   let stats = { count: 0 };
-  if (records.length) {
-    const p    = records.map(r => r.patrons);
+  if (openRecs.length) {
+    const p    = openRecs.map(r => r.patrons);
     const peak = Math.max(...p);
     const low  = Math.min(...p);
     const sum  = p.reduce((a, b) => a + b, 0);
     stats = {
-      count:    records.length,
-      avg:      Math.round(sum / records.length),
+      count:    openRecs.length,
+      avg:      Math.round(sum / openRecs.length),
       peak,
-      peakTime: records[p.indexOf(peak)].time,
+      peakTime: openRecs[p.indexOf(peak)].time,
       low,
-      lowTime:  records[p.indexOf(low)].time,
+      lowTime:  openRecs[p.indexOf(low)].time,
     };
   }
 
-  const { baseline, devicesPerPatron } = recFormula.params();
+  // The baseline the day's opening-hours readings were measured against.
+  const first = openRecs[0];
+  const baseline = first
+    ? { devices: first.baseline, source: first.baselineSource }
+    : null;
+
+  const { devicesPerPatron } = recFormula.params();
   res.json({ date, tz: TZ, baseline, devicesPerPatron, stats, records });
 });
 
@@ -549,9 +572,9 @@ router.get("/rec/day.csv", requireToken, (req, res) => {
 
   const records = getRecDay(date);
   const header =
-    "timeStamp_utc,time_et,patrons_raw,hourly_mean,patrons_adjusted,ground,first,degraded\n";
+    "timeStamp_utc,time_et,open,patrons_raw,hourly_mean,baseline,patrons_adjusted,ground,first,degraded\n";
   const body = records.map(r =>
-    [r.timeStamp, r.time, r.raw, r.hourlyMean, r.patrons, r.ground, r.first, r.degraded].join(",")
+    [r.timeStamp, r.time, r.open, r.raw, r.hourlyMean, r.baseline, r.patrons, r.ground, r.first, r.degraded].join(",")
   ).join("\n");
 
   res.setHeader("Content-Type", "text/csv; charset=utf-8");
@@ -568,8 +591,10 @@ router.get("/rec/day.json", requireToken, (req, res) => {
   res.json(getRecDay(date).map(r => ({
     timeStamp:        r.timeStamp,
     time_et:          r.time,
+    open:             r.open,
     patrons_raw:      r.raw,
     hourly_mean:      r.hourlyMean,
+    baseline:         r.baseline,
     patrons_adjusted: r.patrons,
     countByFloor:     [r.ground, r.first],
     degraded:         r.degraded,
@@ -581,12 +606,12 @@ router.get("/rec/range.csv", requireToken, (req, res) => {
   const { from, to, error } = parseRangeParams(req);
   if (error) return res.status(400).send(error);
 
-  const recs = recWithFormula(getRangeRecords(from, to, REC_SUMMARY_DIR));
+  const recs = getRecRange(from, to);
   const header =
-    "timeStamp_utc,date_et,time_et,patrons_raw,hourly_mean,patrons_adjusted,ground,first,degraded\n";
+    "timeStamp_utc,date_et,time_et,open,patrons_raw,hourly_mean,baseline,patrons_adjusted,ground,first,degraded\n";
   const body = recs.map(r => [
-    r.timeStamp, r.etDate, r.time,
-    r.raw, r.hourlyMean, r.patrons,
+    r.timeStamp, r.etDate, r.time, r.open,
+    r.raw, r.hourlyMean, r.baseline, r.patrons,
     r.ground, r.first, r.degraded,
   ].join(",")).join("\n");
 
@@ -601,12 +626,14 @@ router.get("/rec/range.json", requireToken, (req, res) => {
   const { from, to, error } = parseRangeParams(req);
   if (error) return res.status(400).json({ error });
 
-  const recs = recWithFormula(getRangeRecords(from, to, REC_SUMMARY_DIR)).map(r => ({
+  const recs = getRecRange(from, to).map(r => ({
     timeStamp:        r.timeStamp,
     date_et:          r.etDate,
     time_et:          r.time,
+    open:             r.open,
     patrons_raw:      r.raw,
     hourly_mean:      r.hourlyMean,
+    baseline:         r.baseline,
     patrons_adjusted: r.patrons,
     countByFloor:     [r.ground, r.first],
     degraded:         r.degraded,

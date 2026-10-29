@@ -2,6 +2,7 @@ const prisma   = require("./prisma");
 const axiosApi = require("./axiosApi");
 const { dateTime, validRssi, validTime, isValidDevice, isWithinBounds } = require("./deviceUtils");
 const { isSilentHour, describeWindow, localParts } = require("./collectionWindow");
+const recFormula = require("./recFormula");
 
 const APP_TZ = process.env.TZ || "America/New_York";
 
@@ -273,6 +274,26 @@ async function recHourlyMean(fallbackRaw) {
 }
 
 // ---------------------------------------------------------------------------
+// Rec baseline — the devices CMX reports that are not patrons, measured as the
+// median raw count during last night's closed hours (see modules/recFormula.js).
+// Computed once per collection cycle for the same reason as recHourlyMean.
+// Loads a few days so a night lost to an outage can fall back to the one before.
+// ---------------------------------------------------------------------------
+async function recBaseline(at) {
+  try {
+    const rows = await prisma.recData.findMany({
+      where:   { timeStamp: { gte: new Date(at.getTime() - (recFormula.LOOKBACK_NIGHTS + 1) * 24 * 60 * 60 * 1000) } },
+      orderBy: { timeStamp: "asc" },
+      select:  { timeStamp: true, patrons: true },
+    });
+    return recFormula.baselineFromSamples(rows, at);
+  } catch (err) {
+    console.error(`[${dateTime()}] recBaseline error: ${err.stack}`);
+    return recFormula.baselineFromSamples([], at);
+  }
+}
+
+// ---------------------------------------------------------------------------
 // DeviceDataService — 15-minute aligned scheduler
 // ---------------------------------------------------------------------------
 class DeviceDataService {
@@ -395,6 +416,7 @@ let recDataCache = {
   patrons:      0,
   countByFloor: [0, 0],
   hourlyMean:   0,
+  baseline:     null,   // { baseline, source, night } — see recBaseline()
   lastUpdated:  null,
 };
 
@@ -418,6 +440,7 @@ async function rec_start_cached() {
   recDataCache = {
     ...data,
     hourlyMean:  await recHourlyMean(data.patrons),
+    baseline:    await recBaseline(data.timeStamp),
     lastUpdated: new Date(),
   };
   return recDataCache;
@@ -439,6 +462,7 @@ module.exports = {
   rec_start,
   rec_start_cached,
   recHourlyMean,
+  recBaseline,
   saveRecToDatabase,
   getRecData,
   restart,
