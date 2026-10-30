@@ -25,31 +25,69 @@ The server uses systemd to manage the process — not PM2, not dist builds.
 ## Prerequisites
 
 1. SSH access to the server
-2. Access to the `devicecount` user account
-3. Sudo access to run `sudo service crowdindex restart`
+2. Sudo access from your own account (the deploy script runs as root and drops
+   to `devicecount` where it needs to)
 
 ---
 
 ## Deployment Workflow
 
-### 1. Pull the latest code
+Deploy with the Puppet-generated script, from your own account (not as `devicecount`):
 
 ```bash
-sudo su - devicecount
-cd /opt/devicecount/current
-git pull
+sudo bash /opt/devicecount/deploy.sh          # deploys main
+sudo bash /opt/devicecount/deploy.sh <branch> # or another branch
 ```
 
-### 2. Install dependencies (only if package.json changed)
+It never touches the running build. Each run:
+
+1. Clones the branch fresh into `/opt/devicecount/builds/<timestamp>` (`--depth 1`)
+2. Replaces `.env`, `config/` and `certs/` in the new build with symlinks into
+   `/opt/devicecount/shared/` — the real secrets live only there
+3. Runs `npm install` as `devicecount`
+4. Points the `current` symlink at the new build
+5. Restarts `crowdindex.service`
+6. Deletes all but the 5 newest builds
+
+The script stops at the first failing step (`set -euo pipefail`). Anything that
+fails before step 4 leaves the old version running untouched.
+
+> **Do not `git pull` inside `current`.** `current/config` is a symlink, so git
+> sees `config/default.json` as deleted and refuses any pull that touches it.
+> `git stash`, `git checkout -- config` or `git reset --hard` "fix" that by
+> replacing the symlink with the repo's placeholder config — after the next
+> restart CMX rejects the placeholder credentials and every count reads 0.
+
+### Before deploying: note the current build
 
 ```bash
-npm install --production
+readlink /opt/devicecount/current
 ```
 
-### 3. Update database schema (only if prisma/schema.prisma changed)
+### Verify
 
-Use the **local** Prisma binary, NOT `npx prisma` — `npx` can silently resolve a
-newer major version (e.g. Prisma 7) and break the build:
+```bash
+readlink /opt/devicecount/current          # the new builds/<timestamp>
+sudo -u devicecount git -C /opt/devicecount/current log --oneline -1
+ls -ld /opt/devicecount/current/config      # -> /opt/devicecount/shared/config
+systemctl status crowdindex --no-pager | head -5
+sudo tail -n 30 /var/log/crowdindex/crowdindex.log
+```
+
+### Roll back
+
+Point `current` at the build you noted and restart:
+
+```bash
+sudo -u devicecount ln -sfn /opt/devicecount/builds/<previous-timestamp> /opt/devicecount/current
+sudo systemctl restart crowdindex
+```
+
+### Database schema changes (only if prisma/schema.prisma changed)
+
+`deploy.sh` does not touch the database. After deploying, as `devicecount` in
+`/opt/devicecount/current`, use the **local** Prisma binary, NOT `npx prisma` —
+`npx` can silently resolve a newer major version (e.g. Prisma 7) and break the build:
 
 ```bash
 ./node_modules/.bin/prisma generate
@@ -57,27 +95,8 @@ newer major version (e.g. Prisma 7) and break the build:
 ```
 
 `db push` is **additive** for new models — it creates the `rec_data` table
-without touching the existing `device_data` table or its rows.
-
-> This applies to the deploy that introduces Recreation-Center persistence
-> (the `RecData` model / `rec_data` table). Until `db push` runs, the app logs
-> `saveRecToDatabase error` each cycle but King Library collection is unaffected.
-
-### 4. Restart the service
-
-Exit back to your own user first, then restart:
-
-```bash
-exit
-sudo service crowdindex restart
-```
-
-### 5. Verify
-
-```bash
-sudo service crowdindex status
-sudo tail -n 30 /var/log/crowdindex/crowdindex.log
-```
+without touching the existing `device_data` table or its rows. Restart the
+service afterwards.
 
 ---
 
@@ -129,7 +148,7 @@ The systemd service runs `node bin/www` directly inside `/opt/devicecount/curren
 ## Required Files on Server
 
 ```
-/opt/devicecount/current/
+/opt/devicecount/shared/    # the real files; each build links to them
 ├── .env                    # all secrets and config — DO NOT commit
 ├── config/default.json     # CMX API URLs and auth — DO NOT commit
 └── certs/
@@ -144,23 +163,30 @@ The systemd service runs `node bin/www` directly inside `/opt/devicecount/curren
     └── dashboard.html
 ```
 
-### Where the .env actually lives (IMPORTANT)
+### Where the .env and config actually live (IMPORTANT)
 
-The deployment uses a symlinked release layout:
+The deployment uses a symlinked release layout (built by `deploy.sh`):
 
 ```
 /opt/devicecount/
+├── deploy.sh                           # Puppet-generated deploy script
 ├── current  ->  builds/<timestamp>     # symlink, swapped on each deploy
 ├── shared/
 │   ├── .env                            # the REAL .env (root-owned)
-│   ├── config/
+│   ├── config/default.json             # the REAL CMX config (with auth)
 │   └── certs/
-└── builds/<timestamp>/
-    └── .env  ->  /opt/devicecount/shared/.env   # symlink into shared
+└── builds/<timestamp>/                 # one fresh clone per deploy, 5 kept
+    ├── .env    ->  /opt/devicecount/shared/.env
+    ├── config  ->  /opt/devicecount/shared/config
+    └── certs   ->  /opt/devicecount/shared/certs
 ```
 
 - The app's `dotenv` loads `.env` from its working dir (`current/`), which is a
   **symlink to `/opt/devicecount/shared/.env`**. Edit the shared file, never the build.
+- Likewise `config/` is a symlink: edit `/opt/devicecount/shared/config/default.json`.
+  The repo's `config/default.json` only carries a placeholder for `app.auth`.
+  Every key the code added later (e.g. `rec.capacity`) has a default in the code,
+  so the shared file does not need them.
 - The base systemd unit (`/etc/systemd/system/crowdindex.service`) is generated by
   **Puppet** — do not edit it directly; Puppet will overwrite it.
 
@@ -317,12 +343,9 @@ https://app.lib.miamioh.edu/crowdindex/health
 ## Quick Reference
 
 ```bash
-sudo su - devicecount
-cd /opt/devicecount/current
-git pull
-exit
-sudo service crowdindex restart
-sudo service crowdindex status
+readlink /opt/devicecount/current          # note it, for rollback
+sudo bash /opt/devicecount/deploy.sh
+systemctl status crowdindex --no-pager | head -5
 sudo tail -f /var/log/crowdindex/crowdindex.log
 ```
 
