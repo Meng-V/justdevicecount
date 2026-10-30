@@ -9,6 +9,14 @@ Polls the Cisco CMX API every 15 minutes, counts unique WiFi devices per floor, 
 the results in a PostgreSQL database. A web dashboard and a set of JSON APIs make the data
 available to staff, digital signage, and analytics tools.
 
+## Project Status
+
+Complete and running unattended in production since October 2026. Collection, dashboard
+refreshes, the monthly archive and the daily health check all run on their own; a person
+is only needed when an alert e-mail arrives. See
+[SERVER_DEPLOYMENT.md → Alert e-mails](SERVER_DEPLOYMENT.md#alert-e-mails-and-what-to-do)
+for what each alert means and who to contact.
+
 ## Routes
 
 All routes are prefixed with `/crowdindex/`.
@@ -28,10 +36,25 @@ All routes are prefixed with `/crowdindex/`.
 1. `DeviceDataService` fires at `:00`, `:15`, `:30`, `:45` each hour (Eastern Time)
 2. Fetches device lists from the CMX API for each floor
 3. Deduplicates device IDs within coordinate bounds for each floor
-4. Saves patron counts + per-floor arrays to PostgreSQL via Prisma
-5. A 15-minute in-memory cache keeps API responses fast
-6. On the 1st of every month at midnight ET, old data is exported to
-   `STORED_DATA_DIR` and purged from the database automatically
+   (`KING_FLOOR_BOUNDS` / `REC_FLOOR_BOUNDS` in `modules/app_core.js`)
+4. Leaves out devices CMX keeps listing after people have left: a device CMX marks
+   `INACTIVE` stops counting after 30 minutes (`modules/staleClientFilter.js`)
+5. Saves patron counts + per-floor arrays to PostgreSQL via Prisma
+   (`device_data` for King, `rec_data` for the Rec), except during each building's
+   overnight silent window — King 02:00–07:00, Rec 02:00–05:00 (`modules/collectionWindow.js`)
+6. A 15-minute in-memory cache keeps API responses fast
+7. `/recapi` turns the Rec's device count into people:
+   `(hourly mean of devices − 10) / 1.2` (`modules/recFormula.js`, tunable under `rec` in
+   `config/default.json`). `/patronapi` publishes King's device count as is.
+
+Scheduled jobs, all built into the app (node-cron, Eastern Time — no OS crontab):
+
+| When | Job |
+|------|-----|
+| Every hour at `:05` | Refresh the admin dashboard's summary files (`refresh_summaries.js --no-analysis`) |
+| Daily 03:15 | Full summary refresh, including `big_summary.json` |
+| Daily 07:00 | Health check; e-mails `ALERT_EMAIL` if data is missing, stale, all zero, or the Rec reads too high while closed (`data_health_check.js`) |
+| 1st of the month, 00:00 | Refresh summaries, then export and delete rows older than the two previous months (`export_and_purge.js`) |
 
 ## Tech Stack
 
@@ -39,7 +62,8 @@ All routes are prefixed with `/crowdindex/`.
 - **Database**: PostgreSQL via Prisma ORM
 - **Data source**: Cisco CMX WiFi Analytics API
 - **Process management**: systemd (production) / PM2 (local dev)
-- **Analytics**: Python scripts (`extract_summary.py`, `big_summary.py`, `visualize_summary.py`)
+- **Analytics**: `refresh_summaries.js` rebuilds the dashboard's summary files from the
+  database and runs `big_summary.py` (needs `python3`)
 
 ## Key Environment Variables
 
@@ -52,18 +76,34 @@ All routes are prefixed with `/crowdindex/`.
 | `PRODUCTION_HOSTNAME` | Public hostname for HTTPS server |
 | `PROD_CERT_PATH` | Path to SSL certificate (production) |
 | `PROD_KEY_PATH` | Path to SSL private key (production) |
-| `CMX_AUTH` | Base64-encoded Cisco CMX credentials |
+| `CMX_AUTH` | Base64-encoded Cisco CMX credentials (overrides `app.auth` in `config/default.json`) |
+| `CMX_TIMEOUT_MS` | Per-request CMX timeout (default `30000`) |
 | `ADMIN_TOKEN` | Token for `/admin` dashboard access |
 | `STORED_DATA_DIR` | Where monthly exports and analytics files live |
-| `DASHBOARD_START_MONTH` | Oldest month shown in analytics dashboard (`YYYY-MM`) |
-| `DASHBOARD_END_MONTH` | Newest month shown in analytics dashboard (`YYYY-MM`) |
+| `ALERT_EMAIL` | Who gets the health-check e-mails — set this when the project changes hands |
+| `ALERT_FROM`, `ALERT_MIN_ROWS_24H`, `ALERT_MAX_STALE_MIN`, `ALERT_REC_CLOSED_MAX` | Optional health-check tuning (see `.env.example`) |
+| `DASHBOARD_START_MONTH` / `DASHBOARD_END_MONTH` | Optional month range for the analytics dashboard (`YYYY-MM`). Leave unset so new months appear automatically |
 
 See `.env.example` for a complete template.
+
+## Known Limitations
+
+- **CMX stopped expiring departed clients around 5 Sep 2026.** The collector works around
+  it (step 4 above); the cause on the CMX side was never found. Stored rows from
+  5 Sep to 29 Oct 2026 were corrected afterwards: King device by device, the Rec
+  estimated from its closed-hours readings (see
+  [SERVER_DEPLOYMENT.md → Ghost history correction](SERVER_DEPLOYMENT.md#ghost-history-correction-sepoct-2026)).
+- **King's occupancy percentage is uncalibrated.** The public widget on the library
+  website (not in this repo) shows `devices × 0.8 / 1050`; that factor was never checked
+  against a head count.
+- **The Rec's capacity of 200 is an assumption** until the Rec supplies a real figure
+  (`rec.capacity` in `config/default.json`).
+- `npm audit` reports open advisories in dependencies; none have been addressed.
 
 ## Documentation
 
 - **[DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md)** — local development setup
-- **[SERVER_DEPLOYMENT.md](SERVER_DEPLOYMENT.md)** — production deployment with systemd
+- **[SERVER_DEPLOYMENT.md](SERVER_DEPLOYMENT.md)** — production deployment, scheduled jobs, alerts
 
 ## Privacy
 

@@ -203,9 +203,14 @@ PROD_KEY_PATH=./certs/<hostname>.key
 CMX_AUTH=Basic <base64credentials>
 ADMIN_TOKEN=<random-token>
 STORED_DATA_DIR=/home/qum/stored_data
-DASHBOARD_START_MONTH=2025-10
-DASHBOARD_END_MONTH=2026-05
+# Optional — see .env.example
+# ALERT_EMAIL=<who gets the health-check e-mails>
+# DASHBOARD_START_MONTH=2025-10
 ```
+
+Leave `DASHBOARD_END_MONTH` unset. If it is set, every month after it stays hidden on
+the admin dashboard until someone edits it. Check with
+`sudo grep DASHBOARD /opt/devicecount/shared/.env`.
 
 ### systemd environment override
 
@@ -296,17 +301,23 @@ Common causes:
 
 ### Database connection errors
 
+Test the connection without changing anything:
+
 ```bash
 sudo su - devicecount
 cd /opt/devicecount/current
-npx prisma db pull
+node -e 'require("dotenv").config(); const { PrismaClient } = require("@prisma/client"); const p = new PrismaClient(); p.$queryRaw`SELECT 1`.then(() => console.log("DB OK")).catch((e) => console.error(e.message)).finally(() => p.$disconnect())'
 ```
+
+Do not use `prisma db pull` to test: it overwrites `prisma/schema.prisma`, and `npx`
+may fetch a newer major Prisma version.
 
 ### Permission issues
 
-```bash
-sudo chown -R devicecount:devicecount /opt/devicecount/current
-```
+The app writes only to `STORED_DATA_DIR` and `/var/log/crowdindex/`. A permission
+error almost always means the ACLs on `/home/qum/stored_data` were lost; see
+[Data Directory Permissions](#data-directory-permissions-critical). Do not `chown`
+`current` (it is a symlink, so that changes nothing) or `shared/` (root-owned on purpose).
 
 ### Check the live app URL
 
@@ -351,26 +362,38 @@ sudo tail -f /var/log/crowdindex/crowdindex.log
 
 ---
 
+## Scheduled Jobs
+
+All jobs are built into the app via **node-cron** — no OS crontab needed. They run
+in Eastern Time while the `crowdindex` service is running, and each logs
+`<script> exited with code N` to `/var/log/crowdindex/crowdindex.log`.
+
+| When | Script | What it does |
+|------|--------|--------------|
+| Every hour at `:05` | `refresh_summaries.js --no-analysis` | Merges new DB rows into `summaries/` and `rec_summaries/` (skipped while the monthly job runs) |
+| Daily 03:15 | `refresh_summaries.js` | Same, then rebuilds `analysis/big_summary.json` via `big_summary.py` |
+| Daily 07:00 | `data_health_check.js` | E-mails `ALERT_EMAIL` if something is wrong; see [Alert e-mails](#alert-e-mails-and-what-to-do) |
+| 1st of the month, 00:00 | `refresh_summaries.js`, then `export_and_purge.js` | See below |
+
+Nothing here needs a person. The dashboard picks up new months by itself, as long as
+`DASHBOARD_END_MONTH` is unset.
+
 ## Monthly CRON Job (export-and-purge)
 
-The CRON job is built into the app via **node-cron** — no OS crontab needed.
-It fires automatically at **00:00 ET on the 1st of every month** while the
-`crowdindex` service is running.
+Fires at **00:00 ET on the 1st of every month**.
 
 ### What it does
 
 | Step | Action |
 |------|--------|
-| 1 | Cutoff = first day of 2 months ago (keeps last 2 months in DB) |
-| 2 | Exports all rows older than cutoff to a JSON file in `STORED_DATA_DIR` |
-| 3 | Verifies exported row count matches DB count |
-| 4 | Deletes the exported rows from the database |
+| 1 | Runs `refresh_summaries.js`, so every row is in the summary files before any is deleted. If it fails, the purge is skipped |
+| 2 | Cutoff = first day of the month before last (on 1 Nov: rows before 1 Sep go; September and October stay) |
+| 3 | Exports all `device_data` and `rec_data` rows older than the cutoff to JSON files in `STORED_DATA_DIR` |
+| 4 | Verifies exported row count matches DB count |
+| 5 | Deletes the exported rows from the database |
 
-> **The CRON job does NOT regenerate the dashboard.** It only exports raw JSON and
-> purges the DB. The analytics dashboard reads `big_summary.json`, which is built by
-> the **Python pipeline you must run manually** after each monthly CRON (see
-> "Extend the dashboard date range" below). Until you run it, the dashboard keeps
-> showing the previous month's data.
+Purged months stay on the dashboard: it reads the summary files, which keep every
+record already merged into them.
 
 ### STORED_DATA_DIR must be set in .env
 
@@ -424,35 +447,83 @@ sudo tail -n 100 /var/log/crowdindex/crowdindex.log
 ```
 
 Look for:
-- `Monthly export-and-purge job triggered`
-- `export_and_purge.js exited with code 0` — success
-- `export_and_purge.js exited with code 1` — failure
+- `Monthly maintenance job triggered`
+- `refresh_summaries.js exited with code 0`, then `export_and_purge.js exited with code 0` — success
+- any `exited with code 1` — failure
 
 ### Manual trigger (if app was down on the 1st)
 
+As `devicecount`, in `/opt/devicecount/current`:
+
 ```bash
-cd /opt/devicecount/current
+node scripts/refresh_summaries.js
 node scripts/export_and_purge.js --dry-run
 node scripts/export_and_purge.js
 ```
 
-### Extend the dashboard date range after each CRON run
+### Refresh the dashboard by hand
 
-After the CRON runs and you have regenerated `big_summary.json`, bump the end date:
+Never needed in normal operation. After changing rows in the database (for example
+after a correction), run as `devicecount` in `/opt/devicecount/current`:
 
 ```bash
-# 1. Pull new data into monthly summary files
-STORED_DATA_DIR=/home/qum/stored_data python3 scripts/extract_summary.py
-
-# 2. Rebuild big_summary.json
-STORED_DATA_DIR=/home/qum/stored_data python3 scripts/big_summary.py
-
-# 3. Edit .env — change DASHBOARD_END_MONTH to include the new month
-#    e.g. DASHBOARD_END_MONTH=2026-06
-
-# 4. Restart
-sudo service crowdindex restart
+node scripts/refresh_summaries.js            # merge DB rows over the summary files
+node scripts/refresh_summaries.js --rebuild  # after DELETING rows: replace instead of merge
 ```
+
+The old manual pipeline (`extract_summary.py`, then `big_summary.py`, then bumping
+`DASHBOARD_END_MONTH`) is retired.
+
+---
+
+## Alert e-mails and what to do
+
+`data_health_check.js` runs at 07:00 ET and e-mails `ALERT_EMAIL` only when something
+is wrong. A healthy day sends nothing. To confirm delivery still works:
+`node scripts/data_health_check.js --test`.
+
+Every alert has the subject `[Crowd Index] Data collection problem on <host>`; the
+body lists the problems:
+
+| The e-mail says | Usually means | Do this |
+|-----------------|---------------|---------|
+| `no new rows for N minutes`, `only N rows in the last 24h`, or `the table is EMPTY` | The collector cannot get data from CMX: CMX is down, or its TLS certificate expired (July 2026: three weeks unnoticed) | `sudo tail -n 50 /var/log/crowdindex/crowdindex.log`. Repeated `certificate has expired` or `all retries exhausted` means CMX itself is broken: contact the network team, nothing to change in this app. No collection lines at all: `systemctl status crowdindex` |
+| `every reading is 0` | Same as above, or a code change brought back storing failed cycles as 0 | As above |
+| `Recreation Center: N devices counted while the building was closed` | CMX now flags departed clients in a way `staleClientFilter.js` does not catch, so every count is inflated again. Normal is about 10 | Needs a developer: compare what CMX sends for those clients (`networkStatus`, `currentlyTracked`) with `modules/staleClientFilter.js` |
+| `Dashboard analysis file is Nh old` or `missing` | The 03:15 summary refresh failed | `sudo grep refresh_summaries /var/log/crowdindex/crowdindex.log \| tail`, then run it by hand (above) |
+
+When CMX comes back after an outage, collection resumes by itself; the missing hours
+stay missing.
+
+---
+
+## Ghost history correction (Sep–Oct 2026)
+
+From about 5 Sep 2026 CMX stopped expiring departed clients, and every stored reading
+until `staleClientFilter.js` went live (22:58 ET, 29 Oct 2026) was inflated: King by
+100–200 devices, the Rec by 150–340. `scripts/correct_ghost_history.js` rewrites
+those rows once:
+
+- **King** — device by device: a device frozen in place for 45+ minutes is removed,
+  minus the idle-but-real devices each floor normally has.
+- **Rec** — estimated, because its rows keep only per-floor totals: the excess over a
+  healthy closed-hours reading, interpolated between nights.
+
+`scripts/ghost_history_diag.js` is the read-only measurement behind it.
+
+The originals of every row in the period are saved in
+`/home/qum/stored_data/ghost_correction_backup.json`. To undo, as `devicecount` in
+`/opt/devicecount/current`:
+
+```bash
+node scripts/correct_ghost_history.js --restore
+node scripts/refresh_summaries.js
+```
+
+`--restore` only reaches rows still in the database: September until the 1 Dec
+purge, October until 1 Jan.
+
+**Status**: scheduled for 30 Oct 2026.
 
 ---
 
@@ -462,8 +533,9 @@ sudo service crowdindex restart
 - **App issues**: Check `sudo tail -n 100 /var/log/crowdindex/crowdindex.log`
 - **DB issues**: Verify `DATABASE_URL` in `.env`
 - **CRON issues**: Confirm `STORED_DATA_DIR` is set and writable; run `node scripts/test_cron.js`
+- **Alert e-mails**: see [Alert e-mails and what to do](#alert-e-mails-and-what-to-do)
 
 ---
 
-**Last updated**: 2026-06-15
+**Last updated**: 2026-10-30
 **Maintained by**: Meng Qu (Web Design Librarian)

@@ -113,19 +113,22 @@ npx prisma db push
 npx prisma generate
 ```
 
-This creates the `device_data` table with the following structure:
+This creates two tables:
 
 ```
-device_data
+device_data                         (King Library)
 ├── id (String, Primary Key)
 ├── timeStamp (DateTime, indexed)
 ├── uniqUserTotal (String[])
-├── uniqUserGround (JSON)
+├── uniqUserGround (JSON)           # { deviceId: [x, y] } per floor
 ├── uniqUserFirst (JSON)
 ├── uniqUserSecond (JSON)
 ├── uniqUserThird (JSON)
-├── patrons (Int, indexed)
+├── patrons (Int, indexed)          # unique devices, all floors
 └── countByFloor (Int[])
+
+rec_data                            (Recreation Center — totals only, no device lists)
+├── timeStamp, patrons (raw device count), countByFloor [ground, first]
 ```
 
 ### 4. Verify Database Connection
@@ -148,40 +151,29 @@ Contact your network team to get:
 
 ### 2. Configure CMX Settings
 
-Edit `config/default.json`:
+Copy `config/default.json.example` to `config/default.json` and fill in the CMX
+host, one URL per floor, and `app.auth` (`"Basic <base64 of user:password>"`, or set
+`CMX_AUTH` in `.env` instead):
 
 ```json
 {
-  "server": {
-    "cmx_url": "https://your-cmx-server.example.edu",
-    "username": "cmx_api_user",
-    "password": "cmx_api_password"
+  "address": {
+    "host": "https://your-cmx-server.institution.edu/",
+    "ground-add": "api/location/v3/clients?floorId=YOUR_GROUND_FLOOR_ID",
+    "first-add":  "api/location/v3/clients?floorId=YOUR_FIRST_FLOOR_ID",
+    "second-add": "api/location/v3/clients?floorId=YOUR_SECOND_FLOOR_ID",
+    "third-add":  "api/location/v3/clients?floorId=YOUR_THIRD_FLOOR_ID",
+    "rec-first":  "api/location/v3/clients?floorId=YOUR_REC_FIRST_FLOOR_ID",
+    "rec-ground": "api/location/v3/clients?floorId=YOUR_REC_GROUND_FLOOR_ID",
+    ...
   },
-  "buildings": {
-    "king_library": {
-      "floors": {
-        "ground": "map-id-ground-floor",
-        "first": "map-id-first-floor",
-        "second": "map-id-second-floor",
-        "third": "map-id-third-floor"
-      }
-    },
-    "recreation_center": {
-      "floors": {
-        "ground": "map-id-rec-ground",
-        "first": "map-id-rec-first"
-      }
-    }
-  }
+  "app": { "auth": "Basic YOUR_BASE64_CREDENTIALS" },
+  "rec": { ... },          // Rec formula tunables — see Customization
+  "collection": { ... }    // overnight silent windows — see Customization
 }
 ```
 
-**Getting Map IDs**:
-
-```bash
-# Test CMX connection and list available maps
-curl -u username:password https://your-cmx-server.example.edu/api/location/v2/clients
-```
+The floor IDs come from your network team or the CMX map hierarchy.
 
 ### 3. Test CMX Connection
 
@@ -257,8 +249,7 @@ PROD_KEY_PATH=./certs/your-server.edu.key
 CMX_AUTH=Basic <base64credentials>
 ADMIN_TOKEN=<random-token>
 STORED_DATA_DIR=/home/qum/stored_data
-DASHBOARD_START_MONTH=2025-10
-DASHBOARD_END_MONTH=2026-05
+ALERT_EMAIL=someone@your-institution.edu
 ```
 
 **Environment Variables Explained**:
@@ -272,11 +263,14 @@ DASHBOARD_END_MONTH=2026-05
 | `PRODUCTION_HOSTNAME` | production | Public hostname; triggers HTTPS mode |
 | `PROD_CERT_PATH` | production | Path to SSL certificate file |
 | `PROD_KEY_PATH` | production | Path to SSL private key file |
-| `CMX_AUTH` | yes | Base64 `Basic` auth for Cisco CMX API |
+| `CMX_AUTH` | either this or `app.auth` | Base64 `Basic` auth for Cisco CMX API; overrides `app.auth` in `config/default.json` |
+| `CMX_TIMEOUT_MS` | optional | Per-request CMX timeout (default `30000`) |
 | `ADMIN_TOKEN` | recommended | Token protecting `/crowdindex/admin` |
 | `STORED_DATA_DIR` | production | Where monthly exports and analytics files live |
+| `ALERT_EMAIL` | production | Recipient of the daily health-check alerts (defaults to the original maintainer) |
+| `ALERT_FROM`, `ALERT_MIN_ROWS_24H`, `ALERT_MAX_STALE_MIN`, `ALERT_REC_CLOSED_MAX` | optional | Health-check tuning; see `.env.example` |
 | `DASHBOARD_START_MONTH` | optional | Oldest month shown on analytics dashboard (`YYYY-MM`) |
-| `DASHBOARD_END_MONTH` | optional | Newest month shown on analytics dashboard (`YYYY-MM`) |
+| `DASHBOARD_END_MONTH` | optional | Newest month shown. Leave unset, or new months stay hidden |
 
 ## Deployment Options
 
@@ -361,17 +355,37 @@ npm run pm2:monit
 
 ### Modify Building Configuration
 
-Edit `modules/deviceUtils.js` to change:
-
-**Floor Boundaries** (X/Y coordinates):
+**Floor Boundaries** (X/Y coordinates on the CMX map) are in `modules/app_core.js`:
 
 ```javascript
-const FLOOR_BOUNDARIES = {
-  ground: { minX: 0, maxX: 100, minY: 0, maxY: 50 },
-  first: { minX: 0, maxX: 100, minY: 50, maxY: 100 },
-  // Add/modify as needed
+const KING_FLOOR_BOUNDS = {
+  ground: { minX: 10,  maxX: 314, minY: 36, maxY: 190 },
+  first:  { minX: 16,  maxX: 314, minY: 29, maxY: 190 },
+  // second, third ...
+};
+
+const REC_FLOOR_BOUNDS = {
+  ground: { minX: 10,  maxX: 300, minY: 20,  maxY: 214 },
+  first:  { minX: 190, maxX: 425, minY: 25,  maxY: 270 },
 };
 ```
+
+Signal strength and last-seen checks are in `modules/deviceUtils.js`; dropping the
+clients CMX keeps listing after people leave is in `modules/staleClientFilter.js`.
+
+**Recreation Center formula** — `config/default.json` under `rec`, used by
+`modules/recFormula.js`:
+
+| Key | Default | Meaning |
+|-----|---------|---------|
+| `baselineDevices` | 10 | Always-on devices subtracted from the hourly mean (the Rec reads 8–15 while closed) |
+| `devicesPerPatron` | 1.2 | Devices per person: `patrons = (hourlyMean − baseline) / devicesPerPatron` |
+| `capacity` / `widgetMax` | 200 / 200 | `/recapi` scales its figure by `widgetMax / capacity` for the public widget, which hard-codes 200 |
+| `groundFirstGate` | 1.0 | Ground/first ratio above which a reading is flagged as suspect |
+
+**Overnight silent windows** — `config/default.json` under `collection.silentHours`
+(defaults King 02:00–07:00, Rec 02:00–05:00). The collector keeps polling but does not
+write; the health check uses the same windows.
 
 **Building Names**:
 
@@ -388,14 +402,13 @@ Edit `app.js`:
 const basePath = "/crowdindex"; // Change to your preferred path
 ```
 
-### Adjust Update Interval
+### Update Interval
 
-Edit `modules/app_core.js`:
-
-```javascript
-const UPDATE_INTERVAL = 15 * 60 * 1000; // 15 minutes in milliseconds
-// Change to desired interval (e.g., 5 * 60 * 1000 for 5 minutes)
-```
+Collection is aligned to `:00/:15/:30/:45` by `DeviceDataService` in
+`modules/app_core.js`. The 15-minute step is also assumed by the Rec's hourly mean
+(4 samples, `modules/recFormula.js` and `recHourlyMean()` in `app_core.js`) and by the
+health check's expected rows per day (`modules/collectionWindow.js`). Changing the
+interval means changing all three.
 
 ### Customize Dashboard
 
@@ -431,13 +444,25 @@ npx prisma generate
 
 #### 3. SSL Certificate Error
 
-**Error**: `ENOENT: no such file or directory, open 'security/cert.pem'`
+**Error**: the app exits at startup naming a certificate or key path it cannot find
 
-**Solution**:
-```bash
-mkdir -p security
-# Place your SSL certificates in security/ directory
-```
+**Solution**: check `PROD_CERT_PATH` and `PROD_KEY_PATH` in `.env`. Locally, run with
+`NODE_ENV=development` and no certificate is needed.
+
+#### 3a. Every count is 0, or no new rows
+
+The collector cannot get data from CMX. In July 2026 the CMX server's TLS certificate
+expired and collection failed for three weeks. Look for `certificate has expired` or
+`all retries exhausted` in the log: that is the CMX side, for the network team. Failed
+cycles are no longer stored as 0, so an outage now shows as a gap, and the daily
+health check e-mails about it.
+
+#### 3b. Counts far too high, especially while a building is closed
+
+CMX is listing clients that have left. From September 2026 it stopped expiring them;
+`modules/staleClientFilter.js` drops a client 30 minutes after CMX marks it `INACTIVE`.
+If CMX changes how it flags them, the filter stops working and the health check's
+Rec closed-hours alert fires.
 
 #### 4. Port Already in Use
 
@@ -486,8 +511,12 @@ node test_comprehensive.js
 
 #### Check CMX API Response
 
+Request one of the floor URLs from `config/default.json` (`address.host` +
+`address.ground-add`) with the same `Authorization` header the app sends:
+
 ```bash
-curl -u username:password https://your-cmx-server.example.edu/api/location/v2/clients | jq
+curl -H "Authorization: Basic <base64credentials>" \
+  "https://your-cmx-server.institution.edu/api/location/v3/clients?floorId=YOUR_GROUND_FLOOR_ID" | jq length
 ```
 
 #### Monitor Process
@@ -543,11 +572,12 @@ pm2 monit
 
 ### Monitoring
 
-1. **Health Checks**
-   ```bash
-   # Add to cron for daily checks
-   0 9 * * * cd /path/to/justdevicecount && node test_comprehensive.js >> /var/log/healthcheck.log 2>&1
-   ```
+1. **Health Checks** — built in. `scripts/data_health_check.js` runs every day at
+   07:00 ET (scheduled in `app.js`) and e-mails `ALERT_EMAIL` when data is missing,
+   stale or all zero, when the Rec reads too high while closed, or when the dashboard
+   files are stale. No extra cron entry is needed. Verify delivery with
+   `node scripts/data_health_check.js --test`. See
+   [SERVER_DEPLOYMENT.md → Alert e-mails](SERVER_DEPLOYMENT.md#alert-e-mails-and-what-to-do).
 
 2. **PM2 Monitoring**
    ```bash
@@ -595,7 +625,8 @@ pm2 monit
 
 ### Updating
 
-1. **Application Updates**
+1. **Application Updates** (local; production deploys with `deploy.sh`, see
+   [SERVER_DEPLOYMENT.md](SERVER_DEPLOYMENT.md#deployment-workflow))
    ```bash
    # Pull latest changes
    git pull origin main
@@ -635,10 +666,13 @@ justdevicecount/
 ├── bin/
 │   └── www                         # Server entry point (HTTP dev / HTTPS prod)
 ├── modules/
-│   ├── app_core.js                 # 15-min data collection scheduler
+│   ├── app_core.js                 # 15-min collection scheduler, floor bounds, both buildings
+│   ├── staleClientFilter.js        # Drops clients CMX keeps listing after people leave
+│   ├── collectionWindow.js         # Overnight silent windows (shared with the health check)
+│   ├── recFormula.js               # Rec devices → patrons (shared by /recapi and admin)
 │   ├── patronCache.js              # In-memory cache layer
 │   ├── axiosApi.js                 # Cisco CMX API client with retry
-│   ├── deviceUtils.js              # Floor bounds, RSSI, time validation
+│   ├── deviceUtils.js              # RSSI, last-seen and bounds checks
 │   ├── logger.js                   # Winston rotating logger
 │   └── prisma.js                   # Shared Prisma singleton
 ├── routes/
@@ -649,19 +683,24 @@ justdevicecount/
 │   ├── health.js                   # Health check endpoint
 │   └── admin.js                    # Analytics dashboard (token-gated)
 ├── scripts/
+│   ├── refresh_summaries.js        # Hourly/nightly: rebuild dashboard summaries from the DB
+│   ├── data_health_check.js        # Daily 07:00: e-mail alert on missing/bad data
 │   ├── export_and_purge.js         # Monthly CRON: export + delete old data
+│   ├── big_summary.py              # Build big_summary.json (run by refresh_summaries.js)
+│   ├── ghost_history_diag.js       # One-off, read-only: measure Sep–Oct 2026 ghost inflation
+│   ├── correct_ghost_history.js    # One-off: correct those rows (--apply / --restore)
 │   ├── initial_export.js           # One-time historical export
 │   ├── test_cron.js                # CRON readiness test (6 checks)
-│   ├── extract_summary.py          # Build per-month summary JSON files
-│   ├── big_summary.py              # Build big_summary.json from summaries
-│   └── visualize_summary.py        # Build analytics dashboard HTML
+│   ├── extract_summary.py          # Legacy manual pipeline (replaced by refresh_summaries.js)
+│   └── visualize_summary.py        # Legacy static dashboard HTML
 ├── views/
 │   ├── index.ejs                   # Live dashboard template
-│   └── admin.ejs                   # Analytics dashboard template
+│   ├── admin.ejs                   # Analytics dashboard template
+│   └── admin_login.ejs             # Token prompt for /admin
 ├── prisma/
-│   └── schema.prisma               # PostgreSQL schema (DeviceData model)
+│   └── schema.prisma               # PostgreSQL schema (DeviceData, RecData)
 ├── config/
-│   └── default.json                # CMX API URLs — DO NOT commit
+│   └── default.json                # CMX API URLs, Rec formula, silent windows — DO NOT commit auth
 ├── certs/                          # SSL private key — gitignored
 ├── .env                            # All secrets and config — DO NOT commit
 ├── .env.example                    # Template for .env
@@ -684,9 +723,11 @@ CMX API → axiosApi.js → deviceUtils.js → app_core.js → Database (Postgre
 ### Process Architecture
 
 - **Main Process**: Express server (bin/www)
-- **Background Job 1**: Database updater (15-minute interval)
+- **Background Job 1**: Collector for both buildings (15-minute interval) → `device_data`, `rec_data`
 - **Background Job 2**: Cache updater (15-minute interval)
-- **Memory Store**: Recreation Center data (no database)
+- **Scheduled jobs** (node-cron in `app.js`, each a forked script): hourly and 03:15
+  summary refresh, 07:00 health check, monthly export-and-purge — see
+  [SERVER_DEPLOYMENT.md → Scheduled Jobs](SERVER_DEPLOYMENT.md#scheduled-jobs)
 
 ## Support
 
@@ -726,6 +767,6 @@ Include in bug reports:
 
 ---
 
-**Last Updated**: 2026-06-15  
+**Last Updated**: 2026-10-30  
 **Version**: 1.0.0  
 **Maintainer**: Meng-V
