@@ -121,8 +121,13 @@ StandardOutput=append:/var/log/crowdindex/crowdindex.log
 StandardError=append:/var/log/crowdindex/crowdindex.error.log
 ```
 
-- The files rotate daily around 03:xx. Older days are `crowdindex.log.1`,
-  then `crowdindex.log.2.gz`, `.3.gz`, … — read those with `sudo zgrep` / `sudo zcat`.
+- The files rotate daily between about 03:15 and 03:50, and only seven old days are
+  kept: `crowdindex.log.1`, then `crowdindex.log.2.gz` … `.7.gz` (the same for
+  `crowdindex.error.log`). Anything older is gone, so check a job within a week.
+- `qum` cannot list `/var/log/crowdindex/`, so a wildcard in a plain `sudo` command is
+  never expanded ("No such file or directory"). Name the file
+  (`sudo zcat /var/log/crowdindex/crowdindex.log.3.gz`) or wrap the whole command:
+  `sudo sh -c 'zgrep "pattern" /var/log/crowdindex/*'`.
 - Two timestamp formats appear in the same file. The collector writes
   `[Thu Oct 15 2026 12:45:00 GMT-0400 ...]`; CMX request lines and cron jobs write
   `[10/15/2026, 12:45:03 PM]`. Grep for both when you are looking for a time window.
@@ -366,7 +371,8 @@ sudo tail -f /var/log/crowdindex/crowdindex.log
 
 All jobs are built into the app via **node-cron** — no OS crontab needed. They run
 in Eastern Time while the `crowdindex` service is running, and each logs
-`<script> exited with code N` to `/var/log/crowdindex/crowdindex.log`.
+`<script> exited with code N` to `/var/log/crowdindex/crowdindex.log`. A script's
+error message (`[<script>] FATAL: …`) goes to `crowdindex.error.log`.
 
 | When | Script | What it does |
 |------|--------|--------------|
@@ -442,14 +448,22 @@ rm -rf /tmp/cron_test_dc
 
 ### Check CRON logs
 
+Within a week of the 1st (older logs are deleted, see
+[Where the logs actually are](#where-the-logs-actually-are)):
+
 ```bash
-sudo tail -n 100 /var/log/crowdindex/crowdindex.log
+sudo sh -c 'zgrep -E "Monthly maintenance|export_and_purge" /var/log/crowdindex/*'
 ```
 
-Look for:
+A good run shows:
 - `Monthly maintenance job triggered`
-- `refresh_summaries.js exited with code 0`, then `export_and_purge.js exited with code 0` — success
-- any `exited with code 1` — failure
+- `Starting export_and_purge.js` (it only starts after `refresh_summaries.js` succeeded)
+- `[export_and_purge] Cutoff date : …`, then for `device_data` and `rec_data`:
+  `exported N rows → …` and `deleted N rows from database` (or `no rows eligible`)
+- `export_and_purge.js exited with code 0`
+
+A failure shows `refresh_summaries.js failed — skipping export_and_purge.js`,
+`[export_and_purge] FATAL: …`, or `export_and_purge.js exited with code 1`.
 
 ### Manual trigger (if app was down on the 1st)
 
@@ -490,10 +504,17 @@ body lists the problems:
 | `no new rows for N minutes`, `only N rows in the last 24h`, or `the table is EMPTY` | The collector cannot get data from CMX: CMX is down, or its TLS certificate expired (July 2026: three weeks unnoticed) | `sudo tail -n 50 /var/log/crowdindex/crowdindex.log`. Repeated `certificate has expired` or `all retries exhausted` means CMX itself is broken: contact the network team, nothing to change in this app. No collection lines at all: `systemctl status crowdindex` |
 | `every reading is 0` | Same as above, or a code change brought back storing failed cycles as 0 | As above |
 | `Recreation Center: N devices counted while the building was closed` | CMX now flags departed clients in a way `staleClientFilter.js` does not catch, so every count is inflated again. Normal is about 10 | Needs a developer: compare what CMX sends for those clients (`networkStatus`, `currentlyTracked`) with `modules/staleClientFilter.js` |
-| `Dashboard analysis file is Nh old` or `missing` | The 03:15 summary refresh failed | `sudo grep refresh_summaries /var/log/crowdindex/crowdindex.log \| tail`, then run it by hand (above) |
+| `Dashboard analysis file is Nh old` or `missing` | The 03:15 summary refresh failed | Find the error (command below), then run it by hand (above) |
 
 When CMX comes back after an outage, collection resumes by itself; the missing hours
 stay missing.
+
+To see why a scheduled job failed: by 07:00 the log has usually rotated already, so this
+searches yesterday's files too, and prints only failures:
+
+```bash
+sudo sh -c 'grep -hE "exited with code|FATAL" /var/log/crowdindex/*.log.1 /var/log/crowdindex/*.log' | grep -v "code 0"
+```
 
 ---
 
