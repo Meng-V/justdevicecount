@@ -575,7 +575,8 @@ King devices, monthly average and peak:
 The December and May peaks are finals-week evenings with devices moving normally, not
 ghosts, and stay as recorded.
 
-**Status**: corrections computed on 31 Oct 2026; not yet applied on the server.
+**Status**: applied on 31 Oct 2026: 14,789 summary records rewritten (3 in Feb 2026
+differed from the export and were left alone), `big_summary.json` rebuilt.
 
 ---
 
