@@ -689,6 +689,7 @@ justdevicecount/
 │   ├── big_summary.py              # Build big_summary.json (run by refresh_summaries.js)
 │   ├── ghost_history_diag.js       # One-off, read-only: measure Sep–Oct 2026 ghost inflation
 │   ├── correct_ghost_history.js    # One-off: correct those rows (--apply / --restore)
+│   ├── correct_ghost_summaries.js  # One-off: same King correction for the archived Oct 2025–May 2026 summaries
 │   ├── initial_export.js           # One-time historical export
 │   ├── test_cron.js                # CRON readiness test (6 checks)
 │   ├── extract_summary.py          # Legacy manual pipeline (replaced by refresh_summaries.js)
@@ -767,6 +768,6 @@ Include in bug reports:
 
 ---
 
-**Last Updated**: 2026-10-30  
+**Last Updated**: 2026-10-31  
 **Version**: 1.0.0  
 **Maintainer**: Meng-V

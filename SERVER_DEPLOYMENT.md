@@ -523,7 +523,59 @@ node scripts/refresh_summaries.js
 `--restore` only reaches rows still in the database: September until the 1 Dec
 purge, October until 1 Jan.
 
-**Status**: scheduled for 30 Oct 2026.
+**Status**: applied on 30 Oct 2026: 3,604 King and 4,171 Rec rows rewritten, summaries
+rebuilt.
+
+---
+
+## Ghost correction of archived months (Oct 2025–May 2026)
+
+The same CMX fault had happened before. King's counts were inflated by up to 300–600
+devices from about 21 Oct to 10 Nov 2025, 25 Feb to 20 Mar 2026 and 30 Mar to 20 Apr
+2026, with smaller build-ups (20–60) in most other term weeks. Those rows left the
+database long ago, but the monthly exports written by `initial_export.js`
+(`YYYY-MM_device_data.json`) still hold every device with its position.
+`scripts/correct_ghost_summaries.js` runs the King method above on them and rewrites
+the matching records in `summaries/`. On healthy days it removes almost nothing, so it
+runs over every row and no dates are picked by hand. There was no Rec data yet.
+
+It runs in two steps, because the exports and the summary files are on different
+machines:
+
+1. Where the exports are (a local checkout keeps them in `stored_data/raw_data/`):
+   `STORED_DATA_DIR=$PWD/stored_data node scripts/correct_ghost_summaries.js --exports stored_data/raw_data`
+   prints before → after per day and writes `ghost_summary_corrections.json`
+   (timestamps and counts only, no device IDs). Copy it to `/home/qum/stored_data/`.
+2. On the server, as `devicecount` in `/opt/devicecount/current`:
+
+   ```bash
+   node scripts/correct_ghost_summaries.js            # dry run
+   node scripts/correct_ghost_summaries.js --apply
+   node scripts/refresh_summaries.js
+   ```
+
+`--apply` first copies every file it changes to `/home/qum/stored_data/ghost_summary_backup/`.
+To undo: `node scripts/correct_ghost_summaries.js --restore`, then
+`node scripts/refresh_summaries.js`. Don't run `refresh_summaries.js --include-exports`
+for these months: it would merge the uncorrected export values back in.
+
+King devices, monthly average and peak:
+
+| Month | Average | Peak |
+|-------|---------|------|
+| 2025-10 | 387 → 251 | 1083 → 700 |
+| 2025-11 | 327 → 203 | 963 → 648 |
+| 2025-12 | 184 → 164 | 1554 → 1527 |
+| 2026-01 | 78 → 75 | 315 → 292 |
+| 2026-02 | 263 → 192 | 869 → 623 |
+| 2026-03 | 359 → 188 | 1006 → 671 |
+| 2026-04 | 436 → 231 | 1039 → 660 |
+| 2026-05 | 195 → 178 | 1311 → 1297 |
+
+The December and May peaks are finals-week evenings with devices moving normally, not
+ghosts, and stay as recorded.
+
+**Status**: corrections computed on 31 Oct 2026; not yet applied on the server.
 
 ---
 
@@ -537,5 +589,5 @@ purge, October until 1 Jan.
 
 ---
 
-**Last updated**: 2026-10-30
+**Last updated**: 2026-10-31
 **Maintained by**: Meng Qu (Web Design Librarian)

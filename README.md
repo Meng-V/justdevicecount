@@ -88,11 +88,14 @@ See `.env.example` for a complete template.
 
 ## Known Limitations
 
-- **CMX stopped expiring departed clients around 5 Sep 2026.** The collector works around
-  it (step 4 above); the cause on the CMX side was never found. Stored rows from
-  5 Sep to 29 Oct 2026 were corrected afterwards: King device by device, the Rec
-  estimated from its closed-hours readings (see
-  [SERVER_DEPLOYMENT.md → Ghost history correction](SERVER_DEPLOYMENT.md#ghost-history-correction-sepoct-2026)).
+- **CMX stops expiring departed clients from time to time.** It happened from about
+  21 Oct to 10 Nov 2025, 25 Feb to 20 Mar 2026, 30 Mar to 20 Apr 2026 and 5 Sep to
+  29 Oct 2026, with smaller build-ups in between. The collector now works around it
+  (step 4 above); the cause on the CMX side was never found. The stored history was
+  corrected afterwards: King device by device, the Rec (Sep–Oct 2026) estimated from
+  its closed-hours readings (see SERVER_DEPLOYMENT.md →
+  [Ghost history correction](SERVER_DEPLOYMENT.md#ghost-history-correction-sepoct-2026) and
+  [Ghost correction of archived months](SERVER_DEPLOYMENT.md#ghost-correction-of-archived-months-oct-2025may-2026)).
 - **King's occupancy percentage is uncalibrated.** The public widget on the library
   website (not in this repo) shows `devices × 0.8 / 1050`; that factor was never checked
   against a head count.
