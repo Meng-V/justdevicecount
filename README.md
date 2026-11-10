@@ -116,4 +116,4 @@ The system counts devices, not people.
 ---
 
 **Author**: Meng Qu (Web Design Librarian, Miami University Libraries)
-**License**: ISC
+**License**: MIT (see [LICENSE](LICENSE))
