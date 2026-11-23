@@ -3,1305 +3,608 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title><%= title %> — King Library</title>
+  <title><%= title %></title>
   <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
   <style>
+    :root {
+      color-scheme: light;
+      --page:        #f5f5f3;
+      --surface:     #ffffff;
+      --border:      #e4e3df;
+      --grid:        #ecebe8;
+      --text:        #1b1b1a;
+      --text-2:      #52514e;
+      --text-3:      #7a7974;
+      --accent:      #2a78d6;
+      --accent-soft: #e8f1fc;
+      --warn-bg:     #fff6e0;
+      --warn-text:   #7a5300;
+    }
     *, *::before, *::after { box-sizing: border-box; }
     body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       margin: 0;
-      background: #f0f2f5;
-      color: #212529;
+      background: var(--page);
+      color: var(--text);
+      font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
     }
+    a { color: var(--accent); }
 
-    /* ---- top nav bar ---- */
-    .topbar {
-      background: #fff;
-      border-bottom: 3px solid #0066cc;
-      padding: 14px 28px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      box-shadow: 0 2px 6px rgba(0,0,0,.09);
-      position: sticky;
-      top: 0;
-      z-index: 100;
+    /* ---- header + tabs ---- */
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      position: sticky; top: 0; z-index: 10;
     }
-    .topbar-brand { display: flex; align-items: center; gap: 14px; }
-    .topbar-brand h1 { margin: 0; font-size: 1.25em; color: #0066cc; }
-    .topbar-brand p  { margin: 0; font-size: .78em; color: #6c757d; }
-    .topbar-links { display: flex; align-items: center; gap: 14px; font-size: .85em; }
-    .topbar-links a {
-      color: #6c757d;
-      text-decoration: none;
-      padding: 5px 11px;
-      border-radius: 5px;
-      transition: background .12s;
+    .header-inner, main { max-width: 1180px; margin: 0 auto; padding: 0 24px; }
+    .header-row {
+      display: flex; align-items: baseline; justify-content: space-between;
+      gap: 16px; flex-wrap: wrap; padding-top: 16px;
     }
-    .topbar-links a:hover { background: #f0f2f5; color: #0066cc; }
+    header h1 { margin: 0; font-size: 1.2rem; }
+    .header-meta { color: var(--text-3); font-size: .85rem; }
+    .header-meta a { color: var(--text-2); }
+    .badge {
+      display: inline-block; padding: 1px 8px; border-radius: 999px;
+      background: var(--warn-bg); color: var(--warn-text); font-size: .8rem;
+    }
+    .tabs { display: flex; gap: 4px; margin-top: 10px; }
+    .tab {
+      border: 0; background: none; cursor: pointer; font: inherit;
+      padding: 10px 14px; color: var(--text-2);
+      border-bottom: 3px solid transparent;
+    }
+    .tab:hover { color: var(--text); }
+    .tab[aria-selected="true"] { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
 
+    main { padding-top: 24px; padding-bottom: 48px; }
+    .panel[hidden] { display: none; }
 
-    /* ---- side nav ---- */
-    .layout { display: flex; min-height: calc(100vh - 67px); }
-    .sidenav {
-      width: 210px;
-      flex-shrink: 0;
-      background: #fff;
-      border-right: 1px solid #dee2e6;
-      padding: 20px 0;
-      position: sticky;
-      top: 67px;
-      height: calc(100vh - 67px);
-      overflow-y: auto;
+    /* ---- stat tiles ---- */
+    .tiles {
+      display: grid; gap: 16px; margin-bottom: 24px;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
     }
-    .sidenav-section {
-      font-size: .68em;
-      text-transform: uppercase;
-      letter-spacing: .07em;
-      color: #adb5bd;
-      padding: 14px 18px 4px;
-      font-weight: 700;
+    .tile {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 10px; padding: 16px 18px;
     }
-    .sidenav a {
-      display: block;
-      padding: 8px 18px;
-      font-size: .85em;
-      color: #444;
-      text-decoration: none;
-      border-left: 3px solid transparent;
-      transition: all .12s;
-    }
-    .sidenav a:hover { background: #f0f6ff; color: #0066cc; border-left-color: #0066cc; }
-    .sidenav a.active { background: #e9f2ff; color: #0066cc; border-left-color: #0066cc; font-weight: 600; }
+    .tile .label { color: var(--text-2); font-size: .85rem; }
+    .tile .value { font-size: 1.9rem; font-weight: 650; line-height: 1.2; margin: 4px 0; }
+    .tile .value small { font-size: .95rem; font-weight: 500; color: var(--text-2); }
+    .tile .sub { color: var(--text-3); font-size: .82rem; }
 
-    /* ---- main content ---- */
-    .main {
-      flex: 1;
-      padding: 24px 28px;
-      max-width: 1120px;
+    /* ---- cards ---- */
+    .card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 10px; padding: 18px 20px; margin-bottom: 24px;
+      min-width: 0;
     }
+    .card h2 { margin: 0 0 4px; font-size: 1.05rem; }
+    .card .hint { margin: 0 0 12px; color: var(--text-3); font-size: .85rem; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+    .grid-2 > .card { margin-bottom: 24px; }
+    @media (max-width: 900px) { .grid-2 { grid-template-columns: 1fr; gap: 0; } }
+    .chart { width: 100%; height: 340px; }
+    .chart.tall { height: 380px; }
 
-    /* ---- section headings ---- */
-    .section-label {
-      font-size: .7em;
-      text-transform: uppercase;
-      letter-spacing: .08em;
-      color: #6c757d;
-      font-weight: 700;
-      margin: 32px 0 10px;
+    /* ---- controls ---- */
+    .controls { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 12px; }
+    .controls label { font-size: .85rem; color: var(--text-2); }
+    select, input[type="date"] {
+      font: inherit; font-size: .9rem; padding: 5px 8px;
+      border: 1px solid var(--border); border-radius: 6px; background: var(--surface);
     }
-    .section-label:first-child { margin-top: 0; }
-
-    /* ---- stat cards ---- */
-    .cards-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-      gap: 16px;
-      margin-bottom: 28px;
-    }
-    .stat-card {
-      color: #fff;
-      padding: 20px 18px;
-      border-radius: 10px;
-      transition: transform .12s;
-    }
-    .stat-card:hover { transform: translateY(-2px); }
-    .stat-card .label { font-size: .78em; opacity: .85; margin-bottom: 6px; }
-    .stat-card .value { font-size: 2.1em; font-weight: 700; line-height: 1.1; }
-    .stat-card .sub   { font-size: .73em; opacity: .72; margin-top: 5px; }
-    .card-blue   { background: linear-gradient(135deg, #0066cc, #004fa3); }
-    .card-teal   { background: linear-gradient(135deg, #0d9488, #0f766e); }
-    .card-red    { background: linear-gradient(135deg, #dc3545, #b02a37); }
-    .card-grey   { background: linear-gradient(135deg, #6c757d, #495057); }
-
-    /* ---- insight boxes ---- */
-    .insights-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-      gap: 12px;
-      margin-bottom: 28px;
-    }
-    .insight {
-      padding: 13px 16px;
-      border-radius: 7px;
-      font-size: .86em;
-      line-height: 1.45;
-    }
-    .insight.blue   { background: #e9f2ff; border-left: 3px solid #0066cc; }
-    .insight.red    { background: #ffeaea; border-left: 3px solid #dc3545; }
-    .insight.green  { background: #e6f9f1; border-left: 3px solid #198754; }
-    .insight.yellow { background: #fff8e1; border-left: 3px solid #ffc107; }
-    .insight strong { display: block; margin-bottom: 3px; color: #333; }
-
-    /* ---- chart cards ---- */
-    .chart-card {
-      background: #fff;
-      border: 1px solid #dee2e6;
-      border-radius: 8px;
-      padding: 18px 20px;
-      margin-bottom: 22px;
-      box-shadow: 0 1px 6px rgba(0,0,0,.07);
-    }
-    .chart-card h2 {
-      margin: 0 0 14px;
-      font-size: 1em;
-      color: #0066cc;
-      border-bottom: 2px solid #0066cc;
-      padding-bottom: 7px;
-    }
-    .grid-2 {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 20px;
-    }
-    @media (max-width: 860px) { .grid-2 { grid-template-columns: 1fr; } }
-
-    /* ---- dropdown selector ---- */
-    .month-select-row {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 12px;
-      flex-wrap: wrap;
-    }
-    .month-select-row label { font-size: .83em; font-weight: 600; color: #555; }
-    .month-select-row select,
-    .month-select-row input[type="date"] {
-      padding: 5px 10px;
-      border: 1px solid #ced4da;
-      border-radius: 5px;
-      font-size: .88em;
-      color: #333;
-      cursor: pointer;
-    }
-
-    /* ---- buttons ---- */
     .btn {
-      display: inline-block;
-      padding: 6px 14px;
-      border: 1px solid transparent;
-      border-radius: 5px;
-      font-size: .85em;
-      font-weight: 600;
-      cursor: pointer;
-      text-decoration: none;
-      transition: background .12s, opacity .12s;
+      display: inline-block; padding: 6px 12px; border-radius: 6px;
+      font-size: .88rem; font-weight: 600; text-decoration: none; cursor: pointer;
+      border: 1px solid var(--accent); background: var(--surface); color: var(--accent);
     }
-    .btn-primary { background: #0066cc; color: #fff; }
-    .btn-primary:hover { background: #004fa3; }
-    .btn-outline {
-      background: #fff; color: #0066cc; border-color: #0066cc;
-    }
-    .btn-outline:hover { background: #e9f2ff; }
-    .btn[aria-disabled="true"] { opacity: .45; pointer-events: none; }
+    .btn:hover { background: var(--accent-soft); }
+    .btn.primary { background: var(--accent); color: #fff; }
+    .btn.primary:hover { background: #1c5cab; }
+    .btn[aria-disabled="true"] { opacity: .4; pointer-events: none; }
+    .status { font-size: .85rem; color: var(--text-3); }
+    .status.err { color: #b42318; }
 
-    .day-stats {
-      display: flex; gap: 22px; flex-wrap: wrap;
-      margin: 4px 0 16px; font-size: .9em;
-    }
-    .day-stats .ds-item { color: #555; }
-    .day-stats .ds-item b { color: #212529; font-size: 1.15em; }
-    .day-msg { font-size: .88em; color: #6c757d; margin: 8px 0; }
+    .day-stats { display: flex; flex-wrap: wrap; gap: 20px; margin: 4px 0 8px; font-size: .9rem; color: var(--text-2); }
+    .day-stats b { color: var(--text); font-size: 1.05rem; }
 
-    /* Date-range export block */
-    .export-row {
-      display: flex; flex-wrap: wrap; align-items: center; gap: 10px;
-      margin-top: 14px; padding-top: 14px; border-top: 1px dashed #d9e2ec;
+    /* ---- tables ---- */
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: .88rem; }
+    th, td { padding: 7px 10px; text-align: right; border-bottom: 1px solid var(--grid); white-space: nowrap; }
+    th:first-child, td:first-child { text-align: left; }
+    th { color: var(--text-2); font-weight: 600; border-bottom-color: var(--border); }
+    td.muted { color: var(--text-3); }
+    .tag {
+      display: inline-block; margin-left: 6px; padding: 0 6px; border-radius: 4px;
+      font-size: .75rem; background: var(--accent-soft); color: #1c5cab;
     }
-    .export-row label { font-size: .83em; font-weight: 600; color: #555; }
-    .export-row input[type="date"] {
-      padding: 5px 8px; border: 1px solid #ccd4dc; border-radius: 5px;
-      font-size: .88em; font-family: inherit;
-    }
-    .export-title {
-      font-size: .83em; font-weight: 700; color: #444;
-      text-transform: uppercase; letter-spacing: .04em; width: 100%;
-    }
-    .export-count { font-size: .85em; color: #6c757d; }
-    .export-count.warn { color: #b8860b; }
-    .export-count.err  { color: #c0392b; }
+    details summary { cursor: pointer; color: var(--accent); font-size: .9rem; margin-top: 10px; }
 
-    /* ---- table ---- */
-    .data-table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: .85em;
-    }
-    .data-table th {
-      background: #0066cc;
-      color: #fff;
-      padding: 9px 12px;
-      text-align: left;
-      font-weight: 600;
-    }
-    .data-table td {
-      padding: 8px 12px;
-      border-bottom: 1px solid #f0f0f0;
-    }
-    .data-table tr:nth-child(even) td { background: #f8f9fa; }
-    .data-table tr:hover td { background: #e9f2ff; }
-    .rank-badge {
-      display: inline-block;
-      width: 24px; height: 24px;
-      border-radius: 50%;
-      background: #0066cc;
-      color: #fff;
-      font-size: .78em;
-      font-weight: 700;
-      line-height: 24px;
-      text-align: center;
-    }
-    .rank-badge.red { background: #dc3545; }
-
-    .meta-bar {
-      font-size: .76em;
-      color: #6c757d;
-      text-align: right;
-      margin-top: 28px;
-      padding-top: 14px;
-      border-top: 1px solid #dee2e6;
-    }
+    /* ---- notes ---- */
+    .notes ul { margin: 8px 0 0; padding-left: 20px; color: var(--text-2); font-size: .9rem; }
+    .notes li { margin-bottom: 6px; }
+    .empty { color: var(--text-3); }
   </style>
 </head>
 <body>
+<%
+  const nf = (n) => (n === null || n === undefined) ? "—" : Number(n).toLocaleString("en-US");
+  const MON = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  const WD  = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+  const fmtDate = (d) => {
+    if (!d) return "—";
+    const [y, m, day] = d.split("-").map(Number);
+    return `${MON[m - 1]} ${day}, ${y}`;
+  };
+  const fmtDay = (d) => {
+    const [y, m, day] = d.split("-").map(Number);
+    return `${WD[new Date(Date.UTC(y, m - 1, day)).getUTCDay()]}, ${MON[m - 1]} ${day}, ${y}`;
+  };
+  const fmtRange = (g) => g.from === g.to ? fmtDate(g.from) : `${fmtDate(g.from)} – ${fmtDate(g.to)}`;
+%>
 
-<!-- ===== TOP NAV ===== -->
-<div class="topbar">
-  <div class="topbar-brand">
-    <div>
-      <h1>King Library · Analytics Dashboard</h1>
-      <p>
-        Showing: <strong><%= rangeStart %> – <%= rangeEnd %></strong>
-        <% if (rangeFiltered) { %>&nbsp;<span style="background:#fff3cd;color:#856404;padding:1px 6px;border-radius:4px;font-size:.85em;">date range pinned</span><% } %>
-        &nbsp;·&nbsp; Generated: <%= generatedAt %> &nbsp;·&nbsp; Eastern Time (UTC<%= etOffset >= 0 ? '+' : '' %><%= etOffset %>h)
-      </p>
-    </div>
-  </div>
-  <div class="topbar-links">
-    <a href="/crowdindex/">Live Dashboard</a>
-    <a href="data">Raw JSON</a>
-  </div>
-</div>
-
-<!-- ===== LAYOUT ===== -->
-<div class="layout">
-
-  <!-- side nav -->
-  <nav class="sidenav">
-    <div class="sidenav-section">Daily</div>
-    <a href="#day-detail">Day Detail</a>
-    <a href="#rec-detail">Rec Center (15-min)</a>
-
-    <div class="sidenav-section">Overview</div>
-    <a href="#overview" class="active">Key Stats</a>
-    <a href="#insights">Insights</a>
-    <a href="#monthly">Monthly Trends</a>
-    <a href="#timeline">Daily Timeline</a>
-
-    <div class="sidenav-section">Patterns</div>
-    <a href="#best-worst">Best &amp; Worst Days</a>
-    <a href="#weekday">Day of Week</a>
-    <a href="#hourly">Hourly Profile</a>
-    <a href="#heatmaps">Heatmaps</a>
-
-    <div class="sidenav-section">Drill-Down</div>
-    <a href="#month-drill">By Month</a>
-    <a href="#top-tables">Top/Bottom Tables</a>
-
-    <div class="sidenav-section">Floors</div>
-    <a href="#floors">Floor Analysis</a>
-  </nav>
-
-  <!-- main content -->
-  <main class="main">
-
-    <!-- ===== DAY DETAIL ===== -->
-    <div class="section-label" id="day-detail">Day Detail</div>
-    <div class="chart-card">
-      <h2>Single-Day Breakdown</h2>
-      <div class="month-select-row">
-        <label for="day-picker">Pick a date:</label>
-        <input type="date" id="day-picker"
-               min="<%= dayMin %>" max="<%= dayMax %>" value="<%= dayDefault %>">
-        <button type="button" id="day-load" class="btn btn-primary">Load</button>
-        <a id="day-csv" class="btn btn-outline" href="#">Download CSV</a>
-        <a id="day-json" class="btn btn-outline" href="#">Download JSON</a>
-      </div>
-
-      <div id="day-stats" class="day-stats"></div>
-      <div id="day-msg" class="day-msg"></div>
-      <div id="chart-day" style="width:100%;height:380px;"></div>
-
-      <div id="day-table-wrap" style="margin-top:16px;overflow-x:auto;display:none;">
-        <table class="data-table" id="day-table">
-          <thead>
-            <tr>
-              <th>Time (ET)</th><th>Total</th>
-              <th>Ground</th><th>First</th><th>Second</th><th>Third</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-      </div>
-
-      <div class="export-row" id="king-export"
-           data-base="range" data-name="king_library"
-           data-min="<%= exportMin %>" data-max="<%= exportMax %>">
-        <div class="export-title">Export a date range</div>
-        <label>From</label>
-        <input type="date" class="xp-from"
-               min="<%= exportMin %>" max="<%= exportMax %>" value="<%= exportMin %>">
-        <label>To</label>
-        <input type="date" class="xp-to"
-               min="<%= exportMin %>" max="<%= exportMax %>" value="<%= exportMax %>">
-        <a class="btn btn-primary xp-csv" href="#">Export CSV</a>
-        <a class="btn btn-outline xp-json" href="#">Export JSON</a>
-        <span class="export-count"></span>
+<header>
+  <div class="header-inner">
+    <div class="header-row">
+      <h1>Crowd Index Analytics</h1>
+      <div class="header-meta">
+        Miami University Libraries · Eastern Time
+        <% if (rangeStart || rangeEnd) { %>
+          · <span class="badge">Analysis limited to <%= rangeStart || "the start" %> – <%= rangeEnd || "today" %></span>
+        <% } %>
+        · <a href="/crowdindex/">Live page</a>
       </div>
     </div>
+    <div class="tabs" role="tablist">
+      <% buildings.forEach((b, i) => { %>
+        <button class="tab" role="tab" id="tab-<%= b.kind %>" data-kind="<%= b.kind %>"
+                aria-controls="panel-<%= b.kind %>" aria-selected="<%= i === 0 ? 'true' : 'false' %>"><%= b.name %></button>
+      <% }) %>
+    </div>
+  </div>
+</header>
 
-    <!-- ===== REC CENTER (15-MIN) ===== -->
-    <div class="section-label" id="rec-detail">Recreation Center</div>
-    <div class="chart-card">
-      <h2>Recreation Center — 15-Minute Readings</h2>
-      <% if (recAvailable) { %>
-        <div class="month-select-row">
-          <label for="rec-picker">Pick a date:</label>
-          <input type="date" id="rec-picker"
-                 min="<%= recDayMin %>" max="<%= recDayMax %>" value="<%= recDayMax %>">
-          <button type="button" id="rec-load" class="btn btn-primary">Load</button>
-          <a id="rec-csv" class="btn btn-outline" href="#">Download CSV</a>
-          <a id="rec-json" class="btn btn-outline" href="#">Download JSON</a>
-        </div>
+<main>
+<% buildings.forEach((b, i) => { %>
+  <section class="panel" id="panel-<%= b.kind %>" role="tabpanel" aria-labelledby="tab-<%= b.kind %>" <%= i === 0 ? "" : "hidden" %>>
 
-        <div id="rec-stats" class="day-stats"></div>
-        <div id="rec-msg" class="day-msg">
-          Data available <%= recDayMin %> → <%= recDayMax %> ·
-          total = (hourly mean − <%= recBaseline %> baseline devices) ÷ <%= recDevicesPerPatron %> devices per patron,
-          the live widget's estimate before it is rescaled to the widget's maximum.
-        </div>
-        <div id="chart-rec" style="width:100%;height:380px;"></div>
-
-        <div id="rec-table-wrap" style="margin-top:16px;overflow-x:auto;display:none;">
-          <table class="data-table" id="rec-table">
-            <thead>
-              <tr>
-                <th>Time (ET)</th><th>Total (adjusted)</th><th>Total (raw)</th>
-                <th>Ground</th><th>First</th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
-        </div>
-
-        <div class="export-row" id="rec-export"
-             data-base="rec/range" data-name="rec_center"
-             data-min="<%= recDayMin %>" data-max="<%= recDayMax %>">
-          <div class="export-title">Export a date range</div>
-          <label>From</label>
-          <input type="date" class="xp-from"
-                 min="<%= recDayMin %>" max="<%= recDayMax %>" value="<%= recDayMin %>">
-          <label>To</label>
-          <input type="date" class="xp-to"
-                 min="<%= recDayMin %>" max="<%= recDayMax %>" value="<%= recDayMax %>">
-          <a class="btn btn-primary xp-csv" href="#">Export CSV</a>
-          <a class="btn btn-outline xp-json" href="#">Export JSON</a>
-          <span class="export-count"></span>
-        </div>
+  <% if (!b.available) { %>
+    <div class="card">
+      <h2><%= b.name %></h2>
+      <% if (b.error) { %>
+        <p class="empty">The figures could not be computed (<%= b.error %>). The server log has the details.</p>
       <% } else { %>
-        <div class="day-msg">
-          No Recreation Center summary files yet. Run
-          <code>node scripts/refresh_summaries.js</code> to build them from the
-          <code>rec_data</code> table.
-        </div>
+        <p class="empty">No data in the summary files yet. They are built by
+          <code>node scripts/refresh_summaries.js</code>, which the app runs every hour.</p>
       <% } %>
     </div>
+  <% } else { const o = b.overview; %>
 
-    <!-- ===== OVERVIEW CARDS ===== -->
-    <div class="section-label" id="overview">Overview</div>
-    <div class="cards-grid">
-      <div class="stat-card card-blue">
-        <div class="label">Total 15-min Readings</div>
-        <div class="value"><%= overview.total_records.toLocaleString() %></div>
-        <div class="sub"><%= overview.months_covered.length %> months · <%= overview.months_covered[0] %> → <%= overview.months_covered[overview.months_covered.length-1] %></div>
+    <!-- ===== Headline figures ===== -->
+    <div class="tiles">
+      <div class="tile">
+        <div class="label">Typical daily peak</div>
+        <div class="value"><%= nf(o.avgDailyPeak) %> <small><%= b.unit %></small></div>
+        <div class="sub">Average of each complete day's highest reading</div>
       </div>
-      <div class="stat-card card-teal">
-        <div class="label">All-Time Avg Patrons</div>
-        <div class="value"><%= overview.all_time_avg %></div>
-        <div class="sub">per 15-minute interval</div>
+      <div class="tile">
+        <div class="label">Highest reading</div>
+        <div class="value"><%= nf(o.peak.value) %> <small><%= b.unit %></small></div>
+        <div class="sub"><%= fmtDay(o.peak.date) %> at <%= o.peak.time %></div>
       </div>
-      <div class="stat-card card-red">
-        <div class="label">All-Time Peak</div>
-        <div class="value"><%= overview.peak_record.patrons %></div>
-        <div class="sub"><%= overview.peak_record.timestamp_et %> · <%= overview.peak_record.weekday %></div>
+      <div class="tile">
+        <div class="label">Busiest time of the week</div>
+        <div class="value"><%= o.busiest ? o.busiest.weekday.slice(0, 3) + " " + o.busiest.hour : "—" %></div>
+        <div class="sub"><%= o.busiest ? "Averages " + nf(o.busiest.avg) + " " + b.unit : "Not enough complete days yet" %></div>
       </div>
-      <div class="stat-card card-grey">
-        <div class="label">Quietest Reading</div>
-        <div class="value"><%= overview.all_time_low %></div>
-        <div class="sub"><%= overview.quiet_record.timestamp_et %> · <%= overview.quiet_record.weekday %></div>
+      <div class="tile">
+        <div class="label">Complete days of data</div>
+        <div class="value"><%= nf(o.completeDays) %> <small>of <%= nf(o.daysWithData) %></small></div>
+        <div class="sub"><%= fmtDate(o.firstDate) %> – <%= fmtDate(o.lastDate) %> · last reading <%= o.latest.time %> on <%= fmtDate(o.latest.date) %></div>
       </div>
     </div>
 
-    <!-- ===== INSIGHTS ===== -->
-    <div class="section-label" id="insights">Key Insights</div>
-    <div class="insights-grid" id="insights-boxes">
-      <!-- populated by JS from summaryData -->
+    <!-- ===== Daily trend ===== -->
+    <div class="card">
+      <h2>Daily trend</h2>
+      <p class="hint">Each day's highest reading and its average. Gaps are days with missing or incomplete data.</p>
+      <div class="chart tall" id="<%= b.kind %>-trend"></div>
     </div>
 
-    <!-- ===== MONTHLY BARS ===== -->
-    <div class="section-label" id="monthly">Monthly Trends</div>
-    <div class="chart-card">
-      <h2>Monthly Average vs Peak Patron Count</h2>
-      <div id="chart-monthly-bars" style="height:340px;"></div>
+    <!-- ===== Weekly pattern ===== -->
+    <div class="card">
+      <h2>When it is busy</h2>
+      <p class="hint">Average <%= b.unit %> by day of the week and hour, complete days only.</p>
+      <div class="controls">
+        <label for="<%= b.kind %>-heat-month">Period</label>
+        <select id="<%= b.kind %>-heat-month" data-kind="<%= b.kind %>" class="heat-month">
+          <option value="all">All months</option>
+          <% b.months.slice().reverse().forEach((m) => { %>
+            <option value="<%= m.month %>"><%= m.label %><%= m.inProgress ? " (in progress)" : "" %></option>
+          <% }) %>
+        </select>
+      </div>
+      <div class="chart" id="<%= b.kind %>-heat"></div>
     </div>
 
-    <!-- ===== DAILY TIMELINE ===== -->
-    <div class="chart-card" id="timeline">
-      <h2>Daily Average Patron Count — All Months</h2>
-      <div id="chart-daily-timeline" style="height:360px;"></div>
-    </div>
-
-    <!-- ===== BEST / WORST DAYS ===== -->
-    <div class="section-label" id="best-worst">Best &amp; Worst Days (All-Time)</div>
     <div class="grid-2">
-      <div class="chart-card">
-        <h2>Top-10 Days by Daily Average</h2>
-        <div id="chart-top10" style="height:360px;"></div>
+      <!-- ===== Floors ===== -->
+      <div class="card">
+        <h2>Floors by hour</h2>
+        <p class="hint">Average devices on each floor<%= b.kind === "rec" ? " (raw device counts, before the estimate)" : "" %>, complete days only.</p>
+        <div class="chart" id="<%= b.kind %>-floors"></div>
       </div>
-      <div class="chart-card">
-        <h2>Bottom-10 Days by Daily Average</h2>
-        <div id="chart-bot10" style="height:360px;"></div>
-      </div>
-    </div>
 
-    <!-- ===== WEEKDAY ===== -->
-    <div class="section-label" id="weekday">Day-of-Week Pattern</div>
-    <div class="chart-card">
-      <h2>Day-of-Week Profile — Avg, Peak &amp; Low (All Months Combined)</h2>
-      <div id="chart-weekday-global" style="height:320px;"></div>
-    </div>
-
-    <!-- ===== HOURLY ===== -->
-    <div class="section-label" id="hourly">Hourly Profile</div>
-    <div class="chart-card">
-      <h2>Average &amp; Peak Patrons by Hour of Day (Eastern Time, All Months)</h2>
-      <div id="chart-hourly-global" style="height:320px;"></div>
-    </div>
-
-    <!-- ===== HEATMAPS ===== -->
-    <div class="section-label" id="heatmaps">Heatmaps</div>
-    <div class="chart-card">
-      <h2>Average Patrons — Day of Week × Month</h2>
-      <div id="chart-heatmap-weekday" style="height:360px;"></div>
-    </div>
-    <div class="chart-card">
-      <h2>Average Patrons — Hour of Day (ET) × Month</h2>
-      <div id="chart-heatmap-hourly" style="height:360px;"></div>
-    </div>
-
-    <!-- ===== MONTH DRILL-DOWN ===== -->
-    <div class="section-label" id="month-drill">Month Drill-Down</div>
-    <div class="grid-2">
-      <div class="chart-card">
-        <h2>Weekday Profile — by Month</h2>
-        <div class="month-select-row">
-          <label for="sel-weekday">Month:</label>
-          <select id="sel-weekday"></select>
+      <!-- ===== Busiest days ===== -->
+      <div class="card">
+        <h2>Busiest days</h2>
+        <p class="hint">Ranked by the day's highest reading, complete days only.</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Date</th><th>Highest</th><th>at</th><th>Day average</th></tr></thead>
+            <tbody>
+              <% b.topDays.forEach((d) => { %>
+                <tr><td><%= fmtDay(d.date) %></td><td><%= nf(d.peak) %></td><td class="muted"><%= d.peakTime %></td><td><%= nf(d.avg) %></td></tr>
+              <% }) %>
+            </tbody>
+          </table>
         </div>
-        <div id="chart-weekday-drill" style="height:300px;"></div>
-      </div>
-      <div class="chart-card">
-        <h2>Hourly Profile (ET) — by Month</h2>
-        <div class="month-select-row">
-          <label for="sel-hourly">Month:</label>
-          <select id="sel-hourly"></select>
-        </div>
-        <div id="chart-hourly-drill" style="height:300px;"></div>
       </div>
     </div>
 
-    <!-- ===== TOP / BOTTOM TABLES ===== -->
-    <div class="section-label" id="top-tables">Top &amp; Bottom Days — by Month</div>
-    <div class="grid-2">
-      <div class="chart-card">
-        <h2>Top-10 Busiest Days</h2>
-        <div class="month-select-row">
-          <label for="sel-top10">Month:</label>
-          <select id="sel-top10"></select>
-        </div>
-        <div id="tbl-top10"></div>
-      </div>
-      <div class="chart-card">
-        <h2>Bottom-10 Quietest Days</h2>
-        <div class="month-select-row">
-          <label for="sel-bot10">Month:</label>
-          <select id="sel-bot10"></select>
-        </div>
-        <div id="tbl-bot10"></div>
-      </div>
-    </div>
-
-    <!-- ===== FLOORS ===== -->
-    <div class="section-label" id="floors">Floor Analysis</div>
-    <div class="chart-card">
-      <h2>Average Patrons per Floor × Month</h2>
-      <div id="chart-floor-bars" style="height:340px;"></div>
-    </div>
-    <div class="grid-2">
-      <div class="chart-card">
-        <h2>Per-Floor Patron Trend Across Months</h2>
-        <div id="chart-floor-lines" style="height:320px;"></div>
-      </div>
-      <div class="chart-card">
-        <h2>Floor Peak Hours — Top-5 ET Hours</h2>
-        <div id="chart-floor-radar" style="height:320px;"></div>
+    <!-- ===== Months ===== -->
+    <div class="card">
+      <h2>By month</h2>
+      <p class="hint">Averages use complete days only. The highest reading counts every reading.</p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Month</th><th>Days with data</th><th>Complete days</th>
+              <th>Average</th><th>Typical daily peak</th><th>Highest</th><th>on</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% b.months.slice().reverse().forEach((m) => { %>
+              <tr>
+                <td><%= m.label %><% if (m.inProgress) { %><span class="tag">in progress</span><% } %></td>
+                <td><%= m.daysWithData %></td>
+                <td><%= m.completeDays %></td>
+                <td><%= nf(m.avg) %></td>
+                <td><%= nf(m.avgDailyPeak) %></td>
+                <td><%= nf(m.peak) %></td>
+                <td class="muted"><%= fmtDate(m.peakDate) %> <%= m.peakTime %></td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
       </div>
     </div>
 
-    <div class="meta-bar">
-      Analytics Dashboard · King Library Cisco CMX WiFi Analytics ·
-      Data generated: <%= generatedAt %>
+  <% } %>
+
+  <% if (b.bounds) { %>
+    <!-- ===== One day ===== -->
+    <div class="card day-card" data-kind="<%= b.kind %>">
+      <h2>One day in detail</h2>
+      <p class="hint">Every 15-minute reading for the chosen day.</p>
+      <div class="controls">
+        <label for="<%= b.kind %>-day-picker">Date</label>
+        <input type="date" id="<%= b.kind %>-day-picker" class="day-picker"
+               min="<%= b.bounds.min %>" max="<%= b.bounds.max %>" value="<%= b.bounds.max %>">
+        <a class="btn day-csv" href="#">Download CSV</a>
+        <a class="btn day-json" href="#">Download JSON</a>
+        <span class="status day-status"></span>
+      </div>
+      <div class="day-stats"></div>
+      <div class="chart day-chart" id="<%= b.kind %>-day"></div>
+      <details>
+        <summary>Show the readings as a table</summary>
+        <div class="table-wrap"><table class="day-table"><thead></thead><tbody></tbody></table></div>
+      </details>
     </div>
 
-  </main>
-</div><!-- /.layout -->
+    <!-- ===== Export ===== -->
+    <div class="card export" data-base="<%= b.urls.range %>">
+      <h2>Download a date range</h2>
+      <p class="hint">All 15-minute readings between two dates, as CSV or JSON. Data runs from <%= fmtDate(b.bounds.min) %> to <%= fmtDate(b.bounds.max) %>.</p>
+      <div class="controls">
+        <label>From</label>
+        <input type="date" class="xp-from" min="<%= b.bounds.min %>" max="<%= b.bounds.max %>" value="<%= b.bounds.min %>">
+        <label>To</label>
+        <input type="date" class="xp-to" min="<%= b.bounds.min %>" max="<%= b.bounds.max %>" value="<%= b.bounds.max %>">
+        <a class="btn primary xp-csv" href="#">CSV</a>
+        <a class="btn xp-json" href="#">JSON</a>
+        <span class="status xp-count"></span>
+      </div>
+    </div>
+  <% } %>
 
+  <% if (b.available) { %>
+    <!-- ===== Notes ===== -->
+    <div class="card notes">
+      <h2>About these numbers</h2>
+      <ul>
+        <% if (b.kind === "king") { %>
+          <li>Each number counts the devices (phones, laptops, tablets…) connected to King Library's Wi-Fi,
+            read from IT's Cisco CMX system every 15 minutes. One person often carries more than one device,
+            so this is not a head count.</li>
+        <% } else { %>
+          <li>Each number is an estimate of people, made from the devices connected to the Rec's Wi-Fi
+            (IT's Cisco CMX system, every 15 minutes): (hourly average of devices − <%= recParams.baseline %>
+            always-on devices) ÷ <%= recParams.devicesPerPatron %> devices per person. It is the same estimate the
+            live Rec widget shows before it is rescaled to the widget.</li>
+          <% if (b.degraded && b.degraded.count) { %>
+            <li><%= nf(b.degraded.count) %> of <%= nf(b.degraded.total) %> readings
+              (<%= (100 * b.degraded.count / b.degraded.total).toFixed(1) %>%) failed the ground/first-floor sanity
+              check and may be over-stated. They are included above; the day view marks them.</li>
+          <% } %>
+        <% } %>
+        <% if (b.failedReadings) { %>
+          <li><%= nf(b.failedReadings) %> readings with every floor at zero are ignored: they are failed CMX
+            requests (such as the certificate outage of July–August 2026), not an empty building.</li>
+        <% } %>
+        <li>Nothing is recorded <%= b.silentWindow %>, so those hours are left out.</li>
+        <li>A day counts as complete when it has at least <%= b.minRowsPerDay %> of its
+          <%= b.expectedPerDay %> expected readings. Averages, the weekly pattern, the floor chart and the
+          rankings use complete days only; today is always incomplete until it is over.</li>
+        <% if (b.gaps.length) { %>
+          <li>Missing or incomplete days (usually CMX outages):
+            <%= b.gaps.slice(-12).reverse().map(fmtRange).join("; ") %><%= b.gaps.length > 12 ? `; and ${b.gaps.length - 12} earlier` : "" %>.</li>
+        <% } %>
+        <li>All times are Eastern Time, with daylight saving time applied to each reading.</li>
+      </ul>
+    </div>
+  <% } %>
 
-<!-- ===== CLIENT-SIDE CHART RENDERING ===== -->
+  </section>
+<% }) %>
+</main>
+
 <script>
-// Inject server-side analysis data
-const SUMMARY = <%- summaryJson %>;
+const BUILDINGS = <%- chartJson %>;
+const BY_KIND = Object.fromEntries(BUILDINGS.map((b) => [b.kind, b]));
 
-const G  = SUMMARY.global;
-const MS = SUMMARY.months;
+// Categorical slots in fixed order; sequential blue ramp for the heat map.
+const SERIES  = ["#2a78d6", "#eb6834", "#1baf7a", "#eda100"];
+const NEUTRAL = "#52514e";
+const SUSPECT = "#d03b3b";
+const HEAT    = [[0, "#eef4fd"], [0.15, "#cde2fb"], [0.4, "#86b6ef"], [0.65, "#2a78d6"], [0.85, "#1c5cab"], [1, "#0d366b"]];
 
-// ---- Palette ----
-const PRIMARY  = '#0066cc';
-const ACCENT   = '#dc3545';
-const TEAL     = '#0d9488';
-const GOLD     = '#ffc107';
-const GREY     = '#6c757d';
-const FLOOR_COLORS = { Ground: PRIMARY, First: TEAL, Second: GOLD, Third: ACCENT };
-const MONTH_COLORS = [
-  '#0066cc','#20c997','#ffc107','#dc3545',
-  '#6f42c1','#fd7e14','#0dcaf0','#198754'
-];
-
-const PLOTLY_CFG = {
-  displayModeBar: true,
-  responsive: true,
-  modeBarButtonsToRemove: ['lasso2d','select2d'],
+const CFG = { displayModeBar: false, responsive: true };
+const BASE = {
+  paper_bgcolor: "#ffffff",
+  plot_bgcolor:  "#ffffff",
+  font:   { family: "system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif", size: 12, color: "#52514e" },
+  margin: { t: 30, r: 16, b: 44, l: 56 },
+  hoverlabel: { bgcolor: "#ffffff", bordercolor: "#e4e3df", font: { color: "#1b1b1a" } },
+  legend: { orientation: "h", x: 0, y: 1.12 },
 };
-const LAYOUT_BASE = {
-  paper_bgcolor: '#fff',
-  plot_bgcolor:  '#f8f9fa',
-  margin: { t: 20, r: 20, b: 50, l: 55 },
-  font:   { family: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif", size: 12 },
-};
+const axis = (extra) => ({ gridcolor: "#ecebe8", zerolinecolor: "#e4e3df", linecolor: "#e4e3df", ...extra });
 
-// ---- Helpers ----
-const MONTH_ABBR = ['Jan','Feb','Mar','Apr','May','Jun',
-                    'Jul','Aug','Sep','Oct','Nov','Dec'];
-function monthLabel(mk) {
-  const [y, m] = mk.split('-');
-  return `${MONTH_ABBR[+m - 1]} ${y}`;
+// ---------------------------------------------------------------- charts
+function drawTrend(b) {
+  const x = b.days.map((d) => d.date);
+  Plotly.newPlot(b.kind + "-trend", [
+    { name: "Daily peak", x, y: b.days.map((d) => d.peak), type: "scatter", mode: "lines",
+      line: { color: SERIES[0], width: 2 }, connectgaps: false },
+    { name: "Daily average", x, y: b.days.map((d) => d.avg), type: "scatter", mode: "lines",
+      line: { color: SERIES[1], width: 2 }, connectgaps: false },
+  ], {
+    ...BASE,
+    hovermode: "x unified",
+    xaxis: axis({
+      type: "date",
+      rangeselector: { x: 1, xanchor: "right", y: 1.12, buttons: [
+        { count: 1, label: "1 month",  step: "month", stepmode: "backward" },
+        { count: 3, label: "3 months", step: "month", stepmode: "backward" },
+        { count: 1, label: "1 year",   step: "year",  stepmode: "backward" },
+        { step: "all", label: "All" },
+      ] },
+    }),
+    yaxis: axis({ title: { text: b.unitTitle }, rangemode: "tozero" }),
+  }, CFG);
 }
 
-const sortedMonthKeys = Object.keys(MS).sort();
-const sortedMonthLabels = sortedMonthKeys.map(monthLabel);
+function drawHeat(b, period) {
+  const z = period === "all" ? b.heat.all : b.heat.byMonth[period];
+  Plotly.react(b.kind + "-heat", [{
+    type: "heatmap", z, x: b.hours, y: b.weekdays,
+    colorscale: HEAT, zmin: 0, hoverongaps: false, xgap: 2, ygap: 2,
+    colorbar: { thickness: 12, outlinewidth: 0 },
+    hovertemplate: "%{y} %{x}<br><b>%{z}</b> " + b.unit + "<extra></extra>",
+  }], {
+    ...BASE,
+    margin: { t: 10, r: 16, b: 44, l: 90 },
+    xaxis: axis({ type: "category", title: { text: "Hour (ET)" }, showgrid: false }),
+    yaxis: axis({ autorange: "reversed", showgrid: false }),
+  }, CFG);
+}
 
-// =========================================================
-// 0. DAY DETAIL — pick a date, view/download one day's data
-// =========================================================
-(function() {
-  const picker    = document.getElementById('day-picker');
-  const loadBtn   = document.getElementById('day-load');
-  const csvLink   = document.getElementById('day-csv');
-  const jsonLink  = document.getElementById('day-json');
-  const statsEl   = document.getElementById('day-stats');
-  const msgEl     = document.getElementById('day-msg');
-  const tableWrap = document.getElementById('day-table-wrap');
-  const tableBody = document.querySelector('#day-table tbody');
+function drawFloors(b) {
+  Plotly.newPlot(b.kind + "-floors", b.floorsByHour.map((f, i) => ({
+    name: f.name, x: b.hours, y: f.avg, type: "scatter", mode: "lines",
+    line: { color: SERIES[i], width: 2 },
+  })), {
+    ...BASE,
+    hovermode: "x unified",
+    xaxis: axis({ type: "category", title: { text: "Hour (ET)" }, dtick: 3, tickangle: 0 }),
+    yaxis: axis({ title: { text: "Devices" }, rangemode: "tozero" }),
+  }, CFG);
+}
 
-  const FLOORS = [
-    { key: 'ground', name: 'Ground', color: PRIMARY },
-    { key: 'first',  name: 'First',  color: TEAL    },
-    { key: 'second', name: 'Second', color: GOLD    },
-    { key: 'third',  name: 'Third',  color: ACCENT  },
-  ];
+// ---------------------------------------------------------------- one day
+function setupDay(card) {
+  const b       = BY_KIND[card.dataset.kind];
+  const picker  = card.querySelector(".day-picker");
+  const csv     = card.querySelector(".day-csv");
+  const json    = card.querySelector(".day-json");
+  const status  = card.querySelector(".day-status");
+  const stats   = card.querySelector(".day-stats");
+  const thead   = card.querySelector(".day-table thead");
+  const tbody   = card.querySelector(".day-table tbody");
+  const chartId = b.kind + "-day";
+  const isRec   = b.kind === "rec";
 
-  function setDownloadLinks(date) {
-    csvLink.href  = 'day.csv?date='  + encodeURIComponent(date);
-    jsonLink.href = 'day.json?date=' + encodeURIComponent(date);
-  }
-
-  function disableDownloads(off) {
-    [csvLink, jsonLink].forEach(a => a.setAttribute('aria-disabled', off ? 'true' : 'false'));
-  }
-
-  async function loadDay(date) {
+  async function load() {
+    const date = picker.value;
     if (!date) return;
-    setDownloadLinks(date);
-    msgEl.textContent = 'Loading ' + date + ' …';
+    const q = "?date=" + encodeURIComponent(date);
+    csv.href  = b.urls.day + ".csv"  + q;
+    json.href = b.urls.day + ".json" + q;
+    status.textContent = "Loading…";
+    status.className = "status day-status";
 
     let payload;
     try {
-      const resp = await fetch('day?date=' + encodeURIComponent(date));
+      const resp = await fetch(b.urls.day + q, { credentials: "same-origin" });
       payload = await resp.json();
-      if (!resp.ok) throw new Error(payload.error || 'Request failed');
+      if (!resp.ok) throw new Error(payload.error || "Request failed");
     } catch (e) {
-      msgEl.textContent = 'Error: ' + e.message;
+      status.textContent = "Error: " + e.message;
+      status.className = "status day-status err";
       return;
     }
 
-    const { stats, records } = payload;
-
-    if (!records.length) {
-      statsEl.innerHTML = '';
-      tableWrap.style.display = 'none';
-      Plotly.purge('chart-day');
-      disableDownloads(true);
-      msgEl.textContent = 'No data found for ' + date + '.';
+    const recs = payload.records;
+    [csv, json].forEach((a) => a.setAttribute("aria-disabled", recs.length ? "false" : "true"));
+    if (!recs.length) {
+      stats.innerHTML = "";
+      thead.innerHTML = tbody.innerHTML = "";
+      Plotly.purge(chartId);
+      status.textContent = "No readings on this day.";
       return;
     }
 
-    msgEl.textContent = '';
-    disableDownloads(false);
+    const s = payload.stats;
+    const suspect = isRec ? recs.filter((r) => r.degraded).length : 0;
+    status.textContent = suspect ? suspect + " of " + recs.length + " readings failed the sanity check (marked)." : "";
+    stats.innerHTML =
+      "<span>Readings <b>" + s.count + "</b></span>" +
+      "<span>Average <b>" + s.avg + "</b></span>" +
+      "<span>Highest <b>" + s.peak + "</b> at " + s.peakTime + "</span>" +
+      "<span>Lowest <b>" + s.low + "</b> at " + s.lowTime + "</span>";
 
-    statsEl.innerHTML =
-      `<span class="ds-item">Readings <b>${stats.count}</b></span>` +
-      `<span class="ds-item">Avg <b>${stats.avg}</b></span>` +
-      `<span class="ds-item">Peak <b>${stats.peak}</b> @ ${stats.peakTime}</span>` +
-      `<span class="ds-item">Low <b>${stats.low}</b> @ ${stats.lowTime}</span>`;
+    const x = recs.map((r) => r.time);
+    let traces;
+    if (isRec) {
+      traces = [{ name: "Estimated people", x, y: recs.map((r) => r.patrons), type: "scatter", mode: "lines",
+                  line: { color: SERIES[0], width: 2 } }];
+      if (suspect) {
+        const bad = recs.filter((r) => r.degraded);
+        traces.push({ name: "Failed sanity check", x: bad.map((r) => r.time), y: bad.map((r) => r.patrons),
+                      type: "scatter", mode: "markers", marker: { color: SUSPECT, size: 8, symbol: "x" } });
+      }
+    } else {
+      traces = [{ name: "Total", x, y: recs.map((r) => r.patrons), type: "scatter", mode: "lines",
+                  line: { color: NEUTRAL, width: 2.5 } }]
+        .concat(["ground", "first", "second", "third"].map((k, i) => ({
+          name: b.floors[i], x, y: recs.map((r) => r[k]), type: "scatter", mode: "lines",
+          line: { color: SERIES[i], width: 1.5 },
+        })));
+    }
+    Plotly.newPlot(chartId, traces, {
+      ...BASE,
+      hovermode: "x unified",
+      xaxis: axis({ type: "category", title: { text: "Time (ET)" }, nticks: 12 }),
+      yaxis: axis({ title: { text: b.unitTitle }, rangemode: "tozero" }),
+    }, CFG);
 
-    const x = records.map(r => r.time);
-    const traces = [
-      { name: 'Total', x, y: records.map(r => r.patrons),
-        type: 'scatter', mode: 'lines', line: { color: GREY, width: 3 } },
-    ];
-    FLOORS.forEach(f => traces.push({
-      name: f.name, x, y: records.map(r => r[f.key]),
-      type: 'scatter', mode: 'lines', line: { color: f.color, width: 1.5 },
-    }));
-
-    Plotly.newPlot('chart-day', traces, {
-      ...LAYOUT_BASE,
-      xaxis:  { title: 'Time (ET)' },
-      yaxis:  { title: 'Patrons' },
-      legend: { orientation: 'h', y: 1.08, x: 1, xanchor: 'right' },
-    }, PLOTLY_CFG);
-
-    tableBody.innerHTML = records.map(r =>
-      `<tr><td>${r.time}</td><td>${r.patrons}</td>` +
-      `<td>${r.ground}</td><td>${r.first}</td><td>${r.second}</td><td>${r.third}</td></tr>`
-    ).join('');
-    tableWrap.style.display = '';
+    const cols = isRec
+      ? [["Time", "time"], ["Estimated people", "patrons"], ["Devices (raw)", "raw"], ["Ground", "ground"], ["First", "first"]]
+      : [["Time", "time"], ["Total", "patrons"], ["Ground", "ground"], ["First", "first"], ["Second", "second"], ["Third", "third"]];
+    thead.innerHTML = "<tr>" + cols.map((c) => "<th>" + c[0] + "</th>").join("") + (isRec ? "<th></th>" : "") + "</tr>";
+    tbody.innerHTML = recs.map((r) =>
+      "<tr>" + cols.map((c) => "<td>" + r[c[1]] + "</td>").join("") +
+      (isRec ? "<td class='muted'>" + (r.degraded ? "failed check" : "") + "</td>" : "") + "</tr>"
+    ).join("");
   }
 
-  loadBtn.addEventListener('click', () => loadDay(picker.value));
-  picker.addEventListener('change', () => loadDay(picker.value));
+  picker.addEventListener("change", load);
+  return load;
+}
 
-  // Initial load for the default date
-  loadDay(picker.value);
-})();
+// ---------------------------------------------------------------- export
+function setupExport(card) {
+  const base  = card.dataset.base;
+  const from  = card.querySelector(".xp-from");
+  const to    = card.querySelector(".xp-to");
+  const csv   = card.querySelector(".xp-csv");
+  const json  = card.querySelector(".xp-json");
+  const count = card.querySelector(".xp-count");
+  let timer;
 
-// =========================================================
-// 0b. REC CENTER — 15-minute readings for a single day
-// =========================================================
-(function() {
-  const picker = document.getElementById('rec-picker');
-  if (!picker) return;   // no rec_summaries data on this server yet
+  const enable = (on) => [csv, json].forEach((a) => a.setAttribute("aria-disabled", on ? "false" : "true"));
 
-  const loadBtn   = document.getElementById('rec-load');
-  const csvLink   = document.getElementById('rec-csv');
-  const jsonLink  = document.getElementById('rec-json');
-  const statsEl   = document.getElementById('rec-stats');
-  const msgEl     = document.getElementById('rec-msg');
-  const tableWrap = document.getElementById('rec-table-wrap');
-  const tableBody = document.querySelector('#rec-table tbody');
-
-  async function loadRecDay(date) {
-    if (!date) return;
-    csvLink.href  = 'rec/day.csv?date='  + encodeURIComponent(date);
-    jsonLink.href = 'rec/day.json?date=' + encodeURIComponent(date);
-    msgEl.textContent = 'Loading ' + date + ' …';
-
-    let payload;
+  async function refresh() {
+    if (!from.value || !to.value) return;
+    if (from.value > to.value) {
+      count.textContent = "The start date is after the end date.";
+      count.className = "status xp-count err";
+      enable(false);
+      return;
+    }
+    const qs = "?from=" + encodeURIComponent(from.value) + "&to=" + encodeURIComponent(to.value);
+    csv.href  = base + ".csv"  + qs;
+    json.href = base + ".json" + qs;
+    count.textContent = "Counting…";
+    count.className = "status xp-count";
     try {
-      const resp = await fetch('rec/day?date=' + encodeURIComponent(date));
-      payload = await resp.json();
-      if (!resp.ok) throw new Error(payload.error || 'Request failed');
+      const resp = await fetch(base + "/info" + qs, { credentials: "same-origin" });
+      const info = await resp.json();
+      if (!resp.ok) throw new Error(info.error || "Request failed");
+      count.textContent = info.count
+        ? info.count.toLocaleString("en-US") + " readings across " + info.days + " day(s)"
+        : "No readings in this range.";
+      enable(info.count > 0);
     } catch (e) {
-      msgEl.textContent = 'Error: ' + e.message;
-      return;
+      count.textContent = e.message;
+      count.className = "status xp-count err";
+      enable(false);
     }
-
-    const { stats, records, baseline, devicesPerPatron } = payload;
-
-    if (!records.length) {
-      statsEl.innerHTML = '';
-      tableWrap.style.display = 'none';
-      Plotly.purge('chart-rec');
-      msgEl.textContent = 'No Recreation Center data found for ' + date + '.';
-      return;
-    }
-
-    const degradedCount = records.filter(r => r.degraded).length;
-    msgEl.textContent =
-      'Total = (hourly mean − ' + baseline + ' baseline devices) ÷ ' + devicesPerPatron + ' devices per patron.' +
-      (degradedCount
-        ? '  ' + degradedCount + ' of ' + records.length +
-          ' readings failed the ground/first sanity check and are likely over-stated.'
-        : '');
-
-    statsEl.innerHTML =
-      `<span class="ds-item">Readings <b>${stats.count}</b></span>` +
-      `<span class="ds-item">Avg <b>${stats.avg}</b></span>` +
-      `<span class="ds-item">Peak <b>${stats.peak}</b> @ ${stats.peakTime}</span>` +
-      `<span class="ds-item">Low <b>${stats.low}</b> @ ${stats.lowTime}</span>`;
-
-    const x = records.map(r => r.time);
-    Plotly.newPlot('chart-rec', [
-      { name: 'Total (adjusted)', x, y: records.map(r => r.patrons),
-        type: 'scatter', mode: 'lines', line: { color: GREY, width: 3 } },
-      { name: 'Ground', x, y: records.map(r => r.ground),
-        type: 'scatter', mode: 'lines', line: { color: PRIMARY, width: 1.5 } },
-      { name: 'First',  x, y: records.map(r => r.first),
-        type: 'scatter', mode: 'lines', line: { color: TEAL, width: 1.5 } },
-    ], {
-      ...LAYOUT_BASE,
-      xaxis:  { title: 'Time (ET)' },
-      yaxis:  { title: 'Devices' },
-      legend: { orientation: 'h', y: 1.08, x: 1, xanchor: 'right' },
-    }, PLOTLY_CFG);
-
-    tableBody.innerHTML = records.map(r =>
-      `<tr><td>${r.time}</td><td>${r.patrons}</td><td>${r.raw}</td>` +
-      `<td>${r.ground}</td><td>${r.first}</td></tr>`
-    ).join('');
-    tableWrap.style.display = '';
   }
 
-  loadBtn.addEventListener('click', () => loadRecDay(picker.value));
-  picker.addEventListener('change', () => loadRecDay(picker.value));
-  loadRecDay(picker.value);
-})();
-
-// =========================================================
-// 0c. DATE-RANGE EXPORT — drives both the King and the Rec block
-// =========================================================
-(function() {
-  document.querySelectorAll('.export-row').forEach(function(row) {
-    const base     = row.dataset.base;          // 'range' or 'rec/range'
-    const fromEl   = row.querySelector('.xp-from');
-    const toEl     = row.querySelector('.xp-to');
-    const csvLink  = row.querySelector('.xp-csv');
-    const jsonLink = row.querySelector('.xp-json');
-    const countEl  = row.querySelector('.export-count');
-
-    let debounce;
-
-    function setEnabled(on) {
-      [csvLink, jsonLink].forEach(a => a.setAttribute('aria-disabled', on ? 'false' : 'true'));
-    }
-
-    async function refresh() {
-      const from = fromEl.value, to = toEl.value;
-      if (!from || !to) return;
-
-      if (from > to) {
-        countEl.textContent = 'Start date is after the end date.';
-        countEl.className   = 'export-count err';
-        setEnabled(false);
-        return;
-      }
-
-      const qs = 'from=' + encodeURIComponent(from) + '&to=' + encodeURIComponent(to);
-      csvLink.href  = base + '.csv?'  + qs;
-      jsonLink.href = base + '.json?' + qs;
-
-      countEl.textContent = 'Counting…';
-      countEl.className   = 'export-count';
-
-      try {
-        const resp = await fetch(base + '/info?' + qs);
-        const info = await resp.json();
-        if (!resp.ok) throw new Error(info.error || 'Request failed');
-
-        if (info.count === 0) {
-          countEl.textContent = 'No records in this range.';
-          countEl.className   = 'export-count warn';
-          setEnabled(false);
-        } else {
-          countEl.textContent =
-            info.count.toLocaleString() + ' records across ' + info.days + ' day(s)';
-          countEl.className = 'export-count';
-          setEnabled(true);
-        }
-      } catch (e) {
-        countEl.textContent = e.message;
-        countEl.className   = 'export-count err';
-        setEnabled(false);
-      }
-    }
-
-    [fromEl, toEl].forEach(el => el.addEventListener('change', function() {
-      clearTimeout(debounce);
-      debounce = setTimeout(refresh, 150);
-    }));
-
-    refresh();
-  });
-})();
-
-// =========================================================
-// 1. MONTHLY BARS — avg vs peak
-// =========================================================
-(function() {
-  const ov    = G.monthly_overview;
-  const labels = ov.map(m => monthLabel(m.month));
-  const avgs   = ov.map(m => m.avg_patrons);
-  const peaks  = ov.map(m => m.peak_patrons);
-
-  Plotly.newPlot('chart-monthly-bars', [
-    { name: 'Monthly Avg',  x: labels, y: avgs,  type: 'bar',
-      marker: { color: PRIMARY }, text: avgs, textposition: 'outside' },
-    { name: 'Monthly Peak', x: labels, y: peaks, type: 'bar',
-      marker: { color: ACCENT  }, text: peaks, textposition: 'outside' },
-  ], {
-    ...LAYOUT_BASE,
-    barmode: 'group',
-    xaxis: { title: 'Month' },
-    yaxis: { title: 'Patrons' },
-    legend: { orientation: 'h', y: 1.05, x: 1, xanchor: 'right' },
-  }, PLOTLY_CFG);
-})();
-
-
-// =========================================================
-// 2. DAILY TIMELINE — all months overlaid
-// =========================================================
-(function() {
-  const traces = sortedMonthKeys.map((mk, i) => {
-    const days = MS[mk].all_days;
-    return {
-      name: monthLabel(mk),
-      x: days.map(d => d.date),
-      y: days.map(d => d.avg),
-      type: 'scatter', mode: 'lines',
-      line: { color: MONTH_COLORS[i % MONTH_COLORS.length], width: 1.8 },
-    };
-  });
-
-  Plotly.newPlot('chart-daily-timeline', traces, {
-    ...LAYOUT_BASE,
-    xaxis: { title: 'Date' },
-    yaxis: { title: 'Daily Avg Patrons' },
-    legend: { orientation: 'h', y: 1.05, x: 1, xanchor: 'right' },
-    margin: { ...LAYOUT_BASE.margin, b: 60 },
-  }, PLOTLY_CFG);
-})();
-
-
-// =========================================================
-// 3. TOP-10 / BOTTOM-10 DAYS (cross-month)
-// =========================================================
-(function() {
-  function horizBar(data, containerId, color) {
-    const labels = data.map(d => `${d.date} (${d.weekday.slice(0,3)})`);
-    const avgs   = data.map(d => d.avg);
-    Plotly.newPlot(containerId, [{
-      type: 'bar', orientation: 'h',
-      x: avgs, y: labels,
-      marker: { color },
-      text: avgs, textposition: 'outside',
-    }], {
-      ...LAYOUT_BASE,
-      xaxis: { title: 'Daily Avg Patrons' },
-      yaxis: { autorange: 'reversed' },
-      margin: { t: 10, r: 60, b: 40, l: 175 },
-    }, PLOTLY_CFG);
-  }
-
-  horizBar(G.cross_month_top10_days, 'chart-top10', PRIMARY);
-  horizBar(G.cross_month_low10_days, 'chart-bot10', ACCENT);
-})();
-
-
-// =========================================================
-// 4. WEEKDAY GLOBAL BAR — avg / peak / low
-// =========================================================
-(function() {
-  const wdp   = G.day_of_week_profile;
-  const days  = wdp.map(w => w.weekday);
-  Plotly.newPlot('chart-weekday-global', [
-    { name: 'Avg',  x: days, y: wdp.map(w => w.avg),  type: 'bar', marker: { color: PRIMARY } },
-    { name: 'Peak', x: days, y: wdp.map(w => w.peak), type: 'bar', marker: { color: ACCENT  } },
-    { name: 'Low',  x: days, y: wdp.map(w => w.low),  type: 'bar', marker: { color: GREY    } },
-  ], {
-    ...LAYOUT_BASE,
-    barmode: 'group',
-    xaxis: { title: 'Day of Week' },
-    yaxis: { title: 'Patrons' },
-    legend: { orientation: 'h', y: 1.05, x: 1, xanchor: 'right' },
-  }, PLOTLY_CFG);
-})();
-
-
-// =========================================================
-// 5. HOURLY GLOBAL LINE — avg + peak markers
-// =========================================================
-(function() {
-  const hp     = G.hourly_profile;
-  const labels = hp.map(h => h.label);
-  Plotly.newPlot('chart-hourly-global', [
-    {
-      name: 'Avg Patrons', x: labels, y: hp.map(h => h.avg),
-      type: 'scatter', mode: 'lines+markers',
-      line: { color: PRIMARY, width: 2.5 }, marker: { size: 6 },
-    },
-    {
-      name: 'Peak Reading', x: labels, y: hp.map(h => h.peak),
-      type: 'scatter', mode: 'markers',
-      marker: { color: ACCENT, size: 9, symbol: 'diamond' },
-    },
-  ], {
-    ...LAYOUT_BASE,
-    xaxis: { title: 'Hour (Eastern Time)' },
-    yaxis: { title: 'Patrons' },
-    legend: { orientation: 'h', y: 1.05, x: 1, xanchor: 'right' },
-  }, PLOTLY_CFG);
-})();
-
-
-// =========================================================
-// 6. HEATMAP — weekday × month
-// =========================================================
-(function() {
-  const WEEKDAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
-  const z = sortedMonthKeys.map(mk => {
-    const wdMap = {};
-    MS[mk].day_of_week.forEach(w => { wdMap[w.weekday] = w.avg; });
-    return WEEKDAYS.map(w => wdMap[w] || 0);
-  });
-
-  Plotly.newPlot('chart-heatmap-weekday', [{
-    type: 'heatmap',
-    z,
-    x: WEEKDAYS,
-    y: sortedMonthLabels,
-    colorscale: 'Blues',
-    text: z.map(row => row.map(String)),
-    texttemplate: '%{text}',
-    colorbar: { title: 'Avg Patrons' },
-  }], {
-    ...LAYOUT_BASE,
-    xaxis: { title: 'Day of Week' },
-    yaxis: { title: 'Month' },
-    margin: { t: 10, r: 80, b: 50, l: 85 },
-  }, PLOTLY_CFG);
-})();
-
-
-// =========================================================
-// 7. HEATMAP — hour × month
-// =========================================================
-(function() {
-  const HOURS = Array.from({length:24}, (_, h) => `${String(h).padStart(2,'0')}:00`);
-  const z = sortedMonthKeys.map(mk => {
-    const hMap = {};
-    MS[mk].hourly_profile.forEach(h => { hMap[h.label] = h.avg; });
-    return HOURS.map(lbl => hMap[lbl] || 0);
-  });
-
-  Plotly.newPlot('chart-heatmap-hourly', [{
-    type: 'heatmap',
-    z,
-    x: HOURS,
-    y: sortedMonthLabels,
-    colorscale: 'Oranges',
-    colorbar: { title: 'Avg Patrons' },
-  }], {
-    ...LAYOUT_BASE,
-    xaxis: { title: 'Hour (ET)' },
-    yaxis: { title: 'Month' },
-    margin: { t: 10, r: 80, b: 50, l: 85 },
-  }, PLOTLY_CFG);
-})();
-
-
-// =========================================================
-// 8. WEEKDAY DRILL — dropdown per month
-// =========================================================
-(function() {
-  const WEEKDAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
-  const sel = document.getElementById('sel-weekday');
-  sortedMonthKeys.forEach(mk => {
-    const opt = document.createElement('option');
-    opt.value = mk; opt.textContent = monthLabel(mk);
-    sel.appendChild(opt);
-  });
-
-  function render(mk) {
-    const wdp  = MS[mk].day_of_week;
-    const wdMap = {};
-    wdp.forEach(w => { wdMap[w.weekday] = w; });
-    const avgs  = WEEKDAYS.map(w => wdMap[w]?.avg  || 0);
-    const peaks = WEEKDAYS.map(w => wdMap[w]?.peak || 0);
-    Plotly.react('chart-weekday-drill', [
-      { name: 'Avg',  x: WEEKDAYS, y: avgs,  type: 'bar', marker: { color: PRIMARY },
-        text: avgs, textposition: 'outside' },
-      { name: 'Peak', x: WEEKDAYS, y: peaks, type: 'bar', marker: { color: ACCENT  },
-        text: peaks, textposition: 'outside' },
-    ], {
-      ...LAYOUT_BASE,
-      barmode: 'group',
-      xaxis: { title: 'Day of Week' },
-      yaxis: { title: 'Patrons' },
-      legend: { orientation: 'h', y: 1.05, x: 1, xanchor: 'right' },
-      margin: { t: 10, r: 20, b: 45, l: 55 },
-    }, PLOTLY_CFG);
-  }
-
-  sel.addEventListener('change', () => render(sel.value));
-  render(sortedMonthKeys[0]);
-})();
-
-
-// =========================================================
-// 9. HOURLY DRILL — dropdown per month
-// =========================================================
-(function() {
-  const HOURS = Array.from({length:24}, (_, h) => `${String(h).padStart(2,'0')}:00`);
-  const sel = document.getElementById('sel-hourly');
-  sortedMonthKeys.forEach(mk => {
-    const opt = document.createElement('option');
-    opt.value = mk; opt.textContent = monthLabel(mk);
-    sel.appendChild(opt);
-  });
-
-  function render(mk) {
-    const hMap = {};
-    MS[mk].hourly_profile.forEach(h => { hMap[h.label] = h.avg; });
-    const avgs = HOURS.map(lbl => hMap[lbl] || 0);
-    Plotly.react('chart-hourly-drill', [{
-      name: monthLabel(mk),
-      x: HOURS, y: avgs,
-      type: 'scatter', mode: 'lines+markers',
-      line: { color: PRIMARY, width: 2.5 },
-      marker: { size: 5 },
-    }], {
-      ...LAYOUT_BASE,
-      xaxis: { title: 'Hour (ET)' },
-      yaxis: { title: 'Avg Patrons' },
-      margin: { t: 10, r: 20, b: 45, l: 55 },
-    }, PLOTLY_CFG);
-  }
-
-  sel.addEventListener('change', () => render(sel.value));
-  render(sortedMonthKeys[0]);
-})();
-
-
-// =========================================================
-// 10. TOP-10 / BOTTOM-10 TABLES — dropdown per month
-// =========================================================
-(function() {
-  function makeTable(rows, rankColor) {
-    const rankClass = rankColor === 'red' ? 'rank-badge red' : 'rank-badge';
-    return `<table class="data-table">
-      <thead><tr>
-        <th>#</th><th>Date</th><th>Weekday</th><th>Avg</th><th>Peak</th>
-      </tr></thead>
-      <tbody>
-        ${rows.map((d, i) => `<tr>
-          <td><span class="${rankClass}">${i+1}</span></td>
-          <td>${d.date}</td>
-          <td>${d.weekday}</td>
-          <td><strong>${d.avg}</strong></td>
-          <td>${d.peak}</td>
-        </tr>`).join('')}
-      </tbody>
-    </table>`;
-  }
-
-  // Top-10
-  const selTop = document.getElementById('sel-top10');
-  sortedMonthKeys.forEach(mk => {
-    const opt = document.createElement('option');
-    opt.value = mk; opt.textContent = monthLabel(mk);
-    selTop.appendChild(opt);
-  });
-  function renderTop(mk) {
-    document.getElementById('tbl-top10').innerHTML =
-      makeTable(MS[mk].top10_days, 'blue');
-  }
-  selTop.addEventListener('change', () => renderTop(selTop.value));
-  renderTop(sortedMonthKeys[0]);
-
-  // Bottom-10
-  const selBot = document.getElementById('sel-bot10');
-  sortedMonthKeys.forEach(mk => {
-    const opt = document.createElement('option');
-    opt.value = mk; opt.textContent = monthLabel(mk);
-    selBot.appendChild(opt);
-  });
-  function renderBot(mk) {
-    document.getElementById('tbl-bot10').innerHTML =
-      makeTable(MS[mk].bottom10_days, 'red');
-  }
-  selBot.addEventListener('change', () => renderBot(selBot.value));
-  renderBot(sortedMonthKeys[0]);
-})();
-
-
-// =========================================================
-// 11. FLOOR BARS — avg per floor per month
-// =========================================================
-(function() {
-  const floors = ['Ground','First','Second','Third'];
-  const traces = floors.map(floor => ({
-    name: floor,
-    x: sortedMonthLabels,
-    y: sortedMonthKeys.map(mk => {
-      const fl = MS[mk].floor_breakdown.find(f => f.floor === floor);
-      return fl ? fl.avg : 0;
-    }),
-    type: 'bar',
-    marker: { color: FLOOR_COLORS[floor] },
+  [from, to].forEach((el) => el.addEventListener("change", () => {
+    clearTimeout(timer);
+    timer = setTimeout(refresh, 150);
   }));
+  refresh();
+}
 
-  Plotly.newPlot('chart-floor-bars', traces, {
-    ...LAYOUT_BASE,
-    barmode: 'group',
-    xaxis: { title: 'Month' },
-    yaxis: { title: 'Avg Patrons' },
-    legend: { orientation: 'h', y: 1.05, x: 1, xanchor: 'right' },
-  }, PLOTLY_CFG);
-})();
+// ---------------------------------------------------------------- tabs
+const dayLoaders = {};
+document.querySelectorAll(".day-card").forEach((c) => { dayLoaders[c.dataset.kind] = setupDay(c); });
+document.querySelectorAll(".export").forEach(setupExport);
+document.querySelectorAll(".heat-month").forEach((sel) =>
+  sel.addEventListener("change", () => drawHeat(BY_KIND[sel.dataset.kind], sel.value)));
 
+const drawn = {};
+function showTab(kind) {
+  if (!BY_KIND[kind]) kind = BUILDINGS[0].kind;
+  document.querySelectorAll(".tab").forEach((t) =>
+    t.setAttribute("aria-selected", t.dataset.kind === kind ? "true" : "false"));
+  document.querySelectorAll(".panel").forEach((p) => { p.hidden = p.id !== "panel-" + kind; });
 
-// =========================================================
-// 12. FLOOR TREND LINES — per floor across months
-// =========================================================
-(function() {
-  const floors = ['Ground','First','Second','Third'];
-  const traces = floors.map(floor => ({
-    name: floor,
-    x: sortedMonthLabels,
-    y: sortedMonthKeys.map(mk => {
-      const fl = MS[mk].floor_breakdown.find(f => f.floor === floor);
-      return fl ? fl.avg : 0;
-    }),
-    type: 'scatter', mode: 'lines+markers',
-    line:   { color: FLOOR_COLORS[floor], width: 2.5 },
-    marker: { size: 8 },
-  }));
+  // Plotly needs a visible container to size itself, so each tab draws on first view.
+  if (!drawn[kind]) {
+    drawn[kind] = true;
+    const b = BY_KIND[kind];
+    if (b.available) {
+      drawTrend(b);
+      drawHeat(b, "all");
+      drawFloors(b);
+    }
+    if (dayLoaders[kind]) dayLoaders[kind]();
+  }
+}
 
-  Plotly.newPlot('chart-floor-lines', traces, {
-    ...LAYOUT_BASE,
-    xaxis: { title: 'Month' },
-    yaxis: { title: 'Avg Patrons' },
-    legend: { orientation: 'h', y: 1.05, x: 1, xanchor: 'right' },
-  }, PLOTLY_CFG);
-})();
-
-
-// =========================================================
-// 13. FLOOR RADAR — top-5 peak hours per floor
-// =========================================================
-(function() {
-  const floorData = G.floor_breakdown;
-  const traces = floorData.map(fl => {
-    const theta = fl.top_hours.map(h => h.label);
-    const r     = fl.top_hours.map(h => h.avg);
-    // Close the loop
-    return {
-      type: 'scatterpolar',
-      name: fl.floor,
-      r:     [...r, r[0]],
-      theta: [...theta, theta[0]],
-      fill: 'toself',
-      line: { color: FLOOR_COLORS[fl.floor] },
-      fillcolor: FLOOR_COLORS[fl.floor],
-      opacity: 0.42,
-    };
-  });
-
-  Plotly.newPlot('chart-floor-radar', traces, {
-    ...LAYOUT_BASE,
-    polar: { angularaxis: { direction: 'clockwise' } },
-    legend: { orientation: 'h', y: -0.15, x: 0.5, xanchor: 'center' },
-    margin: { t: 20, r: 30, b: 60, l: 30 },
-  }, PLOTLY_CFG);
-})();
-
-
-// =========================================================
-// 14. INSIGHTS BOXES — auto-generated from data
-// =========================================================
-(function() {
-  const ov      = G.monthly_overview;
-  const bestM   = ov.reduce((a, b) => b.avg_patrons  > a.avg_patrons  ? b : a);
-  const worstM  = ov.reduce((a, b) => b.avg_patrons  < a.avg_patrons  ? b : a);
-  const bestWD  = G.day_of_week_profile.reduce((a, b) => b.avg > a.avg ? b : a);
-  const worstWD = G.day_of_week_profile.reduce((a, b) => b.avg < a.avg ? b : a);
-  const peakH   = G.hourly_profile.reduce((a, b) => b.avg > a.avg ? b : a);
-  const quietH  = G.hourly_profile.filter(h => h.avg > 0).reduce((a, b) => b.avg < a.avg ? b : a);
-  const busyFl  = G.floor_breakdown.reduce((a, b) => b.avg > a.avg ? b : a);
-  const top1D   = G.cross_month_top10_days[0];
-  const bot1D   = G.cross_month_low10_days[0];
-
-  const boxes = [
-    { cls:'blue',   icon:'📈', title:'Busiest Month',
-      text:`${monthLabel(bestM.month)} — avg ${bestM.avg_patrons} patrons/interval, peak ${bestM.peak_patrons}` },
-    { cls:'red',    icon:'📉', title:'Quietest Month',
-      text:`${monthLabel(worstM.month)} — avg ${worstM.avg_patrons} patrons/interval, peak ${worstM.peak_patrons}` },
-    { cls:'blue',   icon:'📅', title:'Busiest Weekday',
-      text:`${bestWD.weekday} — avg ${bestWD.avg}, peak ${bestWD.peak}` },
-    { cls:'yellow', icon:'📅', title:'Quietest Weekday',
-      text:`${worstWD.weekday} — avg ${worstWD.avg}` },
-    { cls:'blue',   icon:'🕐', title:'Peak Hour (ET)',
-      text:`${peakH.label} — avg ${peakH.avg} patrons across all months` },
-    { cls:'yellow', icon:'🌙', title:'Quietest Hour (ET)',
-      text:`${quietH.label} — avg ${quietH.avg} patrons` },
-    { cls:'green',  icon:'🏢', title:'Busiest Floor',
-      text:`${busyFl.floor} floor — avg ${busyFl.avg}, peak ${busyFl.peak}` },
-    { cls:'blue',   icon:'🏆', title:'Best Single Day Ever',
-      text:`${top1D.date} (${top1D.weekday}) — daily avg ${top1D.avg}, peak ${top1D.peak}` },
-    { cls:'red',    icon:'🔕', title:'Quietest Single Day',
-      text:`${bot1D.date} (${bot1D.weekday}) — daily avg ${bot1D.avg}, peak ${bot1D.peak}` },
-  ];
-
-  const container = document.getElementById('insights-boxes');
-  container.innerHTML = boxes.map(b => `
-    <div class="insight ${b.cls}">
-      <strong>${b.icon} ${b.title}</strong>
-      ${b.text}
-    </div>`).join('');
-})();
-
-
-// =========================================================
-// Sidenav — highlight active section on scroll
-// =========================================================
-(function() {
-  const links    = document.querySelectorAll('.sidenav a');
-  const sections = [...links].map(a => document.querySelector(a.getAttribute('href')));
-
-  const observer = new IntersectionObserver(entries => {
-    entries.forEach(e => {
-      if (e.isIntersecting) {
-        links.forEach(l => l.classList.remove('active'));
-        const active = [...links].find(l => l.getAttribute('href') === '#' + e.target.id);
-        if (active) active.classList.add('active');
-      }
-    });
-  }, { rootMargin: '-30% 0px -60% 0px' });
-
-  sections.forEach(s => s && observer.observe(s));
-})();
+document.querySelectorAll(".tab").forEach((t) => t.addEventListener("click", () => {
+  history.replaceState(null, "", "#" + t.dataset.kind);
+  showTab(t.dataset.kind);
+}));
+showTab(location.hash.slice(1));
 </script>
-
 </body>
 </html>

@@ -62,8 +62,10 @@ Scheduled jobs, all built into the app (node-cron, Eastern Time — no OS cronta
 - **Database**: PostgreSQL via Prisma ORM
 - **Data source**: Cisco CMX WiFi Analytics API
 - **Process management**: systemd (production) / PM2 (local dev)
-- **Analytics**: `refresh_summaries.js` rebuilds the dashboard's summary files from the
-  database and runs `big_summary.py` (needs `python3`)
+- **Analytics**: `refresh_summaries.js` rebuilds the summary files from the database every
+  hour, and the admin dashboard computes its figures from them
+  (`modules/dashboardAnalytics.js`). The nightly run also writes `big_summary.json` with
+  `big_summary.py` (needs `python3`); the dashboard no longer reads it
 
 ## Key Environment Variables
 

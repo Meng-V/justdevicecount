@@ -670,6 +670,7 @@ justdevicecount/
 │   ├── staleClientFilter.js        # Drops clients CMX keeps listing after people leave
 │   ├── collectionWindow.js         # Overnight silent windows (shared with the health check)
 │   ├── recFormula.js               # Rec devices → patrons (shared by /recapi and admin)
+│   ├── dashboardAnalytics.js       # Admin dashboard figures, computed from the summary files
 │   ├── patronCache.js              # In-memory cache layer
 │   ├── axiosApi.js                 # Cisco CMX API client with retry
 │   ├── deviceUtils.js              # RSSI, last-seen and bounds checks
@@ -686,7 +687,7 @@ justdevicecount/
 │   ├── refresh_summaries.js        # Hourly/nightly: rebuild dashboard summaries from the DB
 │   ├── data_health_check.js        # Daily 07:00: e-mail alert on missing/bad data
 │   ├── export_and_purge.js         # Monthly CRON: export + delete old data
-│   ├── big_summary.py              # Build big_summary.json (run by refresh_summaries.js)
+│   ├── big_summary.py              # Build big_summary.json (nightly; the dashboard no longer reads it)
 │   ├── ghost_history_diag.js       # One-off, read-only: measure Sep–Oct 2026 ghost inflation
 │   ├── correct_ghost_history.js    # One-off: correct those rows (--apply / --restore)
 │   ├── correct_ghost_summaries.js  # One-off: same King correction for the archived Oct 2025–May 2026 summaries

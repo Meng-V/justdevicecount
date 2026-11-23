@@ -161,9 +161,11 @@ The systemd service runs `node bin/www` directly inside `/opt/devicecount/curren
 
 /home/qum/stored_data/      # persists across deployments
 ├── device_data_export_until_*.json
-├── summaries/
+├── summaries/              # King Library, read by the admin dashboard
 │   └── YYYY-MM_summary.json
-└── analysis/
+├── rec_summaries/          # Recreation Center, read by the admin dashboard
+│   └── YYYY-MM_summary.json
+└── analysis/               # written nightly by big_summary.py; not read by the dashboard
     ├── big_summary.json
     └── dashboard.html
 ```

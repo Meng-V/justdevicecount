@@ -14,7 +14,10 @@
 // Endpoints:
 //   GET /crowdindex/admin?t=<token>   — dashboard (validates token, sets cookie)
 //   GET /crowdindex/admin             — dashboard (cookie must already be set)
-//   GET /crowdindex/admin/data        — raw big_summary.json (JSON API, same auth)
+//   GET /crowdindex/admin/data        — the dashboard's analytics as JSON (same auth)
+//
+// The analytics are computed from the per-building 15-minute summary files by
+// modules/dashboardAnalytics.js; analysis/big_summary.json is no longer read.
 
 const express = require("express");
 const path    = require("path");
@@ -40,8 +43,6 @@ const STORED_DATA_DIR = process.env.STORED_DATA_DIR
   ? path.resolve(process.env.STORED_DATA_DIR)
   : path.resolve(__dirname, "..", "stored_data");
 
-const SUMMARY_PATH = path.join(STORED_DATA_DIR, "analysis", "big_summary.json");
-
 // Per-building 15-minute summary directories, written by scripts/refresh_summaries.js
 const KING_SUMMARY_DIR = path.join(STORED_DATA_DIR, "summaries");
 const REC_SUMMARY_DIR  = path.join(STORED_DATA_DIR, "rec_summaries");
@@ -49,20 +50,15 @@ const REC_SUMMARY_DIR  = path.join(STORED_DATA_DIR, "rec_summaries");
 // Recreation Center patron maths — shared with routes/recapi.js so the admin
 // tables and the live widget can never report different numbers.
 const recFormula = require("../modules/recFormula");
+const analytics  = require("../modules/dashboardAnalytics");
 
 // ---------------------------------------------------------------------------
-// Date-range filter (for the presentation)
-// Set DASHBOARD_START_MONTH and DASHBOARD_END_MONTH in .env to restrict
-// which months are shown on the dashboard.  Both are inclusive.
-// Format: "YYYY-MM"  (e.g. "2025-10" or "2026-05")
-// Leave either unset to use the full range available in big_summary.json.
-//
-// Example — lock to exactly what the boss sees now (Oct 2025 – May 2026):
-//   DASHBOARD_START_MONTH=2025-10
-//   DASHBOARD_END_MONTH=2026-05
-//
-// To include June 2026 after the July 1 CRON runs new data:
-//   DASHBOARD_END_MONTH=2026-06
+// Date-range filter
+// Set DASHBOARD_START_MONTH and/or DASHBOARD_END_MONTH in .env to restrict
+// which Eastern months the analytics cover.  Both are inclusive.
+// Format: "YYYY-MM"  (e.g. "2025-10").  Leave DASHBOARD_END_MONTH unset, or
+// every later month stays hidden.  The day view and the exports always cover
+// every summary file.
 // ---------------------------------------------------------------------------
 const DASHBOARD_START_MONTH = process.env.DASHBOARD_START_MONTH || null;
 const DASHBOARD_END_MONTH   = process.env.DASHBOARD_END_MONTH   || null;
@@ -102,82 +98,6 @@ function requireToken(req, res, next) {
   return res.status(403).send(
     "Access denied. Use the full URL with the access token your administrator shared with you."
   );
-}
-
-// ---------------------------------------------------------------------------
-// Load summary data (cached in memory, auto-reloaded when file changes)
-// ---------------------------------------------------------------------------
-let cachedSummary    = null;
-let cachedSummaryMtm = 0;
-
-function loadSummary() {
-  try {
-    const stat = fs.statSync(SUMMARY_PATH);
-    if (stat.mtimeMs !== cachedSummaryMtm) {
-      cachedSummary    = JSON.parse(fs.readFileSync(SUMMARY_PATH, "utf8"));
-      cachedSummaryMtm = stat.mtimeMs;
-    }
-    return cachedSummary;
-  } catch {
-    return null;
-  }
-}
-
-// ---------------------------------------------------------------------------
-// Apply DASHBOARD_START_MONTH / DASHBOARD_END_MONTH filter.
-// Returns a deep-ish copy of the summary with only the requested months,
-// and recomputes the global overview arrays to match the filtered set.
-// The original cached object is never mutated.
-// ---------------------------------------------------------------------------
-function applyDateRangeFilter(doc) {
-  if (!DASHBOARD_START_MONTH && !DASHBOARD_END_MONTH) return doc;
-
-  const start = DASHBOARD_START_MONTH || "0000-00";
-  const end   = DASHBOARD_END_MONTH   || "9999-99";
-
-  // Filter the months map
-  const filteredMonths = {};
-  Object.entries(doc.months).forEach(([mk, val]) => {
-    if (mk >= start && mk <= end) filteredMonths[mk] = val;
-  });
-
-  const filteredKeys = Object.keys(filteredMonths).sort();
-
-  // Re-slice the global arrays that are month-indexed
-  const filteredMonthlyOverview = (doc.global.monthly_overview || [])
-    .filter(m => m.month >= start && m.month <= end);
-
-  // Recompute overall_stats fields that depend on the month range
-  const allPatrons = filteredKeys.flatMap(mk =>
-    (filteredMonths[mk].all_days || []).map(d => d.avg)
-  );
-  const totalRecords = filteredKeys.reduce(
-    (sum, mk) => sum + (filteredMonths[mk].total_records || 0), 0
-  );
-
-  return {
-    ...doc,
-    months: filteredMonths,
-    global: {
-      ...doc.global,
-      monthly_overview:  filteredMonthlyOverview,
-      overall_stats: {
-        ...doc.global.overall_stats,
-        months_covered:  filteredKeys,
-        total_records:   totalRecords,
-      },
-    },
-  };
-}
-
-// ---------------------------------------------------------------------------
-// Helper: month label  "2025-10" → "Oct 2025"
-// ---------------------------------------------------------------------------
-const MONTH_ABBR = ["Jan","Feb","Mar","Apr","May","Jun",
-                    "Jul","Aug","Sep","Oct","Nov","Dec"];
-function monthLabel(mk) {
-  const [y, m] = mk.split("-");
-  return `${MONTH_ABBR[parseInt(m) - 1]} ${y}`;
 }
 
 // ---------------------------------------------------------------------------
@@ -309,26 +229,77 @@ function parseRangeParams(req) {
   return { from, to };
 }
 
-// "YYYY-MM" → "YYYY-MM-DD" of the last day of that month.
-function lastDayOfMonth(mk) {
-  const [y, m] = mk.split("-").map(Number);
-  const last = new Date(Date.UTC(y, m, 0)).getUTCDate();
-  return `${mk}-${String(last).padStart(2, "0")}`;
+// ---------------------------------------------------------------------------
+// Dashboard analytics (modules/dashboardAnalytics.js)
+// Recomputed only when a summary file changes (the hourly refresh) or the
+// Eastern date rolls over, which is when "today" stops being incomplete.
+// ---------------------------------------------------------------------------
+
+const BUILDING_DIRS = { king: KING_SUMMARY_DIR, rec: REC_SUMMARY_DIR };
+const analyticsCache = {};   // kind → { sig, data }
+
+function buildingAnalytics(kind) {
+  const dir    = BUILDING_DIRS[kind];
+  const months = availableMonths(dir);
+
+  const sig = [
+    analytics.etParts(new Date()).date,
+    DASHBOARD_START_MONTH, DASHBOARD_END_MONTH,
+    ...months.map((mk) => {
+      try {
+        return `${mk}:${fs.statSync(path.join(dir, `${mk}_summary.json`)).mtimeMs}`;
+      } catch {
+        return mk;
+      }
+    }),
+  ].join("|");
+
+  if (analyticsCache[kind]?.sig !== sig) {
+    let data;
+    try {
+      const records = months.flatMap((mk) => loadMonthSummary(mk, dir) || []);
+      data = analytics.analyse(kind, records, {
+        startMonth: DASHBOARD_START_MONTH,
+        endMonth:   DASHBOARD_END_MONTH,
+      });
+    } catch (err) {
+      // One building's bad data must not take the whole dashboard down.
+      console.error(`[admin] analytics for ${kind} failed:`, err);
+      const { name } = analytics.BUILDINGS[kind];
+      data = { available: false, kind, name, error: err.message };
+    }
+    analyticsCache[kind] = { sig, data };
+  }
+  return analyticsCache[kind].data;
+}
+
+// First and last Eastern date held by any summary file — the bounds of the
+// day picker and the export form (not limited by DASHBOARD_*_MONTH).
+function dataBounds(dir) {
+  const months = availableMonths(dir);
+  if (!months.length) return null;
+
+  const stamps = [months[0], months.at(-1)]
+    .flatMap((mk) => (loadMonthSummary(mk, dir) || []).map((r) => r.timeStamp))
+    .filter(Boolean)
+    .sort();
+  if (!stamps.length) return null;
+
+  return { min: toEtParts(stamps[0]).etDate, max: toEtParts(stamps.at(-1)).etDate };
 }
 
 // ---------------------------------------------------------------------------
 // Routes
 // ---------------------------------------------------------------------------
 
-// GET /admin/data — raw JSON (protected, date-range filtered)
+// GET /admin/data — the dashboard's analytics for both buildings as JSON
 router.get("/data", requireToken, (req, res) => {
-  const raw = loadSummary();
-  if (!raw) {
-    return res.status(503).json({
-      error: "big_summary.json not found. Run: python3 scripts/big_summary.py",
-    });
-  }
-  res.json(applyDateRangeFilter(raw));
+  res.json({
+    generatedAt: new Date().toISOString(),
+    timezone:    TZ,
+    king:        buildingAnalytics("king"),
+    rec:         buildingAnalytics("rec"),
+  });
 });
 
 // Shared: validate ?date=YYYY-MM-DD, returns the string or null.
@@ -491,30 +462,6 @@ function getRecDay(date) {
   return recWithFormula(getDayRecords(date, REC_SUMMARY_DIR));
 }
 
-// Date-picker bounds for the Rec tab: first/last ET day that actually has data.
-function recViewData() {
-  const { baseline, devicesPerPatron } = recFormula.params();
-  const months = availableMonths(REC_SUMMARY_DIR);
-  if (!months.length) {
-    return { recAvailable: false, recBaseline: baseline, recDevicesPerPatron: devicesPerPatron };
-  }
-
-  const firstRecs = loadMonthSummary(months[0], REC_SUMMARY_DIR) || [];
-  const lastRecs  = loadMonthSummary(months.at(-1), REC_SUMMARY_DIR) || [];
-  if (!firstRecs.length || !lastRecs.length) {
-    return { recAvailable: false, recBaseline: baseline, recDevicesPerPatron: devicesPerPatron };
-  }
-
-  return {
-    recAvailable: true,
-    recBaseline:  baseline,
-    recDevicesPerPatron: devicesPerPatron,
-    recDayMin:    toEtParts(firstRecs[0].timeStamp).etDate,
-    recDayMax:    toEtParts(lastRecs[lastRecs.length - 1].timeStamp).etDate,
-    recMonths:    months,
-  };
-}
-
 // GET /admin/rec/day — one day's 15-min Rec records + summary stats
 router.get("/rec/day", requireToken, (req, res) => {
   const date = parseDateParam(req);
@@ -632,58 +579,32 @@ router.get("/rec/range/info", requireToken, (req, res) => {
 
 // GET /admin  — main dashboard
 router.get("/", requireToken, (req, res) => {
-  const raw = loadSummary();
-  if (!raw) {
-    return res.status(503).send(
-      "<h2>Analytics data not found.</h2>" +
-      "<p>Run <code>python3 scripts/big_summary.py</code> to generate it.</p>"
-    );
-  }
+  const base = req.baseUrl;   // "/crowdindex/admin" — keeps links working without a trailing slash
 
-  const doc = applyDateRangeFilter(raw);
+  const buildings = ["king", "rec"].map((kind) => {
+    const prefix = kind === "rec" ? `${base}/rec` : base;
+    return {
+      ...buildingAnalytics(kind),
+      bounds: dataBounds(BUILDING_DIRS[kind]),
+      urls: {
+        day:   `${prefix}/day`,
+        range: `${prefix}/range`,
+      },
+    };
+  });
 
-  const monthLabels = {};
-  Object.keys(doc.months).forEach(mk => { monthLabels[mk] = monthLabel(mk); });
-
-  // Pass active range info to the template for the header badge
-  const sortedKeys = Object.keys(doc.months).sort();
-  const rangeStart = DASHBOARD_START_MONTH || sortedKeys[0];
-  const rangeEnd   = DASHBOARD_END_MONTH   || sortedKeys.at(-1);
-
-  // Date-picker bounds for the day-detail section (constrained to displayed range)
-  const dayMin = `${rangeStart}-01`;
-  const dayMax = lastDayOfMonth(rangeEnd);
+  const recParams = recFormula.params();
 
   res.render("admin", {
-    title:           "Analytics Dashboard",
-    generatedAt:     doc.generated_at,
-    etOffset:        doc.et_offset_hours,
-    overview:        doc.global.overall_stats,
-    monthlyOverview: doc.global.monthly_overview,
-    top10Days:       doc.global.cross_month_top10_days,
-    bottom10Days:    doc.global.cross_month_low10_days,
-    dowProfile:      doc.global.day_of_week_profile,
-    hourlyProfile:   doc.global.hourly_profile,
-    floorBreakdown:  doc.global.floor_breakdown,
-    months:          doc.months,
-    monthKeys:       Object.keys(doc.months).sort(),
-    monthLabels,
-    summaryJson:     JSON.stringify(doc),
-    // Date range currently displayed — shown in the topbar subtitle
-    rangeStart:      monthLabel(rangeStart),
-    rangeEnd:        monthLabel(rangeEnd),
-    rangeFiltered:   !!(DASHBOARD_START_MONTH || DASHBOARD_END_MONTH),
-    // Day-detail date picker bounds + default selection
-    dayMin,
-    dayMax,
-    dayDefault:      dayMax,
-    // Export bounds cover every month that has a summary file, even when
-    // DASHBOARD_*_MONTH freezes the charts to a narrower window.
-    exportMin:       `${availableMonths(KING_SUMMARY_DIR)[0] || rangeStart}-01`,
-    exportMax:       lastDayOfMonth(availableMonths(KING_SUMMARY_DIR).at(-1) || rangeEnd),
-    // Recreation Center tab — bounds come from the rec_summaries files, not the
-    // King Library month filter (rec collection started later).
-    ...recViewData(),
+    title:      "Crowd Index Analytics",
+    base,
+    buildings,
+    recParams,
+    rangeStart: DASHBOARD_START_MONTH ? analytics.monthLabel(DASHBOARD_START_MONTH) : null,
+    rangeEnd:   DASHBOARD_END_MONTH   ? analytics.monthLabel(DASHBOARD_END_MONTH)   : null,
+    // Chart data for the client script.  "<" is escaped so no value can close
+    // the <script> element it is embedded in.
+    chartJson: JSON.stringify(buildings).replace(/</g, "\\u003c"),
   });
 });
 
