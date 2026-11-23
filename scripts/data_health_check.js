@@ -16,7 +16,8 @@
  *      moment collection resumed rather than from the row itself, so the
  *      overnight silent window is never reported as a fault.
  *   3. All-zero readings, in case a future change reintroduces the old bug.
- *   Plus: freshness of analysis/big_summary.json, the file the dashboard reads.
+ *   Plus: freshness of summaries/ and rec_summaries/, the files the dashboard
+ *   reads; the app rewrites them every hour at :05.
  *
  *   Collection windows are defined once in modules/collectionWindow.js and
  *   shared with the collector, so the two can never disagree.
@@ -178,26 +179,42 @@ async function checkRecClosedHours(model = prisma.recData) {
   return { median, problems };
 }
 
+// The dashboard reads one summary file per month and building. The app rewrites
+// every month still in the database each hour at :05 (refresh_summaries.js), so
+// the newest file in each folder shows when that refresh last succeeded.
+const SUMMARY_MAX_AGE_H = 3;
+const SUMMARY_DIRS = [
+  { name: "King Library",      dir: "summaries" },
+  { name: "Recreation Center", dir: "rec_summaries" },
+];
+
 function checkSummaryFreshness() {
-  const p = path.join(STORED_DATA_DIR, "analysis", "big_summary.json");
-  try {
-    const ageH = (Date.now() - fs.statSync(p).mtimeMs) / 3600000;
-    if (ageH > 48) {
-      return {
-        ageH: Math.round(ageH),
-        problems: [
-          `Dashboard analysis file is ${Math.round(ageH)}h old ` +
-          "(scripts/refresh_summaries.js runs nightly at 03:15 ET — check it).",
-        ],
-      };
+  const problems = [];
+  const ages = SUMMARY_DIRS.map(({ name, dir }) => {
+    const full = path.join(STORED_DATA_DIR, dir);
+    let newest = null;
+    try {
+      for (const f of fs.readdirSync(full)) {
+        if (!f.endsWith("_summary.json")) continue;
+        const m = fs.statSync(path.join(full, f)).mtimeMs;
+        if (newest === null || m > newest) newest = m;
+      }
+    } catch { /* folder missing or unreadable: reported below */ }
+
+    if (newest === null) {
+      problems.push(`Dashboard summary files for ${name} are missing: ${full}`);
+      return { name, ageH: null };
     }
-    return { ageH: Math.round(ageH), problems: [] };
-  } catch {
-    return {
-      ageH: null,
-      problems: [`Dashboard analysis file is missing: ${p}`],
-    };
-  }
+    const ageH = Math.round((Date.now() - newest) / 3600000);
+    if (ageH > SUMMARY_MAX_AGE_H) {
+      problems.push(
+        `Dashboard summary files for ${name} were last updated ${ageH}h ago ` +
+        "(scripts/refresh_summaries.js should rewrite them every hour at :05 — check it)."
+      );
+    }
+    return { name, ageH };
+  });
+  return { ages, problems };
 }
 
 // ---------------------------------------------------------------------------
@@ -256,7 +273,10 @@ async function run() {
     `    counted while closed: ${recNight.median === null ? "n/a" : recNight.median + " devices"} ` +
     `(${REC_CLOSED_FROM}-${REC_CLOSED_TO} ET, normal ~10)\n` +
     "\n" +
-    `  Dashboard analysis file: ${summary.ageH === null ? "MISSING" : summary.ageH + "h old"}\n`;
+    "  Dashboard summary files:\n" +
+    summary.ages
+      .map((a) => `    ${a.name.padEnd(17)}: ${a.ageH === null ? "MISSING" : a.ageH + "h old"}\n`)
+      .join("");
 
   if (problems.length === 0 && !FORCE_TEST) {
     console.log(`[health_check] OK — King ${king.rows24h} rows / Rec ${rec.rows24h} rows in 24h`);
@@ -288,7 +308,7 @@ async function run() {
 
 if (require.main !== module) {
   // Required (e.g. by a test) rather than run: expose the checks, do nothing.
-  module.exports = { checkRecClosedHours, REC_CLOSED_LIMIT };
+  module.exports = { checkRecClosedHours, REC_CLOSED_LIMIT, checkSummaryFreshness };
 } else run()
   .catch((e) => {
     console.error("[health_check] FATAL:", e);

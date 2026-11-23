@@ -506,7 +506,7 @@ body lists the problems:
 | `no new rows for N minutes`, `only N rows in the last 24h`, or `the table is EMPTY` | The collector cannot get data from CMX: CMX is down, or its TLS certificate expired (July 2026: three weeks unnoticed) | `sudo tail -n 50 /var/log/crowdindex/crowdindex.log`. Repeated `certificate has expired` or `all retries exhausted` means CMX itself is broken: contact the network team, nothing to change in this app. No collection lines at all: `systemctl status crowdindex` |
 | `every reading is 0` | Same as above, or a code change brought back storing failed cycles as 0 | As above |
 | `Recreation Center: N devices counted while the building was closed` | CMX now flags departed clients in a way `staleClientFilter.js` does not catch, so every count is inflated again. Normal is about 10 | Needs a developer: compare what CMX sends for those clients (`networkStatus`, `currentlyTracked`) with `modules/staleClientFilter.js` |
-| `Dashboard analysis file is Nh old` or `missing` | The 03:15 summary refresh failed | Find the error (command below), then run it by hand (above) |
+| `Dashboard summary files for … were last updated Nh ago` or `are missing` | The hourly summary refresh (`:05`) is failing, so the dashboard shows old data | Find the error (command below), then run it by hand (above) |
 
 When CMX comes back after an outage, collection resumes by itself; the missing hours
 stay missing.

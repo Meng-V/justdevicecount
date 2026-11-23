@@ -68,10 +68,10 @@ deviceDataService.start();
 //        the 03:15 run could only see rows written before it, which during the
 //        silent window meant the eight readings between midnight and 01:45.
 //        This keeps the day view at most an hour behind.
-//        --no-analysis skips big_summary.py: the day/range views read the
-//        summary files this refreshes, while big_summary.json only feeds the
-//        monthly overview, which does not change hour to hour.  Runs at :05 so
-//        it never lands on a :00/:15/:30/:45 collection cycle.
+//        --no-analysis skips big_summary.py, whose big_summary.json the
+//        dashboard no longer reads.  Runs at :05 so it never lands on a
+//        :00/:15/:30/:45 collection cycle.  The 07:00 health check alerts
+//        when these files stop updating.
 //
 //   2. Nightly  (03:15 ET)          — scripts/refresh_summaries.js
 //        The full rebuild, including analysis/big_summary.json.
@@ -115,7 +115,7 @@ function runScript(name, args = []) {
   });
 }
 
-// Hourly, lightweight: refresh the summary files the day/range views read.
+// Hourly, lightweight: refresh the summary files the dashboard reads.
 // Skipped while the monthly export-and-purge is in flight — that job rewrites
 // the same files and then deletes the rows behind them, so the two must not
 // interleave.
