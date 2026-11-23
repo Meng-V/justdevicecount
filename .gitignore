@@ -193,3 +193,8 @@ certs/
 /stored_data/raw_data/
 /rec_model
 /stored_data/ghost_*
+# Dashboard working files. The real ones live in STORED_DATA_DIR on the server;
+# the copies once committed here predated the ghost correction.
+/stored_data/summaries/
+/stored_data/rec_summaries/
+/stored_data/analysis/
